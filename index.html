@@ -1,218 +1,210 @@
-
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
-  .mono { font-family: 'IBM Plex Mono', monospace; }
-  .sig-green { background: var(--color-background-success); color: var(--color-text-success); }
-  .sig-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
-  .sig-red   { background: var(--color-background-danger);  color: var(--color-text-danger);  }
-  input { font-family: 'IBM Plex Mono', monospace !important; font-size: 12px !important; }
-</style>
-
-<h2 class="sr-only">Recession Radar — US economic indicator dashboard tracking yield curve, jobless claims, PMI, consumer sentiment, and leading index with green/amber/red risk signals</h2>
-
-<div id="root" style="padding:0 0 24px"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recession Radar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:#1B2A4A; --bg:#F4F5F7; --card:#FFFFFF; --border:#E2E4E9; --muted:#8892A4; --text:#1B2A4A;
+      --green:#639922; --gbg:#EAF3DE; --gtxt:#3B6D11;
+      --amber:#BA7517; --abg:#FAEEDA; --atxt:#854F0B;
+      --red:#E24B4A;   --rbg:#FCEBEB; --rtxt:#791F1F;
+    }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    header { background:var(--navy); padding:18px 32px; display:flex; justify-content:space-between; align-items:center; }
+    .header-title { font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:500; color:#fff; letter-spacing:0.08em; }
+    .header-sub   { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; margin-top:3px; letter-spacing:0.06em; }
+    .header-ts    { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; text-align:right; }
+    .badge-live   { display:inline-block; background:rgba(99,153,34,0.2); color:#8BC34A; font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 7px; border-radius:99px; margin-bottom:4px; letter-spacing:0.1em; }
+    main { max-width:960px; margin:0 auto; padding:28px 24px 48px; }
+    #status-screen { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:48px 28px; text-align:center; max-width:480px; margin:40px auto 0; }
+    #status-screen h2 { font-size:16px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+    #status-screen p  { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
+    .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .btn { padding:10px 20px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.15s; }
+    .btn:active { opacity:0.8; }
+    .btn-primary { background:var(--navy); color:#fff; }
+    .error-box { background:var(--rbg); color:var(--rtxt); border-radius:8px; padding:9px 14px; font-size:12px; margin-top:12px; }
+    #dashboard { display:none; }
+    .agg-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px 28px; margin-bottom:18px; display:flex; align-items:center; gap:36px; flex-wrap:wrap; }
+    .gauge-wrap { text-align:center; flex-shrink:0; }
+    .gauge-label { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; letter-spacing:0.08em; margin-top:4px; }
+    .breakdown { flex:1; min-width:160px; }
+    .breakdown-title { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:12px; }
+    .breakdown-counts { display:flex; gap:24px; margin-bottom:16px; }
+    .count-item { text-align:center; }
+    .count-num { font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:500; }
+    .count-lbl { font-size:11px; color:var(--muted); margin-top:1px; }
+    .action-row { display:flex; gap:8px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+    .ind-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; position:relative; overflow:hidden; }
+    .ind-accent { position:absolute; top:0; left:0; bottom:0; width:3px; }
+    .ind-body { padding-left:10px; }
+    .ind-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+    .ind-name { font-size:13px; font-weight:500; color:var(--text); }
+    .ind-badge { font-size:10px; padding:2px 7px; border-radius:99px; }
+    .ind-sub { font-size:11px; color:var(--muted); margin-bottom:9px; }
+    .ind-value { font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500; margin-bottom:7px; }
+    .ind-note { font-size:11px; color:var(--muted); line-height:1.55; }
+    footer { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-align:center; margin-top:28px; letter-spacing:0.04em; }
+    @media (max-width:600px) { header { padding:14px 16px; } main { padding:16px 12px 40px; } }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="header-title">RECESSION RADAR</div>
+    <div class="header-sub">US ECONOMIC INDICATOR MONITOR</div>
+  </div>
+  <div class="header-ts" id="ts-display" style="display:none">
+    <div class="badge-live">● LIVE</div>
+    <div id="ts-text"></div>
+  </div>
+</header>
+<main>
+  <div id="status-screen">
+    <div class="spinner" id="spinner"></div>
+    <h2 id="status-title">Loading data…</h2>
+    <p id="status-msg">Fetching the latest US economic indicators.</p>
+    <div id="err-box" class="error-box" style="display:none"></div>
+    <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
+  </div>
+  <div id="dashboard">
+    <div class="agg-card">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 100" width="210" height="100">
+          <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E2E4E9" stroke-width="10" stroke-linecap="round"/>
+          <path d="M 32 88 A 68 68 0 0 1 66 23"  fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <path d="M 66 23 A 68 68 0 0 1 134 23"  fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
+          <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/>
+          <circle cx="100" cy="88" r="3" fill="white"/>
+          <text x="22"  y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
+          <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
+        </svg>
+        <div class="gauge-label" id="gauge-label">—</div>
+      </div>
+      <div class="breakdown">
+        <div class="breakdown-title">SIGNAL BREAKDOWN</div>
+        <div class="breakdown-counts">
+          <div class="count-item"><div class="count-num" id="count-red"   style="color:var(--red)">—</div><div class="count-lbl">alert</div></div>
+          <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">—</div><div class="count-lbl">warning</div></div>
+          <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">—</div><div class="count-lbl">clear</div></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" id="refresh-btn" onclick="loadData()">↻ Refresh</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid" id="cards-grid"></div>
+    <footer>DATA: FRED (FEDERAL RESERVE BANK OF ST. LOUIS) &nbsp;·&nbsp; INFORMATIONAL ONLY — NOT FINANCIAL ADVICE</footer>
+  </div>
+</main>
 <script>
-const { useState, useCallback } = React;
+  const INDICATORS = [
+    { id:"T10Y2Y",  name:"Yield curve",       sub:"10Y − 2Y Treasury spread",  unit:"%", dp:2, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"},   note:"Inversion has preceded every US recession since the 1970s." },
+    { id:"ICSA",    name:"Jobless claims",     sub:"Weekly initial claims",      unit:"K", dp:0, tx:v=>v/1000, sig:v=>v<220?"green":v<270?"amber":"red", lbl:{green:"Low",amber:"Elevated",red:"Surging"}, note:"Sharp rises tend to lead broader unemployment by several weeks." },
+    { id:"UNRATE",  name:"Unemployment",       sub:"US unemployment rate",       unit:"%", dp:1, sig:v=>v<4.5?"green":v<5.5?"amber":"red", lbl:{green:"Low",amber:"Rising",red:"Elevated"},             note:"A rising unemployment rate is a classic recession confirmation signal." },
+    { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index",       unit:"",  dp:1, sig:v=>v>80?"green":v>65?"amber":"red",   lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"},  note:"Sentiment collapses reliably precede spending contractions." },
+    { id:"USSLIND", name:"Leading index",      sub:"Conference Board LEI",       unit:"%", dp:2, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"},    note:"Six consecutive monthly declines have historically flagged recessions." },
+  ];
+  const HEX = { green:"#639922", amber:"#BA7517", red:"#E24B4A" };
+  const BGS = { green:"var(--gbg)", amber:"var(--abg)", red:"var(--rbg)" };
+  const TXT = { green:"var(--gtxt)", amber:"var(--atxt)", red:"var(--rtxt)" };
 
-const FRED = "https://api.stlouisfed.org/fred/series/observations";
+  async function fetchSeries(id) {
+    const r = await fetch(`/api/fred?series_id=${id}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    if (d.error_message) throw new Error(d.error_message);
+    const raw = d.observations?.[0]?.value;
+    if (!raw || raw === ".") return null;
+    const v = parseFloat(raw);
+    return isNaN(v) ? null : v;
+  }
 
-const INDICATORS = [
-  { id:"T10Y2Y", name:"Yield curve",       sub:"10Y − 2Y Treasury spread",   unit:"%", dp:2,
-    sig:v=>v>0.25?"green":v>-0.25?"amber":"red",
-    lbl:{green:"Positive",amber:"Flattening",red:"Inverted"},
-    note:"Inversion has preceded every US recession since the 1970s." },
-  { id:"ICSA",   name:"Jobless claims",    sub:"Weekly initial claims",       unit:"K",  dp:0, tx:v=>v/1000,
-    sig:v=>v<220?"green":v<270?"amber":"red",
-    lbl:{green:"Low",amber:"Elevated",red:"Surging"},
-    note:"Sharp rises tend to lead broader unemployment by several weeks." },
-  { id:"NAPM",   name:"Mfg. PMI",          sub:"ISM Manufacturing Index",     unit:"",   dp:1,
-    sig:v=>v>52?"green":v>48?"amber":"red",
-    lbl:{green:"Expanding",amber:"Neutral",red:"Contracting"},
-    note:"Below 50 = contraction. Reads below 48 often precede recessions." },
-  { id:"UMCSENT",name:"Consumer sentiment",sub:"U. of Michigan index",        unit:"",   dp:1,
-    sig:v=>v>80?"green":v>65?"amber":"red",
-    lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"},
-    note:"Sentiment collapses reliably precede spending contractions." },
-  { id:"USSLIND",name:"Leading index",     sub:"Conference Board LEI",        unit:"%",  dp:2,
-    sig:v=>v>0.1?"green":v>-0.3?"amber":"red",
-    lbl:{green:"Advancing",amber:"Slowing",red:"Declining"},
-    note:"Six consecutive monthly declines have historically flagged recessions." },
-];
-
-const DEMO = { T10Y2Y:-0.12, ICSA:241500, NAPM:47.8, UMCSENT:68.2, USSLIND:-0.18 };
-
-const HEX = { green:"#639922", amber:"#BA7517", red:"#E24B4A" };
-
-function Gauge({ signals }) {
-  const r2 = signals.filter(s=>s==="red").length;
-  const a2 = signals.filter(s=>s==="amber").length;
-  const n  = signals.length || 5;
-  const score = Math.min(1, (r2*2 + a2) / (n*2));
-  const angle = Math.PI * (1 - score);
-  const CX=100, CY=88, R=68, NR=58;
-  const nx = CX + NR*Math.cos(angle);
-  const ny = CY - NR*Math.sin(angle);
-  let label, hex;
-  if(r2>=4){ label="High risk"; hex=HEX.red; }
-  else if(r2>=2){ label="Elevated risk"; hex=HEX.amber; }
-  else if(r2===1||a2>=3){ label="Moderate risk"; hex=HEX.amber; }
-  else { label="Low risk"; hex=HEX.green; }
-
-  return React.createElement("div",{style:{textAlign:"center"}},
-    React.createElement("svg",{viewBox:"0 0 200 100",width:210,height:100},
-      React.createElement("path",{d:"M 32 88 A 68 68 0 0 1 168 88",fill:"none",stroke:"var(--color-border-tertiary)",strokeWidth:10,strokeLinecap:"round"}),
-      React.createElement("path",{d:"M 32 88 A 68 68 0 0 1 66 23",fill:"none",stroke:HEX.green,strokeWidth:10,strokeLinecap:"round",strokeOpacity:0.45}),
-      React.createElement("path",{d:"M 66 23 A 68 68 0 0 1 134 23",fill:"none",stroke:HEX.amber,strokeWidth:10,strokeLinecap:"round",strokeOpacity:0.45}),
-      React.createElement("path",{d:"M 134 23 A 68 68 0 0 1 168 88",fill:"none",stroke:HEX.red,strokeWidth:10,strokeLinecap:"round",strokeOpacity:0.45}),
-      React.createElement("line",{x1:CX,y1:CY,x2:nx,y2:ny,stroke:hex,strokeWidth:2.5,strokeLinecap:"round"}),
-      React.createElement("circle",{cx:CX,cy:CY,r:5,fill:hex}),
-      React.createElement("circle",{cx:CX,cy:CY,r:3,fill:"var(--color-background-primary)"}),
-      React.createElement("text",{x:22,y:98,fontSize:9,fill:"var(--color-text-secondary)",textAnchor:"middle",fontFamily:"IBM Plex Mono"},"LOW"),
-      React.createElement("text",{x:178,y:98,fontSize:9,fill:"var(--color-text-secondary)",textAnchor:"middle",fontFamily:"IBM Plex Mono"},"HIGH"),
-    ),
-    React.createElement("div",{className:"mono",style:{fontSize:11,fontWeight:500,color:hex,letterSpacing:"0.07em",marginTop:2}},label.toUpperCase()),
-  );
-}
-
-function Card({ ind, val }) {
-  const dv = (ind.tx && val!==null) ? ind.tx(val) : val;
-  const sig = (val!==null&&val!==undefined&&!isNaN(val)) ? ind.sig(dv) : null;
-  const prefix = (ind.unit==="%"&&dv>=0) ? "+" : "";
-  return React.createElement("div",{style:{
-    background:"var(--color-background-primary)",
-    border:"0.5px solid var(--color-border-tertiary)",
-    borderRadius:"var(--border-radius-lg)",
-    padding:"14px 16px",
-    position:"relative",
-    overflow:"hidden",
-  }},
-    sig && React.createElement("div",{style:{
-      position:"absolute",top:0,left:0,bottom:0,width:3,
-      background:HEX[sig],
-      borderRadius:"var(--border-radius-lg) 0 0 var(--border-radius-lg)",
-    }}),
-    React.createElement("div",{style:{paddingLeft:sig?10:0}},
-      React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}},
-        React.createElement("div",{style:{fontSize:13,fontWeight:500,color:"var(--color-text-primary)"}},[ind.name]),
-        sig && React.createElement("span",{className:`sig-${sig}`,style:{fontSize:10,padding:"2px 7px",borderRadius:999}},[ind.lbl[sig]]),
-      ),
-      React.createElement("div",{style:{fontSize:11,color:"var(--color-text-secondary)",marginBottom:8}},[ind.sub]),
-      React.createElement("div",{className:"mono",style:{fontSize:26,fontWeight:500,color:sig?HEX[sig]:"var(--color-text-secondary)",marginBottom:6}},
-        [val!==null&&val!==undefined&&!isNaN(val) ? `${prefix}${dv.toFixed(ind.dp)}${ind.unit}` : "—"]
-      ),
-      React.createElement("div",{style:{fontSize:11,color:"var(--color-text-secondary)",lineHeight:1.5}},[ind.note]),
-    )
-  );
-}
-
-function App() {
-  const [key,setKey]=useState("");
-  const [saved,setSaved]=useState("");
-  const [vals,setVals]=useState(null);
-  const [loading,setLoading]=useState(false);
-  const [err,setErr]=useState("");
-  const [demo,setDemo]=useState(false);
-  const [ts,setTs]=useState(null);
-
-  const doFetch = useCallback(async k => {
-    setLoading(true); setErr("");
+  async function loadData() {
+    setStatus("loading");
     try {
-      const res = await Promise.all(INDICATORS.map(async ind=>{
-        const r = await fetch(`${FRED}?series_id=${ind.id}&api_key=${k}&sort_order=desc&limit=1&file_type=json`);
-        const d = await r.json();
-        if(d.error_message) throw new Error(d.error_message);
-        const v = parseFloat(d.observations?.[0]?.value);
-        return [ind.id, isNaN(v)?null:v];
-      }));
-      setVals(Object.fromEntries(res)); setDemo(false); setTs(new Date());
-    } catch(e){ setErr(e.message||"Failed — check your API key."); }
-    finally { setLoading(false); }
-  },[]);
+      const results = await Promise.allSettled(INDICATORS.map(ind => fetchSeries(ind.id)));
+      if (results.every(r => r.status === "rejected")) throw new Error(results[0].reason?.message || "All requests failed.");
+      renderDashboard(results.map(r => r.status === "fulfilled" ? r.value : null));
+    } catch(e) { setStatus("error", e.message); }
+  }
 
-  const signals = vals ? INDICATORS.map(ind=>{
-    const v=vals[ind.id]; if(v===null||v===undefined||isNaN(v)) return null;
-    return ind.sig(ind.tx?ind.tx(v):v);
-  }).filter(Boolean) : [];
+  function setStatus(state, msg) {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("status-screen").style.display = "block";
+    if (state === "loading") {
+      document.getElementById("spinner").style.display = "block";
+      document.getElementById("status-title").textContent = "Loading data…";
+      document.getElementById("status-msg").textContent = "Fetching the latest US economic indicators.";
+      document.getElementById("err-box").style.display = "none";
+      document.getElementById("retry-btn").style.display = "none";
+    } else {
+      document.getElementById("spinner").style.display = "none";
+      document.getElementById("status-title").textContent = "Could not load data";
+      document.getElementById("status-msg").textContent = "Something went wrong fetching the indicators.";
+      document.getElementById("err-box").textContent = msg || "Unknown error.";
+      document.getElementById("err-box").style.display = "block";
+      document.getElementById("retry-btn").style.display = "inline-block";
+    }
+  }
 
-  const headerStyle = {
-    background:"var(--color-background-secondary)",
-    borderBottom:"0.5px solid var(--color-border-tertiary)",
-    padding:"12px 20px",
-    display:"flex", justifyContent:"space-between", alignItems:"center",
-    marginBottom:20,
-  };
+  function renderDashboard(values) {
+    document.getElementById("status-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    const now = new Date();
+    document.getElementById("ts-display").style.display = "block";
+    document.getElementById("ts-text").textContent = now.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) + " " + now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    const signals = INDICATORS.map((ind,i) => { const v=values[i]; return (v!==null&&v!==undefined) ? ind.sig(ind.tx?ind.tx(v):v) : null; });
+    updateGauge(signals.filter(Boolean));
+    document.getElementById("count-red").textContent   = signals.filter(s=>s==="red").length;
+    document.getElementById("count-amber").textContent = signals.filter(s=>s==="amber").length;
+    document.getElementById("count-green").textContent = signals.filter(s=>s==="green").length;
+    const grid = document.getElementById("cards-grid");
+    grid.innerHTML = "";
+    INDICATORS.forEach((ind,i) => {
+      const v=values[i], dv=(v!==null&&v!==undefined&&ind.tx)?ind.tx(v):v;
+      const sig=(v!==null&&v!==undefined)?ind.sig(dv):null;
+      const prefix=(ind.unit==="%"&&dv!==null&&dv>=0)?"+":"";
+      const valStr=(v!==null&&v!==undefined)?`${prefix}${dv.toFixed(ind.dp)}${ind.unit}`:"—";
+      const card=document.createElement("div"); card.className="ind-card";
+      card.innerHTML=`${sig?`<div class="ind-accent" style="background:${HEX[sig]}"></div>`:""}
+        <div class="ind-body">
+          <div class="ind-header"><span class="ind-name">${ind.name}</span>${sig?`<span class="ind-badge" style="background:${BGS[sig]};color:${TXT[sig]}">${ind.lbl[sig]}</span>`:""}</div>
+          <div class="ind-sub">${ind.sub}</div>
+          <div class="ind-value" style="color:${sig?HEX[sig]:"var(--muted)"}"> ${valStr}</div>
+          <div class="ind-note">${ind.note}</div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
 
-  return React.createElement("div",{style:{paddingBottom:24}},
-    React.createElement("div",{style:headerStyle},
-      React.createElement("div",null,
-        React.createElement("div",{className:"mono",style:{fontSize:15,fontWeight:500,color:"var(--color-text-primary)",letterSpacing:"0.07em"}},["RECESSION RADAR"]),
-        React.createElement("div",{className:"mono",style:{fontSize:10,color:"var(--color-text-secondary)"}},["US economic indicator monitor"]),
-      ),
-      ts && React.createElement("div",{className:"mono",style:{fontSize:10,color:"var(--color-text-secondary)",textAlign:"right"}},
-        demo ? React.createElement("span",{style:{color:"var(--color-text-warning)",marginRight:8}},["● DEMO"]) : null,
-        [ts.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})],
-      ),
-    ),
-    React.createElement("div",{style:{padding:"0 20px"}},
-      !vals && React.createElement("div",{style:{
-        background:"var(--color-background-primary)",
-        border:"0.5px solid var(--color-border-tertiary)",
-        borderRadius:"var(--border-radius-lg)",
-        padding:"24px", marginBottom:20, textAlign:"center",
-      }},
-        React.createElement("div",{style:{fontSize:14,fontWeight:500,color:"var(--color-text-primary)",marginBottom:6}},["Connect to live data"]),
-        React.createElement("div",{style:{fontSize:13,color:"var(--color-text-secondary)",marginBottom:16}},
-          ["A free FRED API key from ",
-          React.createElement("a",{href:"https://fred.stlouisfed.org/docs/api/api_key.html",style:{color:"var(--color-text-info)"}},["fred.stlouisfed.org"]),
-          " — takes 2 minutes to get one."]
-        ),
-        React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}},
-          React.createElement("input",{value:key,onChange:e=>setKey(e.target.value),placeholder:"Paste API key here",
-            style:{width:260},
-            onKeyDown:e=>e.key==="Enter"&&key.trim()&&(setSaved(key.trim()),doFetch(key.trim()))}),
-          React.createElement("button",{onClick:()=>{const k=key.trim();setSaved(k);doFetch(k);},disabled:!key.trim()||loading,
-            style:{opacity:key.trim()?1:0.5}},loading?"Loading…":"Connect"),
-          React.createElement("button",{onClick:()=>{setVals(DEMO);setDemo(true);setTs(new Date());}},["Demo data"]),
-        ),
-        err && React.createElement("div",{style:{color:"var(--color-text-danger)",fontSize:12,marginTop:10}},[err]),
-      ),
-      vals && React.createElement(React.Fragment,null,
-        React.createElement("div",{style:{
-          background:"var(--color-background-primary)",
-          border:"0.5px solid var(--color-border-tertiary)",
-          borderRadius:"var(--border-radius-lg)",
-          padding:"20px 24px", marginBottom:16,
-          display:"flex", alignItems:"center", gap:32, flexWrap:"wrap",
-        }},
-          React.createElement(Gauge,{signals}),
-          React.createElement("div",{style:{flex:1,minWidth:160}},
-            React.createElement("div",{className:"mono",style:{fontSize:10,color:"var(--color-text-secondary)",letterSpacing:"0.1em",marginBottom:10}},["SIGNAL BREAKDOWN"]),
-            React.createElement("div",{style:{display:"flex",gap:24}},
-              ["red","amber","green"].map(s=>React.createElement("div",{key:s,style:{textAlign:"center"}},
-                React.createElement("div",{className:"mono",style:{fontSize:22,fontWeight:500,color:HEX[s]}},[signals.filter(x=>x===s).length]),
-                React.createElement("div",{style:{fontSize:11,color:"var(--color-text-secondary)"}},[s==="red"?"alert":s==="amber"?"warning":"clear"]),
-              ))
-            ),
-            React.createElement("div",{style:{marginTop:14,display:"flex",gap:8}},
-              !demo && React.createElement("button",{onClick:()=>doFetch(saved),disabled:loading},[loading?"Refreshing…":"↻ Refresh"]),
-              React.createElement("button",{onClick:()=>{setVals(null);setDemo(false);setKey("");setSaved("");}},
-                demo?"Connect live data →":"Change key"),
-            ),
-          ),
-        ),
-        React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(175px,1fr))",gap:12}},
-          INDICATORS.map(ind=>React.createElement(Card,{key:ind.id,ind,val:vals[ind.id]??null}))
-        ),
-        React.createElement("div",{className:"mono",style:{marginTop:16,fontSize:10,color:"var(--color-text-secondary)",textAlign:"center"}},
-          ["Data: FRED, Federal Reserve Bank of St. Louis · Informational only — not financial advice"]
-        ),
-      ),
-    ),
-  );
-}
+  function updateGauge(signals) {
+    const reds=signals.filter(s=>s==="red").length, ambs=signals.filter(s=>s==="amber").length, n=signals.length||5;
+    const score=Math.min(1,(reds*2+ambs)/(n*2)), angle=Math.PI*(1-score);
+    const nx=100+56*Math.cos(angle), ny=88-56*Math.sin(angle);
+    let label,hex;
+    if(reds>=4){label="HIGH RISK";hex=HEX.red;}
+    else if(reds>=2){label="ELEVATED RISK";hex=HEX.amber;}
+    else if(reds===1||ambs>=3){label="MODERATE RISK";hex=HEX.amber;}
+    else{label="LOW RISK";hex=HEX.green;}
+    document.getElementById("needle-line").setAttribute("x2",nx);
+    document.getElementById("needle-line").setAttribute("y2",ny);
+    document.getElementById("needle-line").setAttribute("stroke",hex);
+    document.getElementById("needle-hub").setAttribute("fill",hex);
+    document.getElementById("gauge-label").textContent=label;
+    document.getElementById("gauge-label").style.color=hex;
+  }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  loadData();
 </script>
+</body>
+</html>
