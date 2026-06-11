@@ -4,46 +4,59 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Recession Radar</title>
+  <meta name="description" content="Live US recession risk monitor — tracking yield curve, employment, sentiment and leading indicators in real time."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy:#1B2A4A; --bg:#F4F5F7; --card:#FFFFFF; --border:#E2E4E9; --muted:#8892A4; --text:#1B2A4A;
+      --navy:#1B2A4A; --bg:#FAFAF8; --card:#FFFFFF; --border:#E8E8E6; --muted:#8892A4; --text:#1a1a1a;
       --green:#639922; --gbg:#EAF3DE; --gtxt:#3B6D11;
       --amber:#BA7517; --abg:#FAEEDA; --atxt:#854F0B;
       --red:#E24B4A;   --rbg:#FCEBEB; --rtxt:#791F1F;
     }
     body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-    header { background:var(--navy); padding:18px 32px; display:flex; justify-content:space-between; align-items:center; }
-    .header-title { font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:500; color:#fff; letter-spacing:0.08em; }
-    .header-sub { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; margin-top:3px; letter-spacing:0.06em; }
-    .header-ts { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; text-align:right; }
-    .badge-live { display:inline-block; background:rgba(99,153,34,0.2); color:#8BC34A; font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 7px; border-radius:99px; margin-bottom:4px; letter-spacing:0.1em; }
-    main { max-width:960px; margin:0 auto; padding:28px 24px 48px; }
-    #status-screen { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:48px 28px; text-align:center; max-width:480px; margin:40px auto 0; }
+    nav { background:var(--navy); height:52px; display:flex; align-items:center; padding:0 32px; position:sticky; top:0; z-index:200; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .nav-logo { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500; color:#fff; letter-spacing:0.1em; margin-right:40px; white-space:nowrap; cursor:pointer; }
+    .nav-links { display:flex; list-style:none; flex:1; }
+    .nav-item { position:relative; }
+    .nav-item > a { display:flex; align-items:center; gap:4px; padding:0 16px; height:52px; font-size:13px; color:rgba(255,255,255,0.7); text-decoration:none; transition:color 0.15s,background 0.15s; white-space:nowrap; cursor:pointer; }
+    .nav-item > a:hover { color:#fff; background:rgba(255,255,255,0.07); }
+    .nav-item.active > a { color:#fff; box-shadow:inset 0 -2px 0 #fff; }
+    .nav-chevron { font-size:9px; opacity:0.6; }
+    .nav-dropdown { display:none; position:absolute; top:52px; left:0; background:#fff; min-width:240px; border:1px solid var(--border); border-top:2px solid var(--navy); box-shadow:0 6px 16px rgba(0,0,0,0.1); z-index:300; }
+    .nav-item:hover .nav-dropdown { display:block; }
+    .nav-dropdown a { display:block; padding:11px 16px; font-size:13px; color:var(--text); text-decoration:none; border-bottom:1px solid #F2F2F0; transition:background 0.12s; }
+    .nav-dropdown a:hover { background:#F5F5F3; color:var(--navy); }
+    .nav-dropdown a:last-child { border-bottom:none; }
+    .nav-dropdown .dd-period { font-size:11px; color:var(--muted); display:block; margin-top:2px; }
+    .nav-right { margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.45); }
+    .badge-live { color:#8BC34A; }
+    .page { display:none; }
+    .page.active { display:block; }
+    main { max-width:960px; margin:0 auto; padding:28px 24px 56px; }
+    .btn { padding:9px 18px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.15s; font-family:'Inter',sans-serif; }
+    .btn-primary { background:var(--navy); color:#fff; }
+    .btn:active { opacity:0.8; }
+    #status-screen { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:48px 28px; text-align:center; max-width:480px; margin:40px auto 0; }
     #status-screen h2 { font-size:16px; font-weight:600; color:var(--navy); margin-bottom:8px; }
     #status-screen p { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
-    .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+    .spinner { width:26px; height:26px; border:2px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
     @keyframes spin { to { transform:rotate(360deg); } }
-    .btn { padding:10px 20px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.15s; }
-    .btn:active { opacity:0.8; }
-    .btn-primary { background:var(--navy); color:#fff; }
-    .error-box { background:var(--rbg); color:var(--rtxt); border-radius:8px; padding:9px 14px; font-size:12px; margin-top:12px; }
-    .prob-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 28px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; }
-    .prob-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:4px; }
+    .error-box { background:var(--rbg); color:var(--rtxt); border-radius:6px; padding:9px 14px; font-size:12px; margin-top:12px; }
+    .prob-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px 28px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; }
+    .prob-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:4px; }
     .prob-title { font-size:14px; font-weight:500; color:var(--text); }
     .prob-source { font-size:11px; color:var(--muted); margin-top:3px; }
     .prob-right { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
-    .prob-value { font-family:'IBM Plex Mono',monospace; font-size:40px; font-weight:500; min-width:100px; text-align:right; }
+    .prob-value { font-family:'IBM Plex Mono',monospace; font-size:38px; font-weight:500; min-width:90px; text-align:right; }
     .prob-bar-section { min-width:180px; }
-    .prob-bar-wrap { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-bottom:5px; }
+    .prob-bar-wrap { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin-bottom:5px; }
     .prob-bar { height:100%; border-radius:3px; transition:width 1s ease; }
     .prob-scale { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
-    .prob-status { font-size:11px; margin-top:8px; }
-    #dashboard { display:none; }
-    .agg-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px 28px; margin-bottom:18px; display:flex; align-items:center; gap:36px; flex-wrap:wrap; }
+    .prob-status { font-size:11px; margin-top:7px; }
+    .agg-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:22px 28px; margin-bottom:16px; display:flex; align-items:center; gap:36px; flex-wrap:wrap; }
     .gauge-wrap { text-align:center; flex-shrink:0; }
     .gauge-label { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; letter-spacing:0.08em; margin-top:4px; }
     .breakdown { flex:1; min-width:160px; }
@@ -52,103 +65,186 @@
     .count-item { text-align:center; }
     .count-num { font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:500; }
     .count-lbl { font-size:11px; color:var(--muted); margin-top:1px; }
-    .action-row { display:flex; gap:8px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
-    .ind-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; position:relative; overflow:hidden; }
+    .ind-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:12px; margin-bottom:24px; }
+    .ind-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:15px; position:relative; overflow:hidden; }
     .ind-accent { position:absolute; top:0; left:0; bottom:0; width:3px; }
     .ind-body { padding-left:10px; }
-    .ind-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-    .ind-name { font-size:13px; font-weight:500; color:var(--text); }
+    .ind-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+    .ind-name { font-size:13px; font-weight:500; }
     .ind-badge { font-size:10px; padding:2px 7px; border-radius:99px; }
-    .ind-sub { font-size:11px; color:var(--muted); margin-bottom:9px; }
-    .ind-value { font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500; margin-bottom:7px; }
+    .ind-sub { font-size:11px; color:var(--muted); margin-bottom:8px; }
+    .ind-value { font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500; margin-bottom:6px; }
     .ind-note { font-size:11px; color:var(--muted); line-height:1.55; }
-    #charts-section { display:none; }
     .section-header { margin-bottom:14px; }
     .section-mono { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:3px; }
     .section-hint { font-size:11px; color:var(--muted); }
-    .charts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:14px; }
-    .chart-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 20px; }
-    .chart-name { font-size:13px; font-weight:500; color:var(--text); margin-bottom:2px; }
+    .charts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:12px; }
+    .chart-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 20px; }
+    .chart-name { font-size:13px; font-weight:500; margin-bottom:2px; }
     .chart-sub { font-size:11px; color:var(--muted); margin-bottom:14px; }
     .chart-wrap { position:relative; height:160px; }
-    footer { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-align:center; margin-top:28px; letter-spacing:0.04em; }
-    @media (max-width:600px) { header { padding:14px 16px; } main { padding:16px 12px 40px; } .charts-grid { grid-template-columns:1fr; } }
+    .page-header { border-bottom:1px solid var(--border); padding-bottom:20px; margin-bottom:28px; }
+    .page-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.12em; margin-bottom:8px; }
+    .page-title { font-family:'Playfair Display',Georgia,serif; font-size:30px; font-weight:700; color:var(--navy); line-height:1.2; }
+    .page-subtitle { font-size:14px; color:var(--muted); margin-top:6px; line-height:1.5; max-width:600px; }
+    .archive-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+    .archive-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:22px; cursor:pointer; transition:box-shadow 0.2s,border-color 0.2s; }
+    .archive-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.08); border-color:#C8C8C6; }
+    .archive-card-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:0.1em; margin-bottom:6px; }
+    .archive-card-title { font-family:'Playfair Display',Georgia,serif; font-size:18px; font-weight:700; color:var(--navy); margin-bottom:4px; line-height:1.3; }
+    .archive-card-period { font-size:12px; color:var(--muted); margin-bottom:16px; }
+    .archive-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px solid var(--border); padding-top:14px; }
+    .archive-stat-label { font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:0.05em; margin-bottom:2px; }
+    .archive-stat-value { font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:500; color:var(--text); }
+    .archive-link { display:inline-block; margin-top:14px; font-size:12px; color:var(--navy); font-weight:500; }
+    #archive-detail { display:none; }
+    .back-link { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); cursor:pointer; margin-bottom:24px; padding:6px 0; }
+    .back-link:hover { color:var(--navy); }
+    .detail-header { border-bottom:1px solid var(--border); padding-bottom:24px; margin-bottom:28px; }
+    .detail-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.12em; margin-bottom:10px; }
+    .detail-title { font-family:'Playfair Display',Georgia,serif; font-size:36px; font-weight:700; color:var(--navy); line-height:1.15; margin-bottom:6px; }
+    .detail-period { font-size:15px; color:var(--muted); }
+    .detail-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin:24px 0 32px; }
+    .detail-stat { background:var(--card); padding:16px 20px; }
+    .detail-stat-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.08em; margin-bottom:4px; }
+    .detail-stat-value { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:var(--text); }
+    .detail-section { margin-bottom:36px; }
+    .detail-section-title { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.12em; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .detail-body p { font-size:15px; line-height:1.75; color:#2a2a2a; margin-bottom:16px; max-width:680px; }
+    .timeline { padding:0; }
+    .timeline-item { display:grid; grid-template-columns:90px 20px 1fr; gap:0 12px; margin-bottom:20px; position:relative; }
+    .timeline-item::before { content:''; position:absolute; left:99px; top:18px; bottom:-20px; width:1px; background:var(--border); }
+    .timeline-item:last-child::before { display:none; }
+    .timeline-date { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); text-align:right; padding-top:2px; }
+    .timeline-dot { width:8px; height:8px; background:var(--navy); border-radius:50%; margin-top:4px; justify-self:center; }
+    .timeline-event { font-size:13px; font-weight:500; color:var(--text); margin-bottom:2px; }
+    .timeline-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+    .indicator-signals { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+    .signal-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 16px; }
+    .signal-name { font-size:12px; font-weight:600; color:var(--navy); margin-bottom:4px; }
+    .signal-text { font-size:12px; color:var(--muted); line-height:1.55; }
+    .explain-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+    .explain-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:22px; cursor:pointer; transition:box-shadow 0.2s,border-color 0.2s; }
+    .explain-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.08); border-color:#C8C8C6; }
+    .explain-card-icon { font-size:22px; margin-bottom:12px; }
+    .explain-card-title { font-size:15px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+    .explain-card-preview { font-size:13px; color:var(--muted); line-height:1.6; }
+    .explain-card-link { display:inline-block; margin-top:12px; font-size:12px; color:var(--navy); font-weight:500; }
+    .explain-detail { display:none; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:28px 32px; margin-top:16px; }
+    .explain-detail.open { display:block; }
+    .explain-detail-title { font-family:'Playfair Display',Georgia,serif; font-size:24px; font-weight:700; color:var(--navy); margin-bottom:20px; }
+    .explain-body p { font-size:15px; line-height:1.75; color:#2a2a2a; margin-bottom:16px; max-width:680px; }
+    .explain-callout { background:#F0F4FA; border-left:3px solid var(--navy); padding:14px 18px; margin:20px 0; border-radius:0 6px 6px 0; }
+    .explain-callout p { font-size:14px; color:var(--navy); margin:0; font-weight:500; line-height:1.6; }
+    .explain-close { display:inline-block; margin-top:16px; font-size:12px; color:var(--muted); cursor:pointer; }
+    .explain-close:hover { color:var(--navy); }
+    .site-footer { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-align:center; margin-top:40px; padding-top:20px; border-top:1px solid var(--border); letter-spacing:0.04em; }
+    @media (max-width:640px) { nav { padding:0 16px; } main { padding:16px 14px 48px; } .detail-title { font-size:26px; } .charts-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-<header>
-  <div>
-    <div class="header-title">RECESSION RADAR</div>
-    <div class="header-sub">US ECONOMIC INDICATOR MONITOR</div>
-  </div>
-  <div class="header-ts" id="ts-display" style="display:none">
-    <div class="badge-live">● LIVE</div>
-    <div id="ts-text"></div>
-  </div>
-</header>
-<main>
-  <div id="status-screen">
-    <div class="spinner" id="spinner"></div>
-    <h2 id="status-title">Loading data…</h2>
-    <p id="status-msg">Fetching the latest US economic indicators.</p>
-    <div id="err-box" class="error-box" style="display:none"></div>
-    <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
-  </div>
-  <div id="dashboard">
-    <div class="prob-card">
-      <div>
-        <div class="prob-label">RECESSION PROBABILITY</div>
-        <div class="prob-title">Federal Reserve model estimate</div>
-        <div class="prob-source">Chauvet &amp; Piger · Updated monthly</div>
-      </div>
-      <div class="prob-right">
-        <div class="prob-value" id="prob-value">—</div>
-        <div class="prob-bar-section">
-          <div class="prob-bar-wrap"><div class="prob-bar" id="prob-bar" style="width:0%"></div></div>
-          <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
-          <div class="prob-status" id="prob-status"></div>
+<nav>
+  <div class="nav-logo" onclick="showPage('dashboard')">RECESSION RADAR</div>
+  <ul class="nav-links">
+    <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
+    <li class="nav-item" id="nav-archive"><a>Archive <span class="nav-chevron">▾</span></a><div class="nav-dropdown" id="archive-dropdown"></div></li>
+    <li class="nav-item" id="nav-explain"><a onclick="showPage('explain')">Explain It</a></li>
+  </ul>
+  <div class="nav-right"><span class="badge-live" id="nav-live" style="display:none">● LIVE &nbsp;</span><span id="nav-ts"></span></div>
+</nav>
+
+<div id="page-dashboard" class="page active">
+  <main>
+    <div id="status-screen">
+      <div class="spinner" id="spinner"></div>
+      <h2 id="status-title">Loading data…</h2>
+      <p id="status-msg">Fetching the latest US economic indicators.</p>
+      <div id="err-box" class="error-box" style="display:none"></div>
+      <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
+    </div>
+    <div id="dashboard-content" style="display:none">
+      <div class="prob-card">
+        <div>
+          <div class="prob-eyebrow">RECESSION PROBABILITY</div>
+          <div class="prob-title">Federal Reserve model estimate</div>
+          <div class="prob-source">Chauvet &amp; Piger · Updated monthly</div>
+        </div>
+        <div class="prob-right">
+          <div class="prob-value" id="prob-value">—</div>
+          <div class="prob-bar-section">
+            <div class="prob-bar-wrap"><div class="prob-bar" id="prob-bar" style="width:0%"></div></div>
+            <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+            <div class="prob-status" id="prob-status"></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="agg-card">
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 200 100" width="210" height="100">
-          <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E2E4E9" stroke-width="10" stroke-linecap="round"/>
-          <path d="M 32 88 A 68 68 0 0 1 66 23" fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <path d="M 66 23 A 68 68 0 0 1 134 23" fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
-          <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/>
-          <circle cx="100" cy="88" r="3" fill="white"/>
-          <text x="22" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
-          <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
-        </svg>
-        <div class="gauge-label" id="gauge-label">—</div>
-      </div>
-      <div class="breakdown">
-        <div class="breakdown-title">SIGNAL BREAKDOWN</div>
-        <div class="breakdown-counts">
-          <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">—</div><div class="count-lbl">alert</div></div>
-          <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">—</div><div class="count-lbl">warning</div></div>
-          <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">—</div><div class="count-lbl">clear</div></div>
+      <div class="agg-card">
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 200 100" width="200" height="100">
+            <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E8E8E6" stroke-width="10" stroke-linecap="round"/>
+            <path d="M 32 88 A 68 68 0 0 1 66 23" fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+            <path d="M 66 23 A 68 68 0 0 1 134 23" fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+            <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+            <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
+            <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/>
+            <circle cx="100" cy="88" r="3" fill="white"/>
+            <text x="22" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
+            <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
+          </svg>
+          <div class="gauge-label" id="gauge-label">—</div>
         </div>
-        <div class="action-row">
-          <button class="btn btn-primary" onclick="loadData()">↻ Refresh</button>
+        <div class="breakdown">
+          <div class="breakdown-title">SIGNAL BREAKDOWN</div>
+          <div class="breakdown-counts">
+            <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">—</div><div class="count-lbl">alert</div></div>
+            <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">—</div><div class="count-lbl">warning</div></div>
+            <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">—</div><div class="count-lbl">clear</div></div>
+          </div>
+          <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:7px 14px;">↻ Refresh</button>
         </div>
       </div>
-    </div>
-    <div class="grid" id="cards-grid"></div>
-    <div id="charts-section">
-      <div class="section-header">
-        <div class="section-mono">HISTORICAL CONTEXT — 7 YEARS</div>
-        <div class="section-hint">Dashed lines show alert thresholds. Grey bands mark NBER recession periods.</div>
+      <div class="ind-grid" id="cards-grid"></div>
+      <div id="charts-section" style="display:none">
+        <div class="section-header">
+          <div class="section-mono">HISTORICAL CONTEXT — 7 YEARS</div>
+          <div class="section-hint">Dashed lines show alert thresholds. Grey bands mark NBER recession periods.</div>
+        </div>
+        <div class="charts-grid" id="charts-grid"></div>
       </div>
-      <div class="charts-grid" id="charts-grid"></div>
+      <div class="site-footer">DATA: FRED (FEDERAL RESERVE BANK OF ST. LOUIS) &nbsp;·&nbsp; INFORMATIONAL ONLY — NOT FINANCIAL ADVICE</div>
     </div>
-    <footer>DATA: FRED (FEDERAL RESERVE BANK OF ST. LOUIS) &nbsp;·&nbsp; INFORMATIONAL ONLY — NOT FINANCIAL ADVICE</footer>
-  </div>
-</main>
+  </main>
+</div>
+
+<div id="page-archive" class="page">
+  <main>
+    <div id="archive-overview">
+      <div class="page-header">
+        <div class="page-eyebrow">RECESSION ARCHIVE</div>
+        <div class="page-title">Every US Recession Since 1980</div>
+        <div class="page-subtitle">Deep dives into the causes, timeline, and economic signals behind America's most significant downturns.</div>
+      </div>
+      <div class="archive-grid" id="archive-grid"></div>
+    </div>
+    <div id="archive-detail">
+      <a class="back-link" onclick="showArchiveOverview()">← Back to Archive</a>
+      <div id="archive-detail-content"></div>
+    </div>
+    <div class="site-footer" style="margin-top:48px">DATA SOURCES: BLS, BEA, NBER, FRED · INFORMATIONAL ONLY</div>
+  </main>
+</div>
+
+<div id="page-explain" class="page">
+  <main>
+    <div class="page-header">
+      <div class="page-eyebrow">EXPLAIN IT</div>
+      <div class="page-title">The Economics, Explained</div>
+      <div class="page-subtitle">Plain-English guides to every indicator on this dashboard — and the bigger ideas behind them.</div>
+    </div>
+    <div class="explain-grid" id="explain-grid"></div>
+    <div class="site-footer" style="margin-top:48px">RECESSION RADAR &nbsp;·&nbsp; INFORMATIONAL ONLY</div>
+  </main>
+</div>
 <script>
 const INDICATORS = [
   { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"}, note:"Inversion has preceded every US recession since the 1970s.", thresholds:[0.25,-0.25] },
@@ -157,174 +253,210 @@ const INDICATORS = [
   { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index", unit:"", dp:1, sig:v=>v>80?"green":v>65?"amber":"red", lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"}, note:"Sentiment collapses reliably precede spending contractions.", thresholds:[80,65] },
   { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"}, note:"Six consecutive monthly declines have historically flagged recessions.", thresholds:[0.1,-0.3] },
 ];
-const PROB_ID = "RECPROUSM156N";
-const HEX = { green:"#639922", amber:"#BA7517", red:"#E24B4A" };
-const BGS = { green:"var(--gbg)", amber:"var(--abg)", red:"var(--rbg)" };
-const TXT = { green:"var(--gtxt)", amber:"var(--atxt)", red:"var(--rtxt)" };
-const RECESSIONS = [["2020-02","2020-04"]];
+const PROB_ID="RECPROUSM156N";
+const HEX={green:"#639922",amber:"#BA7517",red:"#E24B4A"};
+const BGS={green:"var(--gbg)",amber:"var(--abg)",red:"var(--rbg)"};
+const TXT={green:"var(--gtxt)",amber:"var(--atxt)",red:"var(--rtxt)"};
+const RECESSIONS_BANDS=[["2020-02","2020-04"]];
 
-const recessionPlugin = {
-  id:'recessionBands',
-  beforeDraw(chart) {
-    const {ctx,chartArea,scales} = chart;
-    if (!chartArea||!scales.x) return;
-    const labels = chart.data.labels;
-    RECESSIONS.forEach(([s,e]) => {
-      let si = labels.findIndex(l=>l>=s);
-      let ei = labels.findIndex(l=>l>e);
-      if (si<0) return;
-      if (ei<0) ei = labels.length-1;
-      const x1 = scales.x.getPixelForValue(si);
-      const x2 = scales.x.getPixelForValue(ei);
-      ctx.save();
-      ctx.fillStyle = 'rgba(150,150,150,0.15)';
-      ctx.fillRect(Math.min(x1,x2), chartArea.top, Math.abs(x2-x1)+(scales.x.width/labels.length), chartArea.bottom-chartArea.top);
-      ctx.restore();
-    });
-  }
-};
+const ARCHIVE_DATA=[
+  {id:"covid",title:"The COVID Recession",period:"February 2020 — April 2020",duration:"2 months",gdpFall:"−31.4%",peakUnemp:"14.7%",sp500:"−34%",
+   narrative:`<p>In early March 2020, the United States economy simply stopped. What had begun as a health crisis in Wuhan became the sharpest contraction in recorded American history — a recession so brief it lasted just two months by the NBER's official measure, yet so violent it erased 22 million jobs in five weeks. No prior recession had moved this fast. The Great Recession of 2008 took 18 months to reach its worst point; COVID-19 reached its nadir in weeks.</p><p>The mechanism was unlike anything in economic history. Previous recessions were driven by financial imbalances, overinvestment, or monetary tightening. This one was driven by a deliberate decision to shut down economic activity to save lives. Restaurants, hotels, airlines, theatres, offices — entire sectors ceased to exist overnight. GDP fell at an annualised rate of 31.4% in the second quarter of 2020, a figure that would have seemed impossible to any economist reading it in January of that year.</p><p>The policy response was equally without precedent. The Federal Reserve cut rates to zero in two emergency weekend moves and launched over $700 billion in asset purchases before March was out. Congress passed the $2.2 trillion CARES Act within weeks. The combination of aggressive monetary and fiscal support meant that while the recession was the sharpest on record, the recovery was also the fastest. By June 2020, the NBER would eventually declare the recession over.</p>`,
+   timeline:[{date:"Jan 2020",event:"WHO reports novel coronavirus",desc:"The WHO reports a cluster of pneumonia cases in Wuhan, China."},{date:"Mar 11",event:"Global pandemic declared",desc:"WHO officially declares COVID-19 a pandemic. US stock markets enter bear market territory."},{date:"Mar 15",event:"Fed cuts rates to zero",desc:"In an emergency Sunday meeting, the Federal Reserve slashes rates to 0–0.25%."},{date:"Mar 27",event:"CARES Act signed",desc:"President Trump signs the $2.2 trillion CARES Act including $1,200 direct payments."},{date:"Apr 2020",event:"Unemployment hits 14.7%",desc:"April's jobs report shows 20.5 million jobs lost — the worst single month in post-war history."},{date:"Jun 2020",event:"Recession ends",desc:"NBER later determines the recession ended in April 2020 — the shortest on record."}],
+   signals:[{name:"Jobless claims",text:"Claims surged from 200,000 to 6.6 million in a single week in March 2020 — an increase so extreme it appeared to be a data error when first reported."},{name:"Consumer sentiment",text:"The Michigan index collapsed from 101.0 in February to 71.8 in March — one of the largest single-month drops ever recorded."},{name:"Leading index",text:"The Conference Board LEI fell 6.7% in March 2020 followed by a further 11.9% in April."}]},
+  {id:"great",title:"The Great Recession",period:"December 2007 — June 2009",duration:"18 months",gdpFall:"−4.3%",peakUnemp:"10.0%",sp500:"−57%",
+   narrative:`<p>The Great Recession did not announce itself with a single event. It built slowly, over years of excess — cheap credit, inflated house prices, and a financial system that had repackaged toxic mortgage debt into instruments so complex that almost nobody fully understood what they contained. The seeds were planted in the early 2000s when the Fed kept rates low following the dot-com bust, and a generation of homebuyers took on mortgages they could never afford on the assumption that house prices would rise forever.</p><p>The visible crack appeared in March 2008 when Bear Stearns collapsed and was acquired by JPMorgan Chase for $2 a share. But the system held — until September 15, 2008, when Lehman Brothers filed for the largest bankruptcy in American history. Credit markets froze. Banks stopped lending to each other. The commercial paper market ceased to function. The financial system came within days of total collapse.</p><p>What followed was 18 months of grinding contraction. Four million homes went into foreclosure. The unemployment rate doubled from 5% to 10%. The policy response — $700 billion in bank bailouts via TARP, rates cut to zero, three rounds of quantitative easing — eventually stabilised the system, but recovery was painfully slow. Output did not return to its pre-crisis peak until 2011, and employment did not recover fully until 2014.</p>`,
+   timeline:[{date:"2006",event:"US house prices peak",desc:"The S&P/Case-Shiller index peaks. Subprime mortgage delinquencies begin to rise."},{date:"Aug 2007",event:"Credit markets seize",desc:"BNP Paribas freezes funds exposed to US subprime. Interbank lending begins to dysfunction."},{date:"Mar 2008",event:"Bear Stearns collapses",desc:"The Fed brokers an emergency sale of Bear Stearns to JPMorgan at $2/share."},{date:"Sep 7 2008",event:"Fannie & Freddie seized",desc:"The US government places both mortgage giants into conservatorship."},{date:"Sep 15 2008",event:"Lehman Brothers fails",desc:"Lehman files for bankruptcy. Global credit markets freeze. The recession's critical moment."},{date:"Oct 2008",event:"TARP signed",desc:"Congress passes the $700 billion Troubled Asset Relief Program."},{date:"Oct 2009",event:"Unemployment peaks at 10%",desc:"Unemployment reaches 10% — its highest level since 1983."}],
+   signals:[{name:"Yield curve",text:"The 10Y–2Y spread inverted in December 2005, more than two years before the recession began — one of its most remarkable early warnings in history."},{name:"Leading index",text:"The Conference Board LEI began declining in early 2007, posting six consecutive monthly falls by mid-year."},{name:"Jobless claims",text:"Initial claims rose steadily from early 2007, climbing from 300,000 to over 650,000 by the peak of the crisis."}]},
+  {id:"dotcom",title:"The Dot-Com Recession",period:"March 2001 — November 2001",duration:"8 months",gdpFall:"−0.3%",peakUnemp:"6.3%",sp500:"−78%",
+   narrative:`<p>By the late 1990s, the American stock market had convinced itself that the internet had permanently changed the rules of economics. Companies with no revenue, no profits, and sometimes no product were valued in the billions. The NASDAQ Composite rose 400% between 1995 and its peak in March 2000. "Eyeballs" — website visitors — were presented as a legitimate substitute for earnings.</p><p>The unwinding began in March 2000 and did not stop for two and a half years. By October 2002, the NASDAQ had fallen 78%, erasing $5 trillion in market capitalisation. But the real economy remained relatively resilient. The recession was remarkably mild: GDP fell only 0.3%, unemployment reached just 6.3%, and the contraction lasted only eight months.</p><p>What made 2001 worse was September 11. The terrorist attacks occurred four months into the recession, devastating the airline and tourism industries. The Fed cut rates aggressively from 6.5% to 1.75% by year-end. The cuts worked, but critics would later argue they were kept too low for too long, laying the groundwork for the housing bubble that caused the far more damaging 2007–09 recession.</p>`,
+   timeline:[{date:"Mar 2000",event:"NASDAQ peaks",desc:"The NASDAQ reaches 5,048 — a peak it would not revisit for 15 years."},{date:"Jan 2001",event:"Fed begins cutting",desc:"The Federal Reserve begins cutting rates from 6.5% across 11 cuts over the year."},{date:"Mar 2001",event:"Recession begins",desc:"The NBER determines the recession began, ending a 10-year expansion."},{date:"Sep 11 2001",event:"Terrorist attacks",desc:"The 9/11 attacks close US markets for four days. Airlines and travel face near-collapse."},{date:"Nov 2001",event:"Recession ends",desc:"The recession ends after just 8 months."},{date:"Oct 2002",event:"NASDAQ bottoms",desc:"The NASDAQ reaches 1,114 — down 78% — as the broader market decline continues."}],
+   signals:[{name:"Yield curve",text:"The yield curve inverted briefly in 2000, providing an early warning of the 2001 recession."},{name:"Consumer sentiment",text:"The Michigan index declined steadily through 2000 as the stock market fell, with a sharp drop after 9/11."},{name:"Leading index",text:"The LEI began declining in late 2000, with multiple consecutive monthly falls preceding the recession."}]},
+  {id:"gulf",title:"The Gulf War Recession",period:"July 1990 — March 1991",duration:"8 months",gdpFall:"−1.5%",peakUnemp:"7.8%",sp500:"−20%",
+   narrative:`<p>The recession of 1990–91 arrived from two directions simultaneously. Iraq's invasion of Kuwait on August 2, 1990 triggered an immediate oil price shock — crude prices roughly doubled over the summer. But the oil shock alone would not have caused a significant contraction. What made this recession more severe was the savings and loan crisis, which had been grinding through the American banking system for years, producing a severe credit crunch that choked off business investment.</p><p>The savings and loan crisis was one of the most expensive financial disasters in American history. Hundreds of S&L institutions had made reckless loans through the decade. By 1990, the government's cleanup was costing taxpayers over $130 billion. Banks tightened lending standards sharply, hitting small businesses and property developers hardest.</p><p>The recession ended in March 1991 as the Gulf War concluded with extraordinary speed. But the recovery was painfully slow — unemployment continued rising for more than a year after the recession ended, peaking at 7.8% in June 1992. This jobless recovery contributed directly to George H.W. Bush's defeat in 1992. The phrase "It's the economy, stupid" was coined to explain why a wartime president lost to an Arkansas governor.</p>`,
+   timeline:[{date:"Aug 2 1990",event:"Iraq invades Kuwait",desc:"Oil prices spike immediately as markets fear regional supply disruption."},{date:"Aug 1990",event:"Recession begins",desc:"The credit crunch and oil shock begin to bite. The NBER later dates the start to July."},{date:"Oct 1990",event:"Oil peaks at $46",desc:"Crude oil reaches nearly double pre-invasion levels. Consumer confidence collapses."},{date:"Jan 1991",event:"Gulf War begins",desc:"Operation Desert Storm commences. Oil prices fall as markets anticipate swift resolution."},{date:"Mar 1991",event:"Recession ends",desc:"The recession officially ends, but unemployment continues to rise into 1992."},{date:"Jun 1992",event:"Unemployment peaks",desc:"Unemployment peaks at 7.8%, 15 months after the recession ended."}],
+   signals:[{name:"Yield curve",text:"The yield curve had been flattening through 1989 and inverted briefly, providing an early signal confirmed when recession materialised."},{name:"Consumer sentiment",text:"Sentiment dropped sharply on the oil shock news in August 1990 and fell further through the autumn."},{name:"Leading index",text:"The LEI began declining in early 1990, well before the invasion, suggesting the economy was already weakening."}]},
+  {id:"volcker",title:"The Volcker Recession",period:"July 1981 — November 1982",duration:"16 months",gdpFall:"−2.9%",peakUnemp:"10.8%",sp500:"−27%",
+   narrative:`<p>Paul Volcker arrived at the Federal Reserve in August 1979 with a single mission: kill inflation. Consumer prices were rising at nearly 15% annually — the highest rate since World War Two. Wages were rising to compensate, which drove prices higher still. This wage-price spiral was corroding savings, distorting investment, and destroying confidence in the dollar. Volcker's diagnosis was simple: the only cure was pain.</p><p>His method was equally simple: raise interest rates until inflation broke. The federal funds rate climbed from 10% to a peak of 20% in June 1981 — the highest in American peacetime history. Mortgage rates followed, reaching 18%. Home construction collapsed. Car sales collapsed. Business investment collapsed. The United States entered a double-dip recession lasting in total through November 1982. Unemployment reached 10.8% — the highest since the Great Depression.</p><p>The strategy worked. Inflation fell from 14.8% in 1980 to 3.2% by 1983. Once it became clear inflation was truly broken, Volcker began cutting rates and the economy recovered sharply. The Volcker recession is often cited as proof that determined central bank action can tame inflation — but also as a warning about the human cost of using unemployment as a monetary policy tool.</p>`,
+   timeline:[{date:"Aug 1979",event:"Volcker appointed Fed Chair",desc:"Jimmy Carter appoints Paul Volcker. He immediately signals a tougher stance on inflation."},{date:"Oct 1979",event:"Saturday night massacre",desc:"In a surprise announcement, the Fed shifts policy — allowing rates to rise far higher."},{date:"Jun 1981",event:"Fed funds rate hits 20%",desc:"The federal funds rate reaches its all-time high. Mortgage rates exceed 18%."},{date:"Jul 1981",event:"Recession begins",desc:"The second of a double-dip recession begins. GDP contracts sharply."},{date:"Nov 1982",event:"Unemployment peaks at 10.8%",desc:"The highest unemployment rate since the Great Depression."},{date:"1983",event:"Inflation broken",desc:"CPI inflation falls to 3.2% — down from nearly 15% in 1980. The Volcker shock succeeds."}],
+   signals:[{name:"Yield curve",text:"The yield curve inverted sharply in 1979 and remained inverted — a direct consequence of Volcker keeping short-term rates far above long-term rates."},{name:"Jobless claims",text:"Initial claims rose steadily from 1981, eventually exceeding 600,000 per week at the recession's depth."},{name:"Consumer sentiment",text:"Sentiment hit record lows as mortgage rates made home-buying impossible for most Americans."}]}
+];
+
+const EXPLAIN_DATA=[
+  {id:"yieldcurve",icon:"📈",title:"The Yield Curve",preview:"Why a line on a chart has predicted every US recession since the 1970s.",
+   body:`<p>The yield curve is a graph showing interest rates on US government bonds of different maturities. In normal times, long-term bonds pay higher rates than short-term ones — you want more compensation for lending money for 30 years than for 3 months. This creates an upward-sloping "normal" curve.</p><p>An inverted yield curve occurs when short-term rates rise above long-term rates. This happens when investors believe the economy is heading for trouble — they pile into long-term bonds because they expect the Fed will have to cut short-term rates sharply in the future to fight a recession. It is a market consensus view that things are about to get worse.</p><div class="explain-callout"><p>The 2Y–10Y Treasury spread has inverted before every US recession since the 1970s, with a typical lead time of 12 to 24 months. It is the single most reliable recession predictor economists have found.</p></div><p>Recession Radar tracks this spread. When it's positive, the curve is normal. When it crosses into negative territory, history says it's time to pay close attention. The curve inverted in 2019 before COVID, in 2006 before the Great Recession, and in 2000 before the dot-com bust.</p>`},
+  {id:"joblessclaims",icon:"📋",title:"Jobless Claims",preview:"The economic indicator released every Thursday morning — and why Wall Street watches it so closely.",
+   body:`<p>Initial jobless claims measure the number of people who filed for unemployment insurance for the first time in a given week. The US Department of Labor releases this figure every Thursday at 8:30am Eastern, making it one of the most frequently updated economic indicators available. Because it measures new layoffs almost in real time, it is one of the first places economic distress shows up in official data.</p><p>In normal conditions, initial claims run between 200,000 and 250,000 per week, reflecting the natural churn of the labour market. When claims start rising consistently above 300,000, it signals layoffs are outpacing hiring. When they reach 400,000 or above, a recession is typically either underway or very close.</p><div class="explain-callout"><p>Jobless claims are a leading indicator because they rise before the unemployment rate does. By the time monthly unemployment rises significantly, the labour market has already been deteriorating for weeks or months.</p></div><p>Recession Radar uses 220,000 as the green threshold, 220,000–270,000 for amber, and above 270,000 for red. One week of elevated claims is noise; a rising trend over several weeks is signal.</p>`},
+  {id:"sentiment",icon:"🧭",title:"Consumer Sentiment",preview:"Why what people think about the economy matters almost as much as what's actually happening.",
+   body:`<p>The University of Michigan Consumer Sentiment Index has been surveying American households since 1946. Each month, researchers call approximately 500 households and ask five questions about their personal finances, broader economic conditions, and whether now is a good time to make major purchases. Results are indexed with 1966 as the baseline of 100.</p><p>Consumer spending accounts for roughly 70% of US GDP, which means consumer confidence is not just a reflection of the economy — it is a driver of it. When households feel pessimistic, they spend less, save more, and defer major purchases. This reduced spending then becomes the economic weakness they were worried about — a self-fulfilling prophecy.</p><div class="explain-callout"><p>Consumer sentiment can collapse faster than any other indicator. During COVID, the Michigan index dropped 30 points in a single month — signalling the coming shock before most hard data had responded.</p></div><p>A reading above 80 is considered healthy. Between 65 and 80 signals caution. Below 65 has historically been associated with recessions or near-recession conditions.</p>`},
+  {id:"lei",icon:"🔭",title:"The Leading Index",preview:"Ten different signals combined into one number designed to see what's coming six months ahead.",
+   body:`<p>The Conference Board's Leading Economic Index (LEI) is a composite of ten indicators chosen because they tend to move before the broader economy does. Components include: the average manufacturing workweek, initial jobless claims, new orders for consumer goods, the ISM new orders index, building permits, stock prices, the yield spread, credit conditions, consumer expectations, and new orders for capital goods.</p><p>The LEI is reported as a monthly percentage change. A rising LEI suggests expansion ahead; a falling LEI suggests contraction. It captures information from multiple parts of the economy simultaneously, making it harder for sector-specific noise to distort the signal.</p><div class="explain-callout"><p>The rule of thumb: six consecutive monthly declines in the LEI, combined with broad-based weakness across components, is historically a reliable recession signal.</p></div><p>Recession Radar uses +0.1% monthly change for green, between −0.3% and +0.1% for amber, and below −0.3% for red. The real signal comes from watching the trend over several months rather than any single reading.</p>`},
+  {id:"causes",icon:"⚡",title:"What Causes Recessions?",preview:"Economists have debated this for decades. Here's what the evidence actually says.",
+   body:`<p>A recession is technically defined as two consecutive quarters of negative GDP growth — though the NBER uses a broader definition involving multiple indicators over a sustained period. The causes vary considerably across history, but several recurring mechanisms stand out.</p><p><strong>Demand shocks</strong> occur when consumer or business spending falls sharply. COVID is the clearest example: forced closures eliminated demand for entire sectors almost overnight. Demand can also fall more gradually as households pay down debt after a borrowing binge, as happened after 2008.</p><p><strong>Supply shocks</strong> reduce the economy's productive capacity. The 1973 and 1990 recessions were triggered partly by oil price spikes that raised costs across the economy. <strong>Financial crises</strong> are particularly severe because they impair the credit system the whole economy depends on — when banks stop lending, even healthy businesses can't access working capital.</p><div class="explain-callout"><p>Most recessions are not caused by a single factor but by the interaction of several: an external shock that exposes underlying vulnerabilities built up during the preceding expansion.</p></div><p><strong>Policy errors</strong> also matter significantly. The Volcker recession was deliberately engineered by the Federal Reserve to break inflation. The Fed's failure to ease adequately in 1929–31 turned a market crash into the Great Depression.</p>`},
+  {id:"fedresponse",icon:"🏛",title:"How the Fed Fights Recessions",preview:"Interest rates, money printing, and forward guidance — the Federal Reserve's toolkit explained.",
+   body:`<p>The Federal Reserve has a dual mandate set by Congress: maximum employment and stable prices. When a recession threatens, the Fed's primary response is to cut interest rates — specifically the federal funds rate, the rate at which banks lend to each other overnight. Lower short-term rates cascade through the economy: mortgage rates fall, business borrowing costs decline, and the lower return on savings nudges consumers toward spending.</p><p>But interest rates can only go to zero. When they hit that floor — as in 2008 and 2020 — the Fed deploys less conventional tools. <strong>Quantitative easing (QE)</strong> involves purchasing large quantities of government bonds and mortgage-backed securities, injecting money into the financial system and pushing down long-term rates. Between 2008 and 2022, the Fed's balance sheet grew from under $1 trillion to nearly $9 trillion.</p><div class="explain-callout"><p>Central bank communication is itself a policy tool. When the Fed signals rates will stay low for an extended period, it shifts long-term expectations and affects borrowing decisions immediately — without changing any actual rate setting.</p></div><p>The 2022 experience showed the opposite challenge: when inflation surged to 9%, the Fed raised rates from near-zero to over 5% in 18 months — the fastest tightening cycle in 40 years. This is the eternal tension: the same tools used to fight recession can fuel the inflation that makes the next recession necessary.</p>`}
+];
+
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  ['dashboard','archive','explain'].forEach(p=>document.getElementById(`nav-${p}`)?.classList.remove('active'));
+  document.getElementById(`nav-${page}`)?.classList.add('active');
+  window.scrollTo(0,0);
+}
+function showArchive(id){
+  showPage('archive');
+  if(id){const rec=ARCHIVE_DATA.find(r=>r.id===id);if(rec)renderArchiveDetail(rec);}
+  else showArchiveOverview();
+}
+function showArchiveOverview(){
+  document.getElementById('archive-overview').style.display='block';
+  document.getElementById('archive-detail').style.display='none';
+  window.scrollTo(0,0);
+}
+function buildDropdown(){
+  document.getElementById('archive-dropdown').innerHTML=ARCHIVE_DATA.map(r=>`<a onclick="showArchive('${r.id}')">${r.title}<span class="dd-period">${r.period}</span></a>`).join('');
+}
+function buildArchiveGrid(){
+  document.getElementById('archive-grid').innerHTML=ARCHIVE_DATA.map(r=>`
+    <div class="archive-card" onclick="showArchive('${r.id}')">
+      <div class="archive-card-eyebrow">RECESSION ARCHIVE</div>
+      <div class="archive-card-title">${r.title}</div>
+      <div class="archive-card-period">${r.period}</div>
+      <div class="archive-stats">
+        <div><div class="archive-stat-label">DURATION</div><div class="archive-stat-value">${r.duration}</div></div>
+        <div><div class="archive-stat-label">GDP FALL</div><div class="archive-stat-value">${r.gdpFall}</div></div>
+        <div><div class="archive-stat-label">PEAK UNEMP</div><div class="archive-stat-value">${r.peakUnemp}</div></div>
+        <div><div class="archive-stat-label">S&P 500</div><div class="archive-stat-value">${r.sp500}</div></div>
+      </div>
+      <span class="archive-link">Read the full story →</span>
+    </div>`).join('');
+}
+function renderArchiveDetail(rec){
+  document.getElementById('archive-overview').style.display='none';
+  document.getElementById('archive-detail').style.display='block';
+  document.getElementById('archive-detail-content').innerHTML=`
+    <div class="detail-header">
+      <div class="detail-eyebrow">RECESSION ARCHIVE</div>
+      <div class="detail-title">${rec.title}</div>
+      <div class="detail-period">${rec.period}</div>
+    </div>
+    <div class="detail-stats">
+      <div class="detail-stat"><div class="detail-stat-label">DURATION</div><div class="detail-stat-value">${rec.duration}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">GDP FALL</div><div class="detail-stat-value">${rec.gdpFall}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">PEAK UNEMPLOYMENT</div><div class="detail-stat-value">${rec.peakUnemp}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">S&P 500 PEAK-TO-TROUGH</div><div class="detail-stat-value">${rec.sp500}</div></div>
+    </div>
+    <div class="detail-section"><div class="detail-section-title">OVERVIEW</div><div class="detail-body">${rec.narrative}</div></div>
+    <div class="detail-section"><div class="detail-section-title">TIMELINE OF KEY EVENTS</div><div class="timeline">${rec.timeline.map(t=>`<div class="timeline-item"><div class="timeline-date">${t.date}</div><div class="timeline-dot"></div><div><div class="timeline-event">${t.event}</div><div class="timeline-desc">${t.desc}</div></div></div>`).join('')}</div></div>
+    <div class="detail-section"><div class="detail-section-title">HOW THE INDICATORS BEHAVED</div><div class="indicator-signals">${rec.signals.map(s=>`<div class="signal-card"><div class="signal-name">${s.name}</div><div class="signal-text">${s.text}</div></div>`).join('')}</div></div>`;
+  window.scrollTo(0,0);
+}
+function buildExplainGrid(){
+  document.getElementById('explain-grid').innerHTML=EXPLAIN_DATA.map(e=>`
+    <div class="explain-card" onclick="toggleExplain('${e.id}')">
+      <div class="explain-card-icon">${e.icon}</div>
+      <div class="explain-card-title">${e.title}</div>
+      <div class="explain-card-preview">${e.preview}</div>
+      <span class="explain-card-link" id="explain-link-${e.id}">Read more →</span>
+    </div>
+    <div class="explain-detail" id="explain-detail-${e.id}">
+      <div class="explain-detail-title">${e.title}</div>
+      <div class="explain-body">${e.body}</div>
+      <span class="explain-close" onclick="toggleExplain('${e.id}')">↑ Close</span>
+    </div>`).join('');
+}
+function toggleExplain(id){
+  const d=document.getElementById(`explain-detail-${id}`),l=document.getElementById(`explain-link-${id}`),o=d.classList.contains('open');
+  d.classList.toggle('open',!o);l.textContent=o?'Read more →':'↑ Close';
+}
+const recessionPlugin={id:'recessionBands',beforeDraw(chart){
+  const{ctx,chartArea,scales}=chart;if(!chartArea||!scales.x)return;
+  const labels=chart.data.labels;
+  RECESSIONS_BANDS.forEach(([s,e])=>{
+    let si=labels.findIndex(l=>l>=s),ei=labels.findIndex(l=>l>e);
+    if(si<0)return;if(ei<0)ei=labels.length-1;
+    const x1=scales.x.getPixelForValue(si),x2=scales.x.getPixelForValue(ei);
+    ctx.save();ctx.fillStyle='rgba(150,150,150,0.15)';
+    ctx.fillRect(Math.min(x1,x2),chartArea.top,Math.abs(x2-x1)+(scales.x.width/labels.length),chartArea.bottom-chartArea.top);
+    ctx.restore();
+  });
+}};
 Chart.register(recessionPlugin);
 
-async function apiFetch(id, history) {
-  const url = history ? `/api/fred?series_id=${id}&history=true` : `/api/fred?series_id=${id}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const d = await r.json();
-  if (d.error_message) throw new Error(d.error_message);
-  return d;
+async function apiFetch(id,history){
+  const r=await fetch(history?`/api/fred?series_id=${id}&history=true`:`/api/fred?series_id=${id}`);
+  if(!r.ok)throw new Error(`HTTP ${r.status}`);
+  const d=await r.json();if(d.error_message)throw new Error(d.error_message);return d;
 }
-
-async function getLatest(id) {
-  const d = await apiFetch(id, false);
-  const raw = d.observations?.[0]?.value;
-  if (!raw||raw==='.') return null;
-  const v = parseFloat(raw);
-  return isNaN(v) ? null : v;
+async function getLatest(id){
+  const d=await apiFetch(id,false);const raw=d.observations?.[0]?.value;
+  if(!raw||raw==='.')return null;const v=parseFloat(raw);return isNaN(v)?null:v;
 }
-
-async function getHistory(id) {
-  const d = await apiFetch(id, true);
-  return d.observations || [];
+async function getHistory(id){const d=await apiFetch(id,true);return d.observations||[];}
+function toMonthly(obs,tx){
+  const m={};
+  for(const o of obs){if(o.value==='.')continue;const k=o.date.substring(0,7);let v=parseFloat(o.value);if(isNaN(v))continue;if(tx)v=tx(v);m[k]=v;}
+  return Object.keys(m).sort().map(k=>({label:k,value:m[k]}));
 }
+function formatMonth(s){const[y,m]=s.split('-');return`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} '${y.substring(2)}`;}
 
-function toMonthly(observations, transform) {
-  const monthly = {};
-  for (const obs of observations) {
-    if (obs.value==='.') continue;
-    const month = obs.date.substring(0,7);
-    let v = parseFloat(obs.value);
-    if (isNaN(v)) continue;
-    if (transform) v = transform(v);
-    monthly[month] = v;
-  }
-  return Object.keys(monthly).sort().map(m=>({label:m, value:monthly[m]}));
-}
-
-function formatMonth(yyyymm) {
-  const [y,m] = yyyymm.split('-');
-  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${names[parseInt(m)-1]} '${y.substring(2)}`;
-}
-
-async function loadData() {
+async function loadData(){
   setStatus("loading");
-  try {
-    const [results, probVal] = await Promise.all([
-      Promise.allSettled(INDICATORS.map(ind=>getLatest(ind.id))),
-      getLatest(PROB_ID).catch(()=>null)
-    ]);
-    if (results.every(r=>r.status==="rejected")) throw new Error(results[0].reason?.message||"All requests failed.");
+  try{
+    const[results,probVal]=await Promise.all([Promise.allSettled(INDICATORS.map(i=>getLatest(i.id))),getLatest(PROB_ID).catch(()=>null)]);
+    if(results.every(r=>r.status==="rejected"))throw new Error(results[0].reason?.message||"All requests failed.");
     renderDashboard(results.map(r=>r.status==="fulfilled"?r.value:null));
-    renderProbability(probVal);
-    loadCharts();
-  } catch(e) { setStatus("error", e.message); }
+    renderProbability(probVal);loadCharts();
+  }catch(e){setStatus("error",e.message);}
 }
-
-async function loadCharts() {
-  try {
-    const histResults = await Promise.allSettled(INDICATORS.map(ind=>getHistory(ind.id)));
-    document.getElementById("charts-section").style.display = "block";
-    const grid = document.getElementById("charts-grid");
-    grid.innerHTML = "";
-    INDICATORS.forEach((ind,i) => {
-      if (histResults[i].status!=="fulfilled") return;
-      const monthly = toMonthly(histResults[i].value, ind.tx);
-      if (monthly.length<2) return;
-      const card = document.createElement("div");
-      card.className = "chart-card";
-      card.innerHTML = `<div class="chart-name">${ind.name}</div><div class="chart-sub">${ind.sub}</div><div class="chart-wrap"><canvas id="chart-${ind.id}"></canvas></div>`;
-      grid.appendChild(card);
-      setTimeout(()=>createChart(ind,monthly), 50);
+async function loadCharts(){
+  try{
+    const h=await Promise.allSettled(INDICATORS.map(i=>getHistory(i.id)));
+    document.getElementById("charts-section").style.display="block";
+    const grid=document.getElementById("charts-grid");grid.innerHTML="";
+    INDICATORS.forEach((ind,i)=>{
+      if(h[i].status!=="fulfilled")return;
+      const m=toMonthly(h[i].value,ind.tx);if(m.length<2)return;
+      const card=document.createElement("div");card.className="chart-card";
+      card.innerHTML=`<div class="chart-name">${ind.name}</div><div class="chart-sub">${ind.sub}</div><div class="chart-wrap"><canvas id="chart-${ind.id}"></canvas></div>`;
+      grid.appendChild(card);setTimeout(()=>createChart(ind,m),50);
     });
-  } catch(e) { console.warn("Charts failed:", e); }
+  }catch(e){console.warn("Charts failed:",e);}
 }
-
-function createChart(ind, monthly) {
-  const canvas = document.getElementById(`chart-${ind.id}`);
-  if (!canvas) return;
-  const labels = monthly.map(p=>p.label);
-  const data = monthly.map(p=>p.value);
-  const [t1,t2] = ind.thresholds;
-  new Chart(canvas, {
-    type:'line',
-    plugins:[recessionPlugin],
-    data: {
-      labels,
-      datasets: [
-        { data, borderColor:'#1B2A4A', borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:0.3, fill:false },
-        { data:labels.map(()=>t1), borderColor:'rgba(99,153,34,0.4)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false },
-        { data:labels.map(()=>t2), borderColor:'rgba(226,75,74,0.4)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins: {
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            title:ctx=>formatMonth(ctx[0].label),
-            label:ctx=>{ if(ctx.datasetIndex!==0) return null; const v=ctx.raw; const p=ind.unit==="%"&&v>=0?"+":""; return `${p}${v.toFixed(ind.dp)}${ind.unit}`; }
-          },
-          filter:item=>item.datasetIndex===0
-        },
-        recessionBands:true
-      },
-      scales: {
-        x:{ ticks:{maxTicksLimit:8,maxRotation:0,callback:(val,idx)=>formatMonth(labels[idx]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
-        y:{ ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} }
-      }
-    }
-  });
+function createChart(ind,monthly){
+  const canvas=document.getElementById(`chart-${ind.id}`);if(!canvas)return;
+  const labels=monthly.map(p=>p.label),data=monthly.map(p=>p.value),[t1,t2]=ind.thresholds;
+  new Chart(canvas,{type:'line',plugins:[recessionPlugin],data:{labels,datasets:[
+    {data,borderColor:'#1B2A4A',borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:false},
+    {data:labels.map(()=>t1),borderColor:'rgba(99,153,34,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+    {data:labels.map(()=>t2),borderColor:'rgba(226,75,74,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>formatMonth(ctx[0].label),label:ctx=>{if(ctx.datasetIndex!==0)return null;const v=ctx.raw,p=ind.unit==="%"&&v>=0?"+":"";return`${p}${v.toFixed(ind.dp)}${ind.unit}`;}},filter:i=>i.datasetIndex===0},recessionBands:true},
+    scales:{x:{ticks:{maxTicksLimit:8,maxRotation:0,callback:(v,i)=>formatMonth(labels[i]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
+      y:{ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}});
 }
-
-function renderProbability(val) {
-  const el = document.getElementById("prob-value");
-  const bar = document.getElementById("prob-bar");
-  const status = document.getElementById("prob-status");
-  if (val===null) { el.textContent="N/A"; return; }
-  let hex, label;
-  if (val<5)       { hex=HEX.green; label="No recession signal detected"; }
-  else if (val<30) { hex=HEX.amber; label="Elevated probability — monitor closely"; }
-  else             { hex=HEX.red;   label="High recession probability"; }
-  el.textContent=`${val.toFixed(1)}%`;
-  el.style.color=hex;
-  bar.style.width=`${Math.min(val,100)}%`;
-  bar.style.background=hex;
-  status.textContent=label;
-  status.style.color=hex;
+function renderProbability(val){
+  const el=document.getElementById("prob-value"),bar=document.getElementById("prob-bar"),st=document.getElementById("prob-status");
+  if(val===null){el.textContent="N/A";return;}
+  let hex,label;
+  if(val<5){hex=HEX.green;label="No recession signal detected";}
+  else if(val<30){hex=HEX.amber;label="Elevated — monitor closely";}
+  else{hex=HEX.red;label="High recession probability";}
+  el.textContent=`${val.toFixed(1)}%`;el.style.color=hex;
+  bar.style.width=`${Math.min(val,100)}%`;bar.style.background=hex;
+  st.textContent=label;st.style.color=hex;
 }
-
-function setStatus(state, msg) {
-  document.getElementById("dashboard").style.display="none";
+function setStatus(state,msg){
+  document.getElementById("dashboard-content").style.display="none";
   document.getElementById("status-screen").style.display="block";
-  if (state==="loading") {
+  if(state==="loading"){
     document.getElementById("spinner").style.display="block";
     document.getElementById("status-title").textContent="Loading data…";
     document.getElementById("status-msg").textContent="Fetching the latest US economic indicators.";
     document.getElementById("err-box").style.display="none";
     document.getElementById("retry-btn").style.display="none";
-  } else {
+  }else{
     document.getElementById("spinner").style.display="none";
     document.getElementById("status-title").textContent="Could not load data";
     document.getElementById("status-msg").textContent="Something went wrong fetching the indicators.";
@@ -333,26 +465,24 @@ function setStatus(state, msg) {
     document.getElementById("retry-btn").style.display="inline-block";
   }
 }
-
-function renderDashboard(values) {
+function renderDashboard(values){
   document.getElementById("status-screen").style.display="none";
-  document.getElementById("dashboard").style.display="block";
-  const now = new Date();
-  document.getElementById("ts-display").style.display="block";
-  document.getElementById("ts-text").textContent=now.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})+" "+now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-  const signals = INDICATORS.map((ind,i)=>{ const v=values[i]; return (v!==null&&v!==undefined)?ind.sig(ind.tx?ind.tx(v):v):null; });
+  document.getElementById("dashboard-content").style.display="block";
+  const now=new Date();
+  document.getElementById("nav-live").style.display="inline";
+  document.getElementById("nav-ts").textContent=now.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  const signals=INDICATORS.map((ind,i)=>{const v=values[i];return(v!==null&&v!==undefined)?ind.sig(ind.tx?ind.tx(v):v):null;});
   updateGauge(signals.filter(Boolean));
   document.getElementById("count-red").textContent=signals.filter(s=>s==="red").length;
   document.getElementById("count-amber").textContent=signals.filter(s=>s==="amber").length;
   document.getElementById("count-green").textContent=signals.filter(s=>s==="green").length;
-  const grid = document.getElementById("cards-grid");
-  grid.innerHTML="";
+  const grid=document.getElementById("cards-grid");grid.innerHTML="";
   INDICATORS.forEach((ind,i)=>{
-    const v=values[i], dv=(v!==null&&v!==undefined&&ind.tx)?ind.tx(v):v;
+    const v=values[i],dv=(v!==null&&v!==undefined&&ind.tx)?ind.tx(v):v;
     const sig=(v!==null&&v!==undefined)?ind.sig(dv):null;
     const prefix=(ind.unit==="%"&&dv!==null&&dv>=0)?"+":"";
     const valStr=(v!==null&&v!==undefined)?`${prefix}${dv.toFixed(ind.dp)}${ind.unit}`:"—";
-    const card=document.createElement("div"); card.className="ind-card";
+    const card=document.createElement("div");card.className="ind-card";
     card.innerHTML=`${sig?`<div class="ind-accent" style="background:${HEX[sig]}"></div>`:""}
       <div class="ind-body">
         <div class="ind-header"><span class="ind-name">${ind.name}</span>${sig?`<span class="ind-badge" style="background:${BGS[sig]};color:${TXT[sig]}">${ind.lbl[sig]}</span>`:""}</div>
@@ -363,11 +493,10 @@ function renderDashboard(values) {
     grid.appendChild(card);
   });
 }
-
-function updateGauge(signals) {
-  const reds=signals.filter(s=>s==="red").length, ambs=signals.filter(s=>s==="amber").length, n=signals.length||5;
-  const score=Math.min(1,(reds*2+ambs)/(n*2)), angle=Math.PI*(1-score);
-  const nx=100+56*Math.cos(angle), ny=88-56*Math.sin(angle);
+function updateGauge(signals){
+  const reds=signals.filter(s=>s==="red").length,ambs=signals.filter(s=>s==="amber").length,n=signals.length||5;
+  const score=Math.min(1,(reds*2+ambs)/(n*2)),angle=Math.PI*(1-score);
+  const nx=100+56*Math.cos(angle),ny=88-56*Math.sin(angle);
   let label,hex;
   if(reds>=4){label="HIGH RISK";hex=HEX.red;}
   else if(reds>=2){label="ELEVATED RISK";hex=HEX.amber;}
@@ -380,8 +509,7 @@ function updateGauge(signals) {
   document.getElementById("gauge-label").textContent=label;
   document.getElementById("gauge-label").style.color=hex;
 }
-
-loadData();
+buildDropdown();buildArchiveGrid();buildExplainGrid();loadData();
 </script>
 </body>
 </html>
