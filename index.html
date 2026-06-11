@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Recession Radar</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -17,19 +18,30 @@
     body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
     header { background:var(--navy); padding:18px 32px; display:flex; justify-content:space-between; align-items:center; }
     .header-title { font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:500; color:#fff; letter-spacing:0.08em; }
-    .header-sub   { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; margin-top:3px; letter-spacing:0.06em; }
-    .header-ts    { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; text-align:right; }
-    .badge-live   { display:inline-block; background:rgba(99,153,34,0.2); color:#8BC34A; font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 7px; border-radius:99px; margin-bottom:4px; letter-spacing:0.1em; }
+    .header-sub { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; margin-top:3px; letter-spacing:0.06em; }
+    .header-ts { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#7A8FAD; text-align:right; }
+    .badge-live { display:inline-block; background:rgba(99,153,34,0.2); color:#8BC34A; font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 7px; border-radius:99px; margin-bottom:4px; letter-spacing:0.1em; }
     main { max-width:960px; margin:0 auto; padding:28px 24px 48px; }
     #status-screen { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:48px 28px; text-align:center; max-width:480px; margin:40px auto 0; }
     #status-screen h2 { font-size:16px; font-weight:600; color:var(--navy); margin-bottom:8px; }
-    #status-screen p  { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
+    #status-screen p { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
     .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .btn { padding:10px 20px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.15s; }
     .btn:active { opacity:0.8; }
     .btn-primary { background:var(--navy); color:#fff; }
     .error-box { background:var(--rbg); color:var(--rtxt); border-radius:8px; padding:9px 14px; font-size:12px; margin-top:12px; }
+    .prob-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 28px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; }
+    .prob-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:4px; }
+    .prob-title { font-size:14px; font-weight:500; color:var(--text); }
+    .prob-source { font-size:11px; color:var(--muted); margin-top:3px; }
+    .prob-right { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .prob-value { font-family:'IBM Plex Mono',monospace; font-size:40px; font-weight:500; min-width:100px; text-align:right; }
+    .prob-bar-section { min-width:180px; }
+    .prob-bar-wrap { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-bottom:5px; }
+    .prob-bar { height:100%; border-radius:3px; transition:width 1s ease; }
+    .prob-scale { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+    .prob-status { font-size:11px; margin-top:8px; }
     #dashboard { display:none; }
     .agg-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px 28px; margin-bottom:18px; display:flex; align-items:center; gap:36px; flex-wrap:wrap; }
     .gauge-wrap { text-align:center; flex-shrink:0; }
@@ -41,7 +53,7 @@
     .count-num { font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:500; }
     .count-lbl { font-size:11px; color:var(--muted); margin-top:1px; }
     .action-row { display:flex; gap:8px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
     .ind-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; position:relative; overflow:hidden; }
     .ind-accent { position:absolute; top:0; left:0; bottom:0; width:3px; }
     .ind-body { padding-left:10px; }
@@ -51,8 +63,17 @@
     .ind-sub { font-size:11px; color:var(--muted); margin-bottom:9px; }
     .ind-value { font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500; margin-bottom:7px; }
     .ind-note { font-size:11px; color:var(--muted); line-height:1.55; }
+    #charts-section { display:none; }
+    .section-header { margin-bottom:14px; }
+    .section-mono { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:3px; }
+    .section-hint { font-size:11px; color:var(--muted); }
+    .charts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:14px; }
+    .chart-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 20px; }
+    .chart-name { font-size:13px; font-weight:500; color:var(--text); margin-bottom:2px; }
+    .chart-sub { font-size:11px; color:var(--muted); margin-bottom:14px; }
+    .chart-wrap { position:relative; height:160px; }
     footer { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-align:center; margin-top:28px; letter-spacing:0.04em; }
-    @media (max-width:600px) { header { padding:14px 16px; } main { padding:16px 12px 40px; } }
+    @media (max-width:600px) { header { padding:14px 16px; } main { padding:16px 12px 40px; } .charts-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -75,17 +96,32 @@
     <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
   </div>
   <div id="dashboard">
+    <div class="prob-card">
+      <div>
+        <div class="prob-label">RECESSION PROBABILITY</div>
+        <div class="prob-title">Federal Reserve model estimate</div>
+        <div class="prob-source">Chauvet &amp; Piger · Updated monthly</div>
+      </div>
+      <div class="prob-right">
+        <div class="prob-value" id="prob-value">—</div>
+        <div class="prob-bar-section">
+          <div class="prob-bar-wrap"><div class="prob-bar" id="prob-bar" style="width:0%"></div></div>
+          <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+          <div class="prob-status" id="prob-status"></div>
+        </div>
+      </div>
+    </div>
     <div class="agg-card">
       <div class="gauge-wrap">
         <svg viewBox="0 0 200 100" width="210" height="100">
           <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E2E4E9" stroke-width="10" stroke-linecap="round"/>
-          <path d="M 32 88 A 68 68 0 0 1 66 23"  fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <path d="M 66 23 A 68 68 0 0 1 134 23"  fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <path d="M 32 88 A 68 68 0 0 1 66 23" fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <path d="M 66 23 A 68 68 0 0 1 134 23" fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
           <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
           <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
           <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/>
           <circle cx="100" cy="88" r="3" fill="white"/>
-          <text x="22"  y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
+          <text x="22" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
           <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
         </svg>
         <div class="gauge-label" id="gauge-label">—</div>
@@ -93,118 +129,259 @@
       <div class="breakdown">
         <div class="breakdown-title">SIGNAL BREAKDOWN</div>
         <div class="breakdown-counts">
-          <div class="count-item"><div class="count-num" id="count-red"   style="color:var(--red)">—</div><div class="count-lbl">alert</div></div>
+          <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">—</div><div class="count-lbl">alert</div></div>
           <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">—</div><div class="count-lbl">warning</div></div>
           <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">—</div><div class="count-lbl">clear</div></div>
         </div>
         <div class="action-row">
-          <button class="btn btn-primary" id="refresh-btn" onclick="loadData()">↻ Refresh</button>
+          <button class="btn btn-primary" onclick="loadData()">↻ Refresh</button>
         </div>
       </div>
     </div>
     <div class="grid" id="cards-grid"></div>
+    <div id="charts-section">
+      <div class="section-header">
+        <div class="section-mono">HISTORICAL CONTEXT — 7 YEARS</div>
+        <div class="section-hint">Dashed lines show alert thresholds. Grey bands mark NBER recession periods.</div>
+      </div>
+      <div class="charts-grid" id="charts-grid"></div>
+    </div>
     <footer>DATA: FRED (FEDERAL RESERVE BANK OF ST. LOUIS) &nbsp;·&nbsp; INFORMATIONAL ONLY — NOT FINANCIAL ADVICE</footer>
   </div>
 </main>
 <script>
-  const INDICATORS = [
-    { id:"T10Y2Y",  name:"Yield curve",       sub:"10Y − 2Y Treasury spread",  unit:"%", dp:2, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"},   note:"Inversion has preceded every US recession since the 1970s." },
-    { id:"ICSA",    name:"Jobless claims",     sub:"Weekly initial claims",      unit:"K", dp:0, tx:v=>v/1000, sig:v=>v<220?"green":v<270?"amber":"red", lbl:{green:"Low",amber:"Elevated",red:"Surging"}, note:"Sharp rises tend to lead broader unemployment by several weeks." },
-    { id:"UNRATE",  name:"Unemployment",       sub:"US unemployment rate",       unit:"%", dp:1, sig:v=>v<4.5?"green":v<5.5?"amber":"red", lbl:{green:"Low",amber:"Rising",red:"Elevated"},             note:"A rising unemployment rate is a classic recession confirmation signal." },
-    { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index",       unit:"",  dp:1, sig:v=>v>80?"green":v>65?"amber":"red",   lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"},  note:"Sentiment collapses reliably precede spending contractions." },
-    { id:"USSLIND", name:"Leading index",      sub:"Conference Board LEI",       unit:"%", dp:2, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"},    note:"Six consecutive monthly declines have historically flagged recessions." },
-  ];
-  const HEX = { green:"#639922", amber:"#BA7517", red:"#E24B4A" };
-  const BGS = { green:"var(--gbg)", amber:"var(--abg)", red:"var(--rbg)" };
-  const TXT = { green:"var(--gtxt)", amber:"var(--atxt)", red:"var(--rtxt)" };
+const INDICATORS = [
+  { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"}, note:"Inversion has preceded every US recession since the 1970s.", thresholds:[0.25,-0.25] },
+  { id:"ICSA", name:"Jobless claims", sub:"Weekly initial claims", unit:"K", dp:0, tx:v=>v/1000, sig:v=>v<220?"green":v<270?"amber":"red", lbl:{green:"Low",amber:"Elevated",red:"Surging"}, note:"Sharp rises tend to lead broader unemployment by several weeks.", thresholds:[220,270] },
+  { id:"UNRATE", name:"Unemployment", sub:"US unemployment rate", unit:"%", dp:1, sig:v=>v<4.5?"green":v<5.5?"amber":"red", lbl:{green:"Low",amber:"Rising",red:"Elevated"}, note:"A rising unemployment rate is a classic recession confirmation signal.", thresholds:[4.5,5.5] },
+  { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index", unit:"", dp:1, sig:v=>v>80?"green":v>65?"amber":"red", lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"}, note:"Sentiment collapses reliably precede spending contractions.", thresholds:[80,65] },
+  { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"}, note:"Six consecutive monthly declines have historically flagged recessions.", thresholds:[0.1,-0.3] },
+];
+const PROB_ID = "RECPROUSM156N";
+const HEX = { green:"#639922", amber:"#BA7517", red:"#E24B4A" };
+const BGS = { green:"var(--gbg)", amber:"var(--abg)", red:"var(--rbg)" };
+const TXT = { green:"var(--gtxt)", amber:"var(--atxt)", red:"var(--rtxt)" };
+const RECESSIONS = [["2020-02","2020-04"]];
 
-  async function fetchSeries(id) {
-    const r = await fetch(`/api/fred?series_id=${id}`);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const d = await r.json();
-    if (d.error_message) throw new Error(d.error_message);
-    const raw = d.observations?.[0]?.value;
-    if (!raw || raw === ".") return null;
-    const v = parseFloat(raw);
-    return isNaN(v) ? null : v;
-  }
-
-  async function loadData() {
-    setStatus("loading");
-    try {
-      const results = await Promise.allSettled(INDICATORS.map(ind => fetchSeries(ind.id)));
-      if (results.every(r => r.status === "rejected")) throw new Error(results[0].reason?.message || "All requests failed.");
-      renderDashboard(results.map(r => r.status === "fulfilled" ? r.value : null));
-    } catch(e) { setStatus("error", e.message); }
-  }
-
-  function setStatus(state, msg) {
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("status-screen").style.display = "block";
-    if (state === "loading") {
-      document.getElementById("spinner").style.display = "block";
-      document.getElementById("status-title").textContent = "Loading data…";
-      document.getElementById("status-msg").textContent = "Fetching the latest US economic indicators.";
-      document.getElementById("err-box").style.display = "none";
-      document.getElementById("retry-btn").style.display = "none";
-    } else {
-      document.getElementById("spinner").style.display = "none";
-      document.getElementById("status-title").textContent = "Could not load data";
-      document.getElementById("status-msg").textContent = "Something went wrong fetching the indicators.";
-      document.getElementById("err-box").textContent = msg || "Unknown error.";
-      document.getElementById("err-box").style.display = "block";
-      document.getElementById("retry-btn").style.display = "inline-block";
-    }
-  }
-
-  function renderDashboard(values) {
-    document.getElementById("status-screen").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    const now = new Date();
-    document.getElementById("ts-display").style.display = "block";
-    document.getElementById("ts-text").textContent = now.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) + " " + now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-    const signals = INDICATORS.map((ind,i) => { const v=values[i]; return (v!==null&&v!==undefined) ? ind.sig(ind.tx?ind.tx(v):v) : null; });
-    updateGauge(signals.filter(Boolean));
-    document.getElementById("count-red").textContent   = signals.filter(s=>s==="red").length;
-    document.getElementById("count-amber").textContent = signals.filter(s=>s==="amber").length;
-    document.getElementById("count-green").textContent = signals.filter(s=>s==="green").length;
-    const grid = document.getElementById("cards-grid");
-    grid.innerHTML = "";
-    INDICATORS.forEach((ind,i) => {
-      const v=values[i], dv=(v!==null&&v!==undefined&&ind.tx)?ind.tx(v):v;
-      const sig=(v!==null&&v!==undefined)?ind.sig(dv):null;
-      const prefix=(ind.unit==="%"&&dv!==null&&dv>=0)?"+":"";
-      const valStr=(v!==null&&v!==undefined)?`${prefix}${dv.toFixed(ind.dp)}${ind.unit}`:"—";
-      const card=document.createElement("div"); card.className="ind-card";
-      card.innerHTML=`${sig?`<div class="ind-accent" style="background:${HEX[sig]}"></div>`:""}
-        <div class="ind-body">
-          <div class="ind-header"><span class="ind-name">${ind.name}</span>${sig?`<span class="ind-badge" style="background:${BGS[sig]};color:${TXT[sig]}">${ind.lbl[sig]}</span>`:""}</div>
-          <div class="ind-sub">${ind.sub}</div>
-          <div class="ind-value" style="color:${sig?HEX[sig]:"var(--muted)"}"> ${valStr}</div>
-          <div class="ind-note">${ind.note}</div>
-        </div>`;
-      grid.appendChild(card);
+const recessionPlugin = {
+  id:'recessionBands',
+  beforeDraw(chart) {
+    const {ctx,chartArea,scales} = chart;
+    if (!chartArea||!scales.x) return;
+    const labels = chart.data.labels;
+    RECESSIONS.forEach(([s,e]) => {
+      let si = labels.findIndex(l=>l>=s);
+      let ei = labels.findIndex(l=>l>e);
+      if (si<0) return;
+      if (ei<0) ei = labels.length-1;
+      const x1 = scales.x.getPixelForValue(si);
+      const x2 = scales.x.getPixelForValue(ei);
+      ctx.save();
+      ctx.fillStyle = 'rgba(150,150,150,0.15)';
+      ctx.fillRect(Math.min(x1,x2), chartArea.top, Math.abs(x2-x1)+(scales.x.width/labels.length), chartArea.bottom-chartArea.top);
+      ctx.restore();
     });
   }
+};
+Chart.register(recessionPlugin);
 
-  function updateGauge(signals) {
-    const reds=signals.filter(s=>s==="red").length, ambs=signals.filter(s=>s==="amber").length, n=signals.length||5;
-    const score=Math.min(1,(reds*2+ambs)/(n*2)), angle=Math.PI*(1-score);
-    const nx=100+56*Math.cos(angle), ny=88-56*Math.sin(angle);
-    let label,hex;
-    if(reds>=4){label="HIGH RISK";hex=HEX.red;}
-    else if(reds>=2){label="ELEVATED RISK";hex=HEX.amber;}
-    else if(reds===1||ambs>=3){label="MODERATE RISK";hex=HEX.amber;}
-    else{label="LOW RISK";hex=HEX.green;}
-    document.getElementById("needle-line").setAttribute("x2",nx);
-    document.getElementById("needle-line").setAttribute("y2",ny);
-    document.getElementById("needle-line").setAttribute("stroke",hex);
-    document.getElementById("needle-hub").setAttribute("fill",hex);
-    document.getElementById("gauge-label").textContent=label;
-    document.getElementById("gauge-label").style.color=hex;
+async function apiFetch(id, history) {
+  const url = history ? `/api/fred?series_id=${id}&history=true` : `/api/fred?series_id=${id}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const d = await r.json();
+  if (d.error_message) throw new Error(d.error_message);
+  return d;
+}
+
+async function getLatest(id) {
+  const d = await apiFetch(id, false);
+  const raw = d.observations?.[0]?.value;
+  if (!raw||raw==='.') return null;
+  const v = parseFloat(raw);
+  return isNaN(v) ? null : v;
+}
+
+async function getHistory(id) {
+  const d = await apiFetch(id, true);
+  return d.observations || [];
+}
+
+function toMonthly(observations, transform) {
+  const monthly = {};
+  for (const obs of observations) {
+    if (obs.value==='.') continue;
+    const month = obs.date.substring(0,7);
+    let v = parseFloat(obs.value);
+    if (isNaN(v)) continue;
+    if (transform) v = transform(v);
+    monthly[month] = v;
   }
+  return Object.keys(monthly).sort().map(m=>({label:m, value:monthly[m]}));
+}
 
-  loadData();
+function formatMonth(yyyymm) {
+  const [y,m] = yyyymm.split('-');
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${names[parseInt(m)-1]} '${y.substring(2)}`;
+}
+
+async function loadData() {
+  setStatus("loading");
+  try {
+    const [results, probVal] = await Promise.all([
+      Promise.allSettled(INDICATORS.map(ind=>getLatest(ind.id))),
+      getLatest(PROB_ID).catch(()=>null)
+    ]);
+    if (results.every(r=>r.status==="rejected")) throw new Error(results[0].reason?.message||"All requests failed.");
+    renderDashboard(results.map(r=>r.status==="fulfilled"?r.value:null));
+    renderProbability(probVal);
+    loadCharts();
+  } catch(e) { setStatus("error", e.message); }
+}
+
+async function loadCharts() {
+  try {
+    const histResults = await Promise.allSettled(INDICATORS.map(ind=>getHistory(ind.id)));
+    document.getElementById("charts-section").style.display = "block";
+    const grid = document.getElementById("charts-grid");
+    grid.innerHTML = "";
+    INDICATORS.forEach((ind,i) => {
+      if (histResults[i].status!=="fulfilled") return;
+      const monthly = toMonthly(histResults[i].value, ind.tx);
+      if (monthly.length<2) return;
+      const card = document.createElement("div");
+      card.className = "chart-card";
+      card.innerHTML = `<div class="chart-name">${ind.name}</div><div class="chart-sub">${ind.sub}</div><div class="chart-wrap"><canvas id="chart-${ind.id}"></canvas></div>`;
+      grid.appendChild(card);
+      setTimeout(()=>createChart(ind,monthly), 50);
+    });
+  } catch(e) { console.warn("Charts failed:", e); }
+}
+
+function createChart(ind, monthly) {
+  const canvas = document.getElementById(`chart-${ind.id}`);
+  if (!canvas) return;
+  const labels = monthly.map(p=>p.label);
+  const data = monthly.map(p=>p.value);
+  const [t1,t2] = ind.thresholds;
+  new Chart(canvas, {
+    type:'line',
+    plugins:[recessionPlugin],
+    data: {
+      labels,
+      datasets: [
+        { data, borderColor:'#1B2A4A', borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:0.3, fill:false },
+        { data:labels.map(()=>t1), borderColor:'rgba(99,153,34,0.4)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false },
+        { data:labels.map(()=>t2), borderColor:'rgba(226,75,74,0.4)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins: {
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:ctx=>formatMonth(ctx[0].label),
+            label:ctx=>{ if(ctx.datasetIndex!==0) return null; const v=ctx.raw; const p=ind.unit==="%"&&v>=0?"+":""; return `${p}${v.toFixed(ind.dp)}${ind.unit}`; }
+          },
+          filter:item=>item.datasetIndex===0
+        },
+        recessionBands:true
+      },
+      scales: {
+        x:{ ticks:{maxTicksLimit:8,maxRotation:0,callback:(val,idx)=>formatMonth(labels[idx]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
+        y:{ ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} }
+      }
+    }
+  });
+}
+
+function renderProbability(val) {
+  const el = document.getElementById("prob-value");
+  const bar = document.getElementById("prob-bar");
+  const status = document.getElementById("prob-status");
+  if (val===null) { el.textContent="N/A"; return; }
+  let hex, label;
+  if (val<5)       { hex=HEX.green; label="No recession signal detected"; }
+  else if (val<30) { hex=HEX.amber; label="Elevated probability — monitor closely"; }
+  else             { hex=HEX.red;   label="High recession probability"; }
+  el.textContent=`${val.toFixed(1)}%`;
+  el.style.color=hex;
+  bar.style.width=`${Math.min(val,100)}%`;
+  bar.style.background=hex;
+  status.textContent=label;
+  status.style.color=hex;
+}
+
+function setStatus(state, msg) {
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("status-screen").style.display="block";
+  if (state==="loading") {
+    document.getElementById("spinner").style.display="block";
+    document.getElementById("status-title").textContent="Loading data…";
+    document.getElementById("status-msg").textContent="Fetching the latest US economic indicators.";
+    document.getElementById("err-box").style.display="none";
+    document.getElementById("retry-btn").style.display="none";
+  } else {
+    document.getElementById("spinner").style.display="none";
+    document.getElementById("status-title").textContent="Could not load data";
+    document.getElementById("status-msg").textContent="Something went wrong fetching the indicators.";
+    document.getElementById("err-box").textContent=msg||"Unknown error.";
+    document.getElementById("err-box").style.display="block";
+    document.getElementById("retry-btn").style.display="inline-block";
+  }
+}
+
+function renderDashboard(values) {
+  document.getElementById("status-screen").style.display="none";
+  document.getElementById("dashboard").style.display="block";
+  const now = new Date();
+  document.getElementById("ts-display").style.display="block";
+  document.getElementById("ts-text").textContent=now.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})+" "+now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  const signals = INDICATORS.map((ind,i)=>{ const v=values[i]; return (v!==null&&v!==undefined)?ind.sig(ind.tx?ind.tx(v):v):null; });
+  updateGauge(signals.filter(Boolean));
+  document.getElementById("count-red").textContent=signals.filter(s=>s==="red").length;
+  document.getElementById("count-amber").textContent=signals.filter(s=>s==="amber").length;
+  document.getElementById("count-green").textContent=signals.filter(s=>s==="green").length;
+  const grid = document.getElementById("cards-grid");
+  grid.innerHTML="";
+  INDICATORS.forEach((ind,i)=>{
+    const v=values[i], dv=(v!==null&&v!==undefined&&ind.tx)?ind.tx(v):v;
+    const sig=(v!==null&&v!==undefined)?ind.sig(dv):null;
+    const prefix=(ind.unit==="%"&&dv!==null&&dv>=0)?"+":"";
+    const valStr=(v!==null&&v!==undefined)?`${prefix}${dv.toFixed(ind.dp)}${ind.unit}`:"—";
+    const card=document.createElement("div"); card.className="ind-card";
+    card.innerHTML=`${sig?`<div class="ind-accent" style="background:${HEX[sig]}"></div>`:""}
+      <div class="ind-body">
+        <div class="ind-header"><span class="ind-name">${ind.name}</span>${sig?`<span class="ind-badge" style="background:${BGS[sig]};color:${TXT[sig]}">${ind.lbl[sig]}</span>`:""}</div>
+        <div class="ind-sub">${ind.sub}</div>
+        <div class="ind-value" style="color:${sig?HEX[sig]:"var(--muted)"}"> ${valStr}</div>
+        <div class="ind-note">${ind.note}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function updateGauge(signals) {
+  const reds=signals.filter(s=>s==="red").length, ambs=signals.filter(s=>s==="amber").length, n=signals.length||5;
+  const score=Math.min(1,(reds*2+ambs)/(n*2)), angle=Math.PI*(1-score);
+  const nx=100+56*Math.cos(angle), ny=88-56*Math.sin(angle);
+  let label,hex;
+  if(reds>=4){label="HIGH RISK";hex=HEX.red;}
+  else if(reds>=2){label="ELEVATED RISK";hex=HEX.amber;}
+  else if(reds===1||ambs>=3){label="MODERATE RISK";hex=HEX.amber;}
+  else{label="LOW RISK";hex=HEX.green;}
+  document.getElementById("needle-line").setAttribute("x2",nx);
+  document.getElementById("needle-line").setAttribute("y2",ny);
+  document.getElementById("needle-line").setAttribute("stroke",hex);
+  document.getElementById("needle-hub").setAttribute("fill",hex);
+  document.getElementById("gauge-label").textContent=label;
+  document.getElementById("gauge-label").style.color=hex;
+}
+
+loadData();
 </script>
 </body>
 </html>
