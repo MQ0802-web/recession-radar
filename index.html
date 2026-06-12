@@ -279,8 +279,12 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
           <button class="btn-sm" id="prob-range-max" onclick="setProbRange('max')">Max</button>
         </div>
       </div>
-      <div style="position:relative;height:180px">
+      <<div style="position:relative;height:180px">
         <canvas id="prob-chart-canvas"></canvas>
+        <div class="chart-zoom-btns">
+          <button class="chart-zoom-btn" onclick="probZoomIn()">+</button>
+          <button class="chart-zoom-btn" onclick="probZoomOut()">−</button>
+        </div>
       </div>
     </div>
     <div class="score-card" id="score-card" style="display:none">
@@ -1594,8 +1598,8 @@ function setProbRange(range) {
           }
         },
         zoom: {
-          zoom: {wheel: {enabled: true, modifierKey: 'ctrl'}, pinch: {enabled: true}, mode: 'x'},
-          pan: {enabled: true, mode: 'x', threshold: 5}
+          zoom: {wheel: {enabled: true, modifierKey: 'ctrl'}, pinch: {enabled: true}, mode: 'xy'},
+          pan: {enabled: true, mode: 'xy', threshold: 5}
         }
       },
       scales: {
@@ -1614,11 +1618,19 @@ function setProbRange(range) {
 
   var isDragging = false;
   var lastDragX = 0;
-canvas.addEventListener('mousedown', function(e) { isDragging = true; lastDragX = e.clientX; });  canvas.addEventListener('mousemove', function(e) {
+  var lastDragY = 0;
+  canvas.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    lastDragX = e.clientX;
+    lastDragY = e.clientY;
+  });
+  canvas.addEventListener('mousemove', function(e) {
     if (!isDragging) { return; }
     var dx = e.clientX - lastDragX;
+    var dy = e.clientY - lastDragY;
     lastDragX = e.clientX;
-    chart.pan({x: dx});
+    lastDragY = e.clientY;
+    chart.pan({x: dx, y: dy});
   });
   canvas.addEventListener('mouseup', function() { isDragging = false; });
   canvas.addEventListener('mouseleave', function() { isDragging = false; });
@@ -2185,6 +2197,16 @@ function modalZoomIn() {
 function modalZoomOut() {
   if (!modalChart) { return; }
   modalChart.zoom(0.7);
+}
+
+function probZoomIn() {
+  if (!probChartInstance) { return; }
+  probChartInstance.zoom(1.3);
+}
+
+function probZoomOut() {
+  if (!probChartInstance) { return; }
+  probChartInstance.zoom(0.7);
 }
 
 function closeModal() {
