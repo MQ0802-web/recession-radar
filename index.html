@@ -1496,13 +1496,12 @@ function filterCat(cat, btn) {
 function loadLibrary() {
   var grid = document.getElementById('library-grid');
   grid.innerHTML = '';
-  document.getElementById('lib-count').textContent = LIBRARY.length;
   var cards = {};
-  LIBRARY.forEach(function(ind) { cards[ind.id] = createCard(ind, null, grid); });
+  INDICATORS.forEach(function(ind) { cards[ind.id] = createCard(ind, null, grid); });
 
-  var libPromises = LIBRARY.map(function(ind) { return getLatestValue(ind); });
+  var libPromises = INDICATORS.map(function(ind) { return getLatestValue(ind); });
   Promise.allSettled(libPromises).then(function(results) {
-    LIBRARY.forEach(function(ind, i) {
+    INDICATORS.forEach(function(ind, i) {
       if (results[i].status !== 'fulfilled') { return; }
       var val = results[i].value;
       var c = cards[ind.id];
