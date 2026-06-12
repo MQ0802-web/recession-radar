@@ -292,14 +292,15 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:24px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CONTEXT</div>    
-<div style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:stretch;margin-bottom:12px">      <div class="chart-card" id="prob-chart-card" style="display:none;flex-direction:column;cursor:pointer" onclick="openProbModal()">
-        <div class="chart-card-hdr">
+<div style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:stretch;margin-bottom:12px">      
+<div class="chart-card" id="prob-chart-card" style="display:none;cursor:pointer" onclick="openProbModal()">        <div class="chart-card-hdr">
           <div>
             <div class="chart-card-name">Recession Probability</div>
             <div class="chart-card-sub">Federal Reserve model (Chauvet &amp; Piger) &middot; 2-3 month lag &middot; click to expand</div>
           </div>
         </div>
-<div style="position:relative;height:150px">          <canvas id="prob-chart-canvas"></canvas>
+<div style="position:relative;flex:1;min-height:120px">
+          <canvas id="prob-chart-canvas"></canvas>
         </div>
       </div>
       <div style="background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
@@ -1616,8 +1617,8 @@ function buildProbChart(monthly) {
   probMonthlyAll = monthly;
   var canvas = document.getElementById('prob-chart-canvas');
   if (!canvas || monthly.length < 2) { return; }
-  document.getElementById('prob-chart-card').style.display = 'block';
-
+document.getElementById('prob-chart-card').style.display = 'flex';
+  document.getElementById('prob-chart-card').style.flexDirection = 'column';
   var now = new Date();
   var cutoff = new Date(now);
   cutoff.setFullYear(cutoff.getFullYear() - 7);
