@@ -268,7 +268,7 @@
 </div>
 <script>
 const INDICATORS = [
-  { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, showSign:true,
+  { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, showSign:true, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"}, note:"Inversion has preceded every US recession since the 1970s.", thresholds:[0.25,-0.25] },
   { id:"ICSA", name:"Jobless claims", sub:"Weekly initial claims", unit:"K", dp:0, tx:v=>v/1000, sig:v=>v<220?"green":v<270?"amber":"red", lbl:{green:"Low",amber:"Elevated",red:"Surging"}, note:"Sharp rises tend to lead broader unemployment by several weeks.", thresholds:[220,270] },
   { id:"UNRATE", name:"Unemployment", sub:"US unemployment rate", unit:"%", dp:1, sig:v=>v<4.5?"green":v<5.5?"amber":"red", lbl:{green:"Low",amber:"Rising",red:"Elevated"}, note:"A rising unemployment rate is a classic recession confirmation signal.", thresholds:[4.5,5.5] },
   { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index", unit:"", dp:1, sig:v=>v>80?"green":v>65?"amber":"red", lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"}, note:"Sentiment collapses reliably precede spending contractions.", thresholds:[80,65] },
