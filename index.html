@@ -179,6 +179,7 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .cal-eforecast{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;text-align:right}
 .cal-disc{margin-top:20px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6}
 .cal-disc a{color:var(--navy)}
+.score-card{background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:24px 32px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-left:4px solid var(--border)}
 .site-footer{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);letter-spacing:0.04em}
 .customize-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:999;opacity:0;transition:opacity 250ms ease;pointer-events:none;display:none}.customize-overlay.active{opacity:1;pointer-events:auto;display:block}
 .customize-panel{position:fixed;right:0;top:0;bottom:0;width:340px;background:white;box-shadow:-2px 0 12px rgba(0,0,0,0.1);z-index:1000;transform:translateX(100%);transition:transform 250ms ease;overflow-y:auto;display:none;flex-direction:column}.customize-panel.active{transform:translateX(0);display:flex}
@@ -238,6 +239,16 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
     <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
   </div>
   <div id="dashboard-content" style="display:none">
+    <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px">US Recession Monitor</div>
+        <div style="font-size:13px;color:var(--muted)" id="hero-summary">Loading indicators...</div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right">
+        <div id="hero-date"></div>
+        <div style="margin-top:2px">Live data from FRED</div>
+      </div>
+    </div>
     <div class="prob-card">
       <div>
         <div class="prob-eyebrow">RECESSION PROBABILITY</div>
@@ -265,6 +276,26 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
         <a style="font-size:12px;color:var(--navy);cursor:pointer;margin-top:8px;display:inline-block" onclick="showPage('indicators')">Explore all indicators →</a>
       </div>
     </div>
+    <div class="score-card" id="score-card" style="display:none">
+      <div>
+        <div class="prob-eyebrow">COMPOSITE RISK SCORE</div>
+        <div class="prob-title">Recession Radar proprietary index</div>
+        <div class="prob-source">Computed live from your selected indicators</div>
+      </div>
+      <div class="prob-right">
+        <div style="text-align:right">
+          <div class="prob-value" id="score-value">-</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-top:4px" id="score-label">-</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px" id="score-desc">-</div>
+        </div>
+        <div class="prob-bar-section">
+          <div class="prob-bar-wrap"><div class="prob-bar" id="score-bar" style="width:0%"></div></div>
+          <div class="prob-scale"><span>0</span><span>50</span><span>100</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;line-height:1.5">Based on <span id="score-ind-count">-</span> indicators &middot; Red=2pts &middot; Amber=1pt &middot; Green=0pts</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-label">YOUR INDICATORS</div>
     <div class="section-label">YOUR INDICATORS</div>
     <div class="ind-grid" id="headline-grid"></div>
     <div id="dashboard-charts-section" style="display:none;margin-top:24px">
@@ -869,6 +900,76 @@ var WDAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var MTHS    = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var ALL_PAGES = ["dashboard","indicators","archive","calendar","explain"];
 
+function computeCompositeScore(indicators, values) {
+  var total = 0;
+  var max = 0;
+  indicators.forEach(function(ind, i) {
+    var v = values[i];
+    if (v === null || v === undefined) { return; }
+    var sig = ind.sig(v);
+    if (sig === 'r') { total += 2; }
+    else if (sig === 'a') { total += 1; }
+    max += 2;
+  });
+  if (max === 0) { return null; }
+  return Math.round((total / max) * 1000) / 10;
+}
+
+function scoreToRisk(score) {
+  if (score === null) { return {label: '-', hex: 'var(--muted)', desc: '-'}; }
+  if (score < 25)  { return {label: 'LOW',      hex: '#639922', desc: 'Indicators broadly healthy'}; }
+  if (score < 50)  { return {label: 'MODERATE', hex: '#BA7517', desc: 'Some warning signals present'}; }
+  if (score < 75)  { return {label: 'ELEVATED',  hex: '#BA7517', desc: 'Multiple indicators flagging stress'}; }
+  return             {label: 'HIGH',     hex: '#E24B4A', desc: 'Widespread recession signals'};
+}
+
+function renderCompositeScore(indicators, values) {
+  var score = computeCompositeScore(indicators, values);
+  var risk = scoreToRisk(score);
+  var card = document.getElementById('score-card');
+  var el = document.getElementById('score-value');
+  var lbl = document.getElementById('score-label');
+  var desc = document.getElementById('score-desc');
+  var bar = document.getElementById('score-bar');
+  var cnt = document.getElementById('score-ind-count');
+  if (score === null) { return; }
+  card.style.display = 'flex';
+  card.style.borderLeftColor = risk.hex;
+  el.textContent = score.toFixed(1);
+  el.style.color = risk.hex;
+  lbl.textContent = risk.label;
+  lbl.style.color = risk.hex;
+  desc.textContent = risk.desc;
+  bar.style.width = score + '%';
+  bar.style.background = risk.hex;
+  cnt.textContent = indicators.filter(function(ind, i) { return values[i] !== null && values[i] !== undefined; }).length;
+}
+
+function renderHero(indicators, values) {
+  var now = new Date();
+  document.getElementById('hero-date').textContent = now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  var reds = 0, ambers = 0, greens = 0, total = 0;
+  indicators.forEach(function(ind, i) {
+    var v = values[i];
+    if (v === null || v === undefined) { return; }
+    var sig = ind.sig(v);
+    if (sig === 'r') { reds++; }
+    else if (sig === 'a') { ambers++; }
+    else { greens++; }
+    total++;
+  });
+  var summary;
+  if (reds === 0 && ambers === 0) {
+    summary = 'All ' + total + ' indicators are currently clear. No recession signals detected.';
+  } else if (reds === 0) {
+    summary = ambers + ' of ' + total + ' indicators showing caution signals. No red alerts.';
+  } else if (reds >= Math.ceil(total / 2)) {
+    summary = reds + ' of ' + total + ' indicators in alert territory. Elevated recession risk.';
+  } else {
+    summary = reds + ' alert' + (reds > 1 ? 's' : '') + ', ' + ambers + ' warning' + (ambers > 1 ? 's' : '') + ' across ' + total + ' indicators.';
+  }
+  document.getElementById('hero-summary').textContent = summary;
+}
 // ── NAVIGATION ─────────────────────────────────────────────────────────────
 function showPage(p) {
   for (var i = 0; i < ALL_PAGES.length; i++) {
@@ -1384,6 +1485,8 @@ function renderDashboard(values) {
   var grid = document.getElementById('headline-grid');
   grid.innerHTML = '';
   selected.forEach(function(ind, i) { createCard(ind, values[i], grid); });
+  renderCompositeScore(selected, values);
+  renderHero(selected, values);
   loadDashboardCharts();
 }
 
