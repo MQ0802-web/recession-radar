@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hammerjs/2.0.8/hammer.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -38,6 +40,9 @@
     main { max-width:960px; margin:0 auto; padding:28px 24px 56px; }
     .btn { padding:9px 18px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.15s; font-family:'Inter',sans-serif; }
     .btn-primary { background:var(--navy); color:#fff; }
+    .btn-sm { padding:5px 10px; font-size:11px; border-radius:5px; cursor:pointer; border:1px solid var(--border); background:#fff; color:var(--muted); font-family:'Inter',sans-serif; transition:all 0.15s; }
+    .btn-sm:hover { border-color:var(--navy); color:var(--navy); }
+    .btn-sm.active { background:var(--navy); color:#fff; border-color:var(--navy); }
     .btn:active { opacity:0.8; }
     #status-screen { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:48px 28px; text-align:center; max-width:480px; margin:40px auto 0; }
     #status-screen h2 { font-size:16px; font-weight:600; color:var(--navy); margin-bottom:8px; }
@@ -66,7 +71,9 @@
     .count-num { font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:500; }
     .count-lbl { font-size:11px; color:var(--muted); margin-top:1px; }
     .ind-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:12px; margin-bottom:24px; }
-    .ind-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:15px; position:relative; overflow:hidden; }
+    .ind-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:15px; position:relative; overflow:hidden; cursor:pointer; transition:box-shadow 0.2s,border-color 0.2s; }
+    .ind-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.08); border-color:#C8C8C6; }
+    .ind-card-hint { font-size:10px; color:var(--muted); margin-top:6px; }
     .ind-accent { position:absolute; top:0; left:0; bottom:0; width:3px; }
     .ind-body { padding-left:10px; }
     .ind-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
@@ -80,8 +87,10 @@
     .section-hint { font-size:11px; color:var(--muted); }
     .charts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:12px; }
     .chart-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 20px; }
-    .chart-name { font-size:13px; font-weight:500; margin-bottom:2px; }
-    .chart-sub { font-size:11px; color:var(--muted); margin-bottom:14px; }
+    .chart-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+    .chart-card-title { font-size:13px; font-weight:500; margin-bottom:2px; }
+    .chart-card-sub { font-size:11px; color:var(--muted); }
+    .chart-controls { display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; }
     .chart-wrap { position:relative; height:160px; }
     .page-header { border-bottom:1px solid var(--border); padding-bottom:20px; margin-bottom:28px; }
     .page-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.12em; margin-bottom:8px; }
@@ -138,29 +147,34 @@
     .explain-callout p { font-size:14px; color:var(--navy); margin:0; font-weight:500; line-height:1.6; }
     .explain-close { display:inline-block; margin-top:16px; font-size:12px; color:var(--muted); cursor:pointer; }
     .explain-close:hover { color:var(--navy); }
+    /* Modal */
+    #ind-modal { display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px); overflow-y:auto; padding:40px 16px; }
+    .modal-panel { background:#fff; max-width:760px; margin:0 auto; border-radius:12px; overflow:hidden; }
+    .modal-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; }
+    .modal-ind-name { font-size:18px; font-weight:600; color:var(--navy); margin-bottom:2px; }
+    .modal-ind-sub { font-size:12px; color:var(--muted); }
+    .modal-close { background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; padding:0; line-height:1; }
+    .modal-close:hover { color:var(--text); }
+    .modal-body { padding:24px; }
+    .modal-value-row { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
+    .modal-value { font-family:'IBM Plex Mono',monospace; font-size:44px; font-weight:500; }
+    .modal-badge { font-size:12px; padding:4px 10px; border-radius:99px; }
+    .modal-chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .modal-chart-title { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; }
+    .modal-chart-controls { display:flex; gap:4px; flex-wrap:wrap; }
+    .modal-chart-wrap { position:relative; height:260px; margin-bottom:8px; }
+    .modal-chart-hint { font-size:10px; color:var(--muted); text-align:center; margin-bottom:20px; font-family:'IBM Plex Mono',monospace; }
+    .modal-toggle-row { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+    .modal-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:24px; }
+    .modal-stat { background:#fff; padding:14px 16px; }
+    .modal-stat-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.08em; margin-bottom:4px; }
+    .modal-stat-value { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:500; color:var(--text); }
+    .modal-about-title { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .modal-about p { font-size:14px; line-height:1.75; color:#2a2a2a; margin-bottom:12px; }
+    .modal-about-watch { background:#F0F4FA; border-left:3px solid var(--navy); padding:12px 16px; border-radius:0 6px 6px 0; margin-top:12px; }
+    .modal-about-watch p { font-size:13px; color:var(--navy); font-weight:500; line-height:1.6; margin:0; }
     .site-footer { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-align:center; margin-top:40px; padding-top:20px; border-top:1px solid var(--border); letter-spacing:0.04em; }
-    #ind-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);overflow-y:auto;padding:40px 16px;}
-.modal-panel{background:#fff;max-width:720px;margin:0 auto;border-radius:12px;overflow:hidden;}
-.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
-.modal-header-left{}
-.modal-ind-name{font-size:18px;font-weight:600;color:var(--navy);margin-bottom:2px;}
-.modal-ind-sub{font-size:12px;color:var(--muted);}
-.modal-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;padding:0;line-height:1;}
-.modal-close:hover{color:var(--text);}
-.modal-body{padding:24px;}
-.modal-value-row{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
-.modal-value{font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:500;}
-.modal-badge{font-size:12px;padding:4px 10px;border-radius:99px;}
-.modal-chart-wrap{position:relative;height:240px;margin-bottom:24px;}
-.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px;}
-.modal-stat{background:#fff;padding:14px 16px;}
-.modal-stat-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px;}
-.modal-stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500;color:var(--text);}
-.modal-about-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.modal-about-watch{background:#F0F4FA;border-left:3px solid var(--navy);padding:12px 16px;border-radius:0 6px 6px 0;margin-top:12px;}
-.modal-about-watch p{font-size:13px;color:var(--navy);font-weight:500;line-height:1.6;margin:0;}
-.modal-about p{font-size:14px;line-height:1.75;color:#2a2a2a;margin-bottom:12px;}
-    @media (max-width:640px) { nav { padding:0 16px; } main { padding:16px 14px 48px; } .detail-title { font-size:26px; } .charts-grid { grid-template-columns:1fr; } }
+    @media (max-width:640px) { nav { padding:0 16px; } main { padding:16px 14px 48px; } .detail-title { font-size:26px; } .charts-grid { grid-template-columns:1fr; } .modal-stats { grid-template-columns:repeat(2,1fr); } }
   </style>
 </head>
 <body>
@@ -228,7 +242,7 @@
       <div id="charts-section" style="display:none">
         <div class="section-header">
           <div class="section-mono">HISTORICAL CONTEXT — 7 YEARS</div>
-          <div class="section-hint">Dashed lines show alert thresholds. Grey bands mark NBER recession periods.</div>
+          <div class="section-hint">Click any card above for a detailed view. Drag to zoom, double-click to reset.</div>
         </div>
         <div class="charts-grid" id="charts-grid"></div>
       </div>
@@ -266,6 +280,50 @@
     <div class="site-footer" style="margin-top:48px">RECESSION RADAR &nbsp;·&nbsp; INFORMATIONAL ONLY</div>
   </main>
 </div>
+
+<!-- Indicator Modal -->
+<div id="ind-modal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div>
+        <div class="modal-ind-name" id="modal-ind-name"></div>
+        <div class="modal-ind-sub" id="modal-ind-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-loading" style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;"><div class="spinner" style="margin:0 auto 12px"></div>Loading…</div>
+      <div id="modal-loaded" style="display:none">
+        <div class="modal-value-row">
+          <div class="modal-value" id="modal-value">—</div>
+          <span class="modal-badge" id="modal-badge"></span>
+        </div>
+        <div class="modal-chart-header">
+          <div class="modal-chart-title">7-YEAR HISTORY</div>
+          <div class="modal-chart-controls">
+            <button class="btn-sm" onclick="setRange('1y')">1Y</button>
+            <button class="btn-sm" onclick="setRange('3y')">3Y</button>
+            <button class="btn-sm active" onclick="setRange('7y')">7Y</button>
+            <button class="btn-sm" onclick="resetZoom()">Reset zoom</button>
+          </div>
+        </div>
+        <div class="modal-chart-wrap"><canvas id="modal-chart-canvas"></canvas></div>
+        <div class="modal-chart-hint">Drag to zoom · Double-click to reset · Hover for values</div>
+        <div class="modal-toggle-row" id="modal-toggle-row"></div>
+        <div class="modal-stats">
+          <div class="modal-stat"><div class="modal-stat-label">1Y HIGH</div><div class="modal-stat-value" id="modal-stat-high">—</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">1Y LOW</div><div class="modal-stat-value" id="modal-stat-low">—</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">PERCENTILE</div><div class="modal-stat-value" id="modal-stat-pct">—</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">MOM CHANGE</div><div class="modal-stat-value" id="modal-stat-mom">—</div></div>
+        </div>
+        <div class="modal-about-title">ABOUT THIS INDICATOR</div>
+        <div class="modal-about" id="modal-about-text"></div>
+        <div class="modal-about-watch" id="modal-watch-text"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const INDICATORS = [
   { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, showSign:true, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"}, note:"Inversion has preceded every US recession since the 1970s.", thresholds:[0.25,-0.25] },
@@ -274,51 +332,55 @@ const INDICATORS = [
   { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index", unit:"", dp:1, sig:v=>v>80?"green":v>65?"amber":"red", lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"}, note:"Sentiment collapses reliably precede spending contractions.", thresholds:[80,65] },
   { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, showSign:true, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"}, note:"Six consecutive monthly declines have historically flagged recessions.", thresholds:[0.1,-0.3] },
 ];
-const historicalData={};  
+
 const PROB_ID="RECPROUSM156N";
 const HEX={green:"#639922",amber:"#BA7517",red:"#E24B4A"};
 const BGS={green:"var(--gbg)",amber:"var(--abg)",red:"var(--rbg)"};
 const TXT={green:"var(--gtxt)",amber:"var(--atxt)",red:"var(--rtxt)"};
 const RECESSIONS_BANDS=[["2020-02","2020-04"]];
+const historicalData={};
+
+const IND_DETAIL={
+  T10Y2Y:{about:"The difference between 10-year and 2-year US Treasury yields. When long-term rates exceed short-term rates the curve is normal. When it inverts (goes negative) it signals that markets expect the Fed to cut rates sharply — usually because a recession is anticipated.",watch:"Sustained inversion below −0.25% for more than a quarter has preceded every US recession since 1970, typically with a 12–18 month lead time."},
+  ICSA:{about:"The number of Americans filing for unemployment benefits for the first time each week. Released every Thursday by the Department of Labor. Because it captures new layoffs in near real-time, it is one of the fastest-moving economic indicators available.",watch:"A sustained move above 300,000 per week signals labour market stress. Readings above 400,000 have historically accompanied recessions. One elevated week is noise — a rising trend over four or more weeks is signal."},
+  UNRATE:{about:"The percentage of the labour force actively seeking work but unable to find it, released monthly by the Bureau of Labor Statistics. Unlike jobless claims, unemployment is a lagging indicator — it rises after a recession has already begun, confirming weakness rather than predicting it.",watch:"The Sahm Rule: if the 3-month average unemployment rate rises 0.5 percentage points above its 12-month low, a recession has historically already started. Watch the trend, not the level."},
+  UMCSENT:{about:"A monthly index compiled by the University of Michigan from surveys of approximately 500 US households. Measures confidence in personal finances and broader economic conditions. Since consumer spending drives roughly 70% of GDP, this is one of the most powerful leading indicators of economic direction.",watch:"Single-month drops of 10 or more points have historically signalled major economic disruptions ahead. Prolonged readings below 65 have accompanied or preceded recessions."},
+  USSLIND:{about:"A composite of 10 forward-looking indicators published monthly by the Conference Board, designed to signal turning points in the economic cycle approximately 6 months before they occur. Components include jobless claims, building permits, stock prices, the yield spread, and manufacturing new orders.",watch:"Six consecutive monthly declines — especially if broad-based across components — have historically flagged recessions reliably. One or two negative months are common even in healthy expansions."}
+};
 
 const ARCHIVE_DATA=[
   {id:"covid",title:"The COVID Recession",period:"February 2020 — April 2020",duration:"2 months",gdpFall:"−31.4%",peakUnemp:"14.7%",sp500:"−34%",
-   narrative:`<p>In early March 2020, the United States economy simply stopped. What had begun as a health crisis in Wuhan became the sharpest contraction in recorded American history — a recession so brief it lasted just two months by the NBER's official measure, yet so violent it erased 22 million jobs in five weeks. No prior recession had moved this fast. The Great Recession of 2008 took 18 months to reach its worst point; COVID-19 reached its nadir in weeks.</p><p>The mechanism was unlike anything in economic history. Previous recessions were driven by financial imbalances, overinvestment, or monetary tightening. This one was driven by a deliberate decision to shut down economic activity to save lives. Restaurants, hotels, airlines, theatres, offices — entire sectors ceased to exist overnight. GDP fell at an annualised rate of 31.4% in the second quarter of 2020, a figure that would have seemed impossible to any economist reading it in January of that year.</p><p>The policy response was equally without precedent. The Federal Reserve cut rates to zero in two emergency weekend moves and launched over $700 billion in asset purchases before March was out. Congress passed the $2.2 trillion CARES Act within weeks. The combination of aggressive monetary and fiscal support meant that while the recession was the sharpest on record, the recovery was also the fastest. By June 2020, the NBER would eventually declare the recession over.</p>`,
-   timeline:[{date:"Jan 2020",event:"WHO reports novel coronavirus",desc:"The WHO reports a cluster of pneumonia cases in Wuhan, China."},{date:"Mar 11",event:"Global pandemic declared",desc:"WHO officially declares COVID-19 a pandemic. US stock markets enter bear market territory."},{date:"Mar 15",event:"Fed cuts rates to zero",desc:"In an emergency Sunday meeting, the Federal Reserve slashes rates to 0–0.25%."},{date:"Mar 27",event:"CARES Act signed",desc:"President Trump signs the $2.2 trillion CARES Act including $1,200 direct payments."},{date:"Apr 2020",event:"Unemployment hits 14.7%",desc:"April's jobs report shows 20.5 million jobs lost — the worst single month in post-war history."},{date:"Jun 2020",event:"Recession ends",desc:"NBER later determines the recession ended in April 2020 — the shortest on record."}],
+   narrative:`<p>In early March 2020, the United States economy simply stopped. What had begun as a health crisis in Wuhan became the sharpest contraction in recorded American history — a recession so brief it lasted just two months by the NBER's official measure, yet so violent it erased 22 million jobs in five weeks. No prior recession had moved this fast. The Great Recession of 2008 took 18 months to reach its worst point; COVID-19 reached its nadir in weeks.</p><p>The mechanism was unlike anything in economic history. Previous recessions were driven by financial imbalances, overinvestment, or monetary tightening. This one was driven by a deliberate decision to shut down economic activity to save lives. GDP fell at an annualised rate of 31.4% in Q2 2020 — a figure that would have seemed impossible to any economist reading it in January of that year.</p><p>The policy response was equally without precedent. The Federal Reserve cut rates to zero in two emergency weekend moves and launched over $700 billion in asset purchases before March was out. Congress passed the $2.2 trillion CARES Act within weeks. The combination of aggressive monetary and fiscal support meant that while the recession was the sharpest on record, the recovery was also the fastest.</p>`,
+   timeline:[{date:"Jan 2020",event:"WHO reports novel coronavirus",desc:"The WHO reports a cluster of pneumonia cases in Wuhan, China."},{date:"Mar 11",event:"Global pandemic declared",desc:"WHO declares COVID-19 a pandemic. US markets enter bear market territory."},{date:"Mar 15",event:"Fed cuts rates to zero",desc:"Emergency Sunday meeting — federal funds rate slashed to 0–0.25%."},{date:"Mar 27",event:"CARES Act signed",desc:"$2.2 trillion stimulus signed including $1,200 direct payments."},{date:"Apr 2020",event:"Unemployment hits 14.7%",desc:"20.5 million jobs lost — the worst single month in post-war history."},{date:"Jun 2020",event:"Recession ends",desc:"NBER later determines the recession ended in April 2020."}],
    signals:[{name:"Jobless claims",text:"Claims surged from 200,000 to 6.6 million in a single week in March 2020 — an increase so extreme it appeared to be a data error when first reported."},{name:"Consumer sentiment",text:"The Michigan index collapsed from 101.0 in February to 71.8 in March — one of the largest single-month drops ever recorded."},{name:"Leading index",text:"The Conference Board LEI fell 6.7% in March 2020 followed by a further 11.9% in April."}]},
   {id:"great",title:"The Great Recession",period:"December 2007 — June 2009",duration:"18 months",gdpFall:"−4.3%",peakUnemp:"10.0%",sp500:"−57%",
-   narrative:`<p>The Great Recession did not announce itself with a single event. It built slowly, over years of excess — cheap credit, inflated house prices, and a financial system that had repackaged toxic mortgage debt into instruments so complex that almost nobody fully understood what they contained. The seeds were planted in the early 2000s when the Fed kept rates low following the dot-com bust, and a generation of homebuyers took on mortgages they could never afford on the assumption that house prices would rise forever.</p><p>The visible crack appeared in March 2008 when Bear Stearns collapsed and was acquired by JPMorgan Chase for $2 a share. But the system held — until September 15, 2008, when Lehman Brothers filed for the largest bankruptcy in American history. Credit markets froze. Banks stopped lending to each other. The commercial paper market ceased to function. The financial system came within days of total collapse.</p><p>What followed was 18 months of grinding contraction. Four million homes went into foreclosure. The unemployment rate doubled from 5% to 10%. The policy response — $700 billion in bank bailouts via TARP, rates cut to zero, three rounds of quantitative easing — eventually stabilised the system, but recovery was painfully slow. Output did not return to its pre-crisis peak until 2011, and employment did not recover fully until 2014.</p>`,
-   timeline:[{date:"2006",event:"US house prices peak",desc:"The S&P/Case-Shiller index peaks. Subprime mortgage delinquencies begin to rise."},{date:"Aug 2007",event:"Credit markets seize",desc:"BNP Paribas freezes funds exposed to US subprime. Interbank lending begins to dysfunction."},{date:"Mar 2008",event:"Bear Stearns collapses",desc:"The Fed brokers an emergency sale of Bear Stearns to JPMorgan at $2/share."},{date:"Sep 7 2008",event:"Fannie & Freddie seized",desc:"The US government places both mortgage giants into conservatorship."},{date:"Sep 15 2008",event:"Lehman Brothers fails",desc:"Lehman files for bankruptcy. Global credit markets freeze. The recession's critical moment."},{date:"Oct 2008",event:"TARP signed",desc:"Congress passes the $700 billion Troubled Asset Relief Program."},{date:"Oct 2009",event:"Unemployment peaks at 10%",desc:"Unemployment reaches 10% — its highest level since 1983."}],
-   signals:[{name:"Yield curve",text:"The 10Y–2Y spread inverted in December 2005, more than two years before the recession began — one of its most remarkable early warnings in history."},{name:"Leading index",text:"The Conference Board LEI began declining in early 2007, posting six consecutive monthly falls by mid-year."},{name:"Jobless claims",text:"Initial claims rose steadily from early 2007, climbing from 300,000 to over 650,000 by the peak of the crisis."}]},
+   narrative:`<p>The Great Recession did not announce itself with a single event. It built slowly, over years of excess — cheap credit, inflated house prices, and a financial system that had repackaged toxic mortgage debt into instruments so complex that almost nobody fully understood what they contained. The seeds were planted in the early 2000s when the Fed kept rates low, and a generation of homebuyers took on mortgages they could never afford.</p><p>The visible crack appeared in March 2008 when Bear Stearns collapsed and was acquired by JPMorgan Chase for $2 a share. But the system held — until September 15, 2008, when Lehman Brothers filed for the largest bankruptcy in American history. Credit markets froze. The commercial paper market ceased to function. The financial system came within days of total collapse.</p><p>What followed was 18 months of grinding contraction. Four million homes went into foreclosure. The unemployment rate doubled from 5% to 10%. Recovery was painfully slow — output did not return to pre-crisis peak until 2011, and employment did not recover fully until 2014.</p>`,
+   timeline:[{date:"2006",event:"US house prices peak",desc:"The S&P/Case-Shiller index peaks. Subprime mortgage delinquencies begin rising."},{date:"Aug 2007",event:"Credit markets seize",desc:"BNP Paribas freezes funds exposed to US subprime. Interbank lending dysfunctions."},{date:"Mar 2008",event:"Bear Stearns collapses",desc:"Emergency sale to JPMorgan at $2/share brokered by the Fed."},{date:"Sep 15 2008",event:"Lehman Brothers fails",desc:"Largest bankruptcy in US history. Global credit markets freeze."},{date:"Oct 2008",event:"TARP signed",desc:"Congress passes the $700 billion Troubled Asset Relief Program."},{date:"Oct 2009",event:"Unemployment peaks at 10%",desc:"Highest level since 1983, four months after the recession officially ended."}],
+   signals:[{name:"Yield curve",text:"The 10Y–2Y spread inverted in December 2005, more than two years before the recession — one of its most remarkable early warnings."},{name:"Leading index",text:"The Conference Board LEI began declining in early 2007, posting six consecutive monthly falls by mid-year."},{name:"Jobless claims",text:"Initial claims rose steadily from early 2007, climbing from 300,000 to over 650,000 by the crisis peak."}]},
   {id:"dotcom",title:"The Dot-Com Recession",period:"March 2001 — November 2001",duration:"8 months",gdpFall:"−0.3%",peakUnemp:"6.3%",sp500:"−78%",
-   narrative:`<p>By the late 1990s, the American stock market had convinced itself that the internet had permanently changed the rules of economics. Companies with no revenue, no profits, and sometimes no product were valued in the billions. The NASDAQ Composite rose 400% between 1995 and its peak in March 2000. "Eyeballs" — website visitors — were presented as a legitimate substitute for earnings.</p><p>The unwinding began in March 2000 and did not stop for two and a half years. By October 2002, the NASDAQ had fallen 78%, erasing $5 trillion in market capitalisation. But the real economy remained relatively resilient. The recession was remarkably mild: GDP fell only 0.3%, unemployment reached just 6.3%, and the contraction lasted only eight months.</p><p>What made 2001 worse was September 11. The terrorist attacks occurred four months into the recession, devastating the airline and tourism industries. The Fed cut rates aggressively from 6.5% to 1.75% by year-end. The cuts worked, but critics would later argue they were kept too low for too long, laying the groundwork for the housing bubble that caused the far more damaging 2007–09 recession.</p>`,
-   timeline:[{date:"Mar 2000",event:"NASDAQ peaks",desc:"The NASDAQ reaches 5,048 — a peak it would not revisit for 15 years."},{date:"Jan 2001",event:"Fed begins cutting",desc:"The Federal Reserve begins cutting rates from 6.5% across 11 cuts over the year."},{date:"Mar 2001",event:"Recession begins",desc:"The NBER determines the recession began, ending a 10-year expansion."},{date:"Sep 11 2001",event:"Terrorist attacks",desc:"The 9/11 attacks close US markets for four days. Airlines and travel face near-collapse."},{date:"Nov 2001",event:"Recession ends",desc:"The recession ends after just 8 months."},{date:"Oct 2002",event:"NASDAQ bottoms",desc:"The NASDAQ reaches 1,114 — down 78% — as the broader market decline continues."}],
-   signals:[{name:"Yield curve",text:"The yield curve inverted briefly in 2000, providing an early warning of the 2001 recession."},{name:"Consumer sentiment",text:"The Michigan index declined steadily through 2000 as the stock market fell, with a sharp drop after 9/11."},{name:"Leading index",text:"The LEI began declining in late 2000, with multiple consecutive monthly falls preceding the recession."}]},
+   narrative:`<p>By the late 1990s, the American stock market had convinced itself that the internet had permanently changed the rules of economics. Companies with no revenue, no profits, and sometimes no product were valued in the billions. The NASDAQ rose 400% between 1995 and its peak in March 2000. "Eyeballs" were presented as a legitimate substitute for earnings.</p><p>The unwinding began in March 2000 and did not stop for two and a half years. By October 2002 the NASDAQ had fallen 78%, erasing $5 trillion in market capitalisation. But the real economy remained relatively resilient — the recession lasted only eight months and GDP fell just 0.3%.</p><p>What made 2001 worse was September 11. The terrorist attacks devastated the airline and tourism industries. The Fed cut rates aggressively from 6.5% to 1.75% by year-end — cuts that worked but were later kept too low for too long, laying the groundwork for the housing bubble.</p>`,
+   timeline:[{date:"Mar 2000",event:"NASDAQ peaks",desc:"Reaches 5,048 — a peak it would not revisit for 15 years."},{date:"Jan 2001",event:"Fed begins cutting",desc:"Rate-cutting cycle begins from 6.5% across 11 cuts over the year."},{date:"Mar 2001",event:"Recession begins",desc:"Ends a 10-year expansion — the longest on record at the time."},{date:"Sep 11 2001",event:"Terrorist attacks",desc:"Markets close for four days. Airlines and travel face near-collapse."},{date:"Nov 2001",event:"Recession ends",desc:"After just 8 months."},{date:"Oct 2002",event:"NASDAQ bottoms",desc:"Down 78% from its peak as the broader decline continues."}],
+   signals:[{name:"Yield curve",text:"The yield curve inverted briefly in 2000, providing an early warning — though the mild contraction meant the signal's magnitude was smaller than in other cycles."},{name:"Consumer sentiment",text:"The Michigan index declined steadily through 2000 as markets fell, with a sharp additional drop after 9/11."},{name:"Leading index",text:"The LEI began declining in late 2000, with multiple consecutive monthly falls preceding the recession."}]},
   {id:"gulf",title:"The Gulf War Recession",period:"July 1990 — March 1991",duration:"8 months",gdpFall:"−1.5%",peakUnemp:"7.8%",sp500:"−20%",
-   narrative:`<p>The recession of 1990–91 arrived from two directions simultaneously. Iraq's invasion of Kuwait on August 2, 1990 triggered an immediate oil price shock — crude prices roughly doubled over the summer. But the oil shock alone would not have caused a significant contraction. What made this recession more severe was the savings and loan crisis, which had been grinding through the American banking system for years, producing a severe credit crunch that choked off business investment.</p><p>The savings and loan crisis was one of the most expensive financial disasters in American history. Hundreds of S&L institutions had made reckless loans through the decade. By 1990, the government's cleanup was costing taxpayers over $130 billion. Banks tightened lending standards sharply, hitting small businesses and property developers hardest.</p><p>The recession ended in March 1991 as the Gulf War concluded with extraordinary speed. But the recovery was painfully slow — unemployment continued rising for more than a year after the recession ended, peaking at 7.8% in June 1992. This jobless recovery contributed directly to George H.W. Bush's defeat in 1992. The phrase "It's the economy, stupid" was coined to explain why a wartime president lost to an Arkansas governor.</p>`,
-   timeline:[{date:"Aug 2 1990",event:"Iraq invades Kuwait",desc:"Oil prices spike immediately as markets fear regional supply disruption."},{date:"Aug 1990",event:"Recession begins",desc:"The credit crunch and oil shock begin to bite. The NBER later dates the start to July."},{date:"Oct 1990",event:"Oil peaks at $46",desc:"Crude oil reaches nearly double pre-invasion levels. Consumer confidence collapses."},{date:"Jan 1991",event:"Gulf War begins",desc:"Operation Desert Storm commences. Oil prices fall as markets anticipate swift resolution."},{date:"Mar 1991",event:"Recession ends",desc:"The recession officially ends, but unemployment continues to rise into 1992."},{date:"Jun 1992",event:"Unemployment peaks",desc:"Unemployment peaks at 7.8%, 15 months after the recession ended."}],
-   signals:[{name:"Yield curve",text:"The yield curve had been flattening through 1989 and inverted briefly, providing an early signal confirmed when recession materialised."},{name:"Consumer sentiment",text:"Sentiment dropped sharply on the oil shock news in August 1990 and fell further through the autumn."},{name:"Leading index",text:"The LEI began declining in early 1990, well before the invasion, suggesting the economy was already weakening."}]},
+   narrative:`<p>The recession of 1990–91 arrived from two directions simultaneously. Iraq's invasion of Kuwait on August 2, 1990 triggered an immediate oil price shock — crude prices roughly doubled over the summer. But the oil shock alone would not have caused a significant contraction. What made it more severe was the savings and loan crisis, producing a severe credit crunch that choked off business investment.</p><p>The S&L crisis was one of the most expensive financial disasters in American history. Hundreds of S&L institutions had made reckless loans through the decade. By 1990, the cleanup was costing taxpayers over $130 billion. Banks tightened lending sharply, hitting small businesses and property developers hardest.</p><p>The recession ended in March 1991 as the Gulf War concluded with extraordinary speed. But unemployment continued rising for more than a year after, peaking at 7.8% in June 1992 — a jobless recovery that contributed directly to George H.W. Bush's defeat. "It's the economy, stupid" was coined to explain why a wartime president lost to an Arkansas governor.</p>`,
+   timeline:[{date:"Aug 2 1990",event:"Iraq invades Kuwait",desc:"Oil prices spike immediately as markets fear supply disruption."},{date:"Aug 1990",event:"Recession begins",desc:"The credit crunch and oil shock begin to bite."},{date:"Oct 1990",event:"Oil peaks at $46",desc:"Nearly double pre-invasion levels. Consumer confidence collapses."},{date:"Jan 1991",event:"Gulf War begins",desc:"Operation Desert Storm commences. Oil prices fall sharply."},{date:"Mar 1991",event:"Recession ends",desc:"But unemployment continues rising into 1992."},{date:"Jun 1992",event:"Unemployment peaks",desc:"At 7.8% — 15 months after the recession ended."}],
+   signals:[{name:"Yield curve",text:"The yield curve had been flattening through 1989 and inverted briefly, providing an early signal confirmed when recession materialised."},{name:"Consumer sentiment",text:"Sentiment dropped sharply on the oil shock news and fell further through the autumn build-up."},{name:"Leading index",text:"The LEI began declining in early 1990, well before the invasion, suggesting prior weakness from the credit crunch."}]},
   {id:"volcker",title:"The Volcker Recession",period:"July 1981 — November 1982",duration:"16 months",gdpFall:"−2.9%",peakUnemp:"10.8%",sp500:"−27%",
-   narrative:`<p>Paul Volcker arrived at the Federal Reserve in August 1979 with a single mission: kill inflation. Consumer prices were rising at nearly 15% annually — the highest rate since World War Two. Wages were rising to compensate, which drove prices higher still. This wage-price spiral was corroding savings, distorting investment, and destroying confidence in the dollar. Volcker's diagnosis was simple: the only cure was pain.</p><p>His method was equally simple: raise interest rates until inflation broke. The federal funds rate climbed from 10% to a peak of 20% in June 1981 — the highest in American peacetime history. Mortgage rates followed, reaching 18%. Home construction collapsed. Car sales collapsed. Business investment collapsed. The United States entered a double-dip recession lasting in total through November 1982. Unemployment reached 10.8% — the highest since the Great Depression.</p><p>The strategy worked. Inflation fell from 14.8% in 1980 to 3.2% by 1983. Once it became clear inflation was truly broken, Volcker began cutting rates and the economy recovered sharply. The Volcker recession is often cited as proof that determined central bank action can tame inflation — but also as a warning about the human cost of using unemployment as a monetary policy tool.</p>`,
-   timeline:[{date:"Aug 1979",event:"Volcker appointed Fed Chair",desc:"Jimmy Carter appoints Paul Volcker. He immediately signals a tougher stance on inflation."},{date:"Oct 1979",event:"Saturday night massacre",desc:"In a surprise announcement, the Fed shifts policy — allowing rates to rise far higher."},{date:"Jun 1981",event:"Fed funds rate hits 20%",desc:"The federal funds rate reaches its all-time high. Mortgage rates exceed 18%."},{date:"Jul 1981",event:"Recession begins",desc:"The second of a double-dip recession begins. GDP contracts sharply."},{date:"Nov 1982",event:"Unemployment peaks at 10.8%",desc:"The highest unemployment rate since the Great Depression."},{date:"1983",event:"Inflation broken",desc:"CPI inflation falls to 3.2% — down from nearly 15% in 1980. The Volcker shock succeeds."}],
+   narrative:`<p>Paul Volcker arrived at the Federal Reserve in August 1979 with a single mission: kill inflation. Consumer prices were rising at nearly 15% annually. Wages were rising to compensate, which drove prices higher still. This wage-price spiral was corroding savings and destroying confidence in the dollar. Volcker's diagnosis was simple: the only cure was pain.</p><p>His method: raise interest rates until inflation broke. The federal funds rate climbed from 10% to a peak of 20% in June 1981 — the highest in American peacetime history. Mortgage rates reached 18%. Home construction, car sales, and business investment collapsed. Unemployment reached 10.8% — the highest since the Great Depression.</p><p>The strategy worked. Inflation fell from 14.8% in 1980 to 3.2% by 1983. The Volcker recession is often cited as proof that determined central bank action can tame inflation — but also as a warning about the human cost of using unemployment as a monetary policy tool.</p>`,
+   timeline:[{date:"Aug 1979",event:"Volcker appointed Fed Chair",desc:"Immediately signals a tougher stance on inflation."},{date:"Oct 1979",event:"Saturday night massacre",desc:"Surprise shift in Fed policy allows rates to rise far higher."},{date:"Jun 1981",event:"Fed funds rate hits 20%",desc:"Its all-time high. Mortgage rates exceed 18%."},{date:"Jul 1981",event:"Recession begins",desc:"Double-dip recession begins. GDP contracts sharply."},{date:"Nov 1982",event:"Unemployment peaks at 10.8%",desc:"Highest since the Great Depression."},{date:"1983",event:"Inflation broken",desc:"CPI falls to 3.2% — down from nearly 15% in 1980."}],
    signals:[{name:"Yield curve",text:"The yield curve inverted sharply in 1979 and remained inverted — a direct consequence of Volcker keeping short-term rates far above long-term rates."},{name:"Jobless claims",text:"Initial claims rose steadily from 1981, eventually exceeding 600,000 per week at the recession's depth."},{name:"Consumer sentiment",text:"Sentiment hit record lows as mortgage rates made home-buying impossible for most Americans."}]}
 ];
 
 const EXPLAIN_DATA=[
-  {id:"yieldcurve",icon:"📈",title:"The Yield Curve",preview:"Why a line on a chart has predicted every US recession since the 1970s.",
-   body:`<p>The yield curve is a graph showing interest rates on US government bonds of different maturities. In normal times, long-term bonds pay higher rates than short-term ones — you want more compensation for lending money for 30 years than for 3 months. This creates an upward-sloping "normal" curve.</p><p>An inverted yield curve occurs when short-term rates rise above long-term rates. This happens when investors believe the economy is heading for trouble — they pile into long-term bonds because they expect the Fed will have to cut short-term rates sharply in the future to fight a recession. It is a market consensus view that things are about to get worse.</p><div class="explain-callout"><p>The 2Y–10Y Treasury spread has inverted before every US recession since the 1970s, with a typical lead time of 12 to 24 months. It is the single most reliable recession predictor economists have found.</p></div><p>Recession Radar tracks this spread. When it's positive, the curve is normal. When it crosses into negative territory, history says it's time to pay close attention. The curve inverted in 2019 before COVID, in 2006 before the Great Recession, and in 2000 before the dot-com bust.</p>`},
-  {id:"joblessclaims",icon:"📋",title:"Jobless Claims",preview:"The economic indicator released every Thursday morning — and why Wall Street watches it so closely.",
-   body:`<p>Initial jobless claims measure the number of people who filed for unemployment insurance for the first time in a given week. The US Department of Labor releases this figure every Thursday at 8:30am Eastern, making it one of the most frequently updated economic indicators available. Because it measures new layoffs almost in real time, it is one of the first places economic distress shows up in official data.</p><p>In normal conditions, initial claims run between 200,000 and 250,000 per week, reflecting the natural churn of the labour market. When claims start rising consistently above 300,000, it signals layoffs are outpacing hiring. When they reach 400,000 or above, a recession is typically either underway or very close.</p><div class="explain-callout"><p>Jobless claims are a leading indicator because they rise before the unemployment rate does. By the time monthly unemployment rises significantly, the labour market has already been deteriorating for weeks or months.</p></div><p>Recession Radar uses 220,000 as the green threshold, 220,000–270,000 for amber, and above 270,000 for red. One week of elevated claims is noise; a rising trend over several weeks is signal.</p>`},
-  {id:"sentiment",icon:"🧭",title:"Consumer Sentiment",preview:"Why what people think about the economy matters almost as much as what's actually happening.",
-   body:`<p>The University of Michigan Consumer Sentiment Index has been surveying American households since 1946. Each month, researchers call approximately 500 households and ask five questions about their personal finances, broader economic conditions, and whether now is a good time to make major purchases. Results are indexed with 1966 as the baseline of 100.</p><p>Consumer spending accounts for roughly 70% of US GDP, which means consumer confidence is not just a reflection of the economy — it is a driver of it. When households feel pessimistic, they spend less, save more, and defer major purchases. This reduced spending then becomes the economic weakness they were worried about — a self-fulfilling prophecy.</p><div class="explain-callout"><p>Consumer sentiment can collapse faster than any other indicator. During COVID, the Michigan index dropped 30 points in a single month — signalling the coming shock before most hard data had responded.</p></div><p>A reading above 80 is considered healthy. Between 65 and 80 signals caution. Below 65 has historically been associated with recessions or near-recession conditions.</p>`},
-  {id:"lei",icon:"🔭",title:"The Leading Index",preview:"Ten different signals combined into one number designed to see what's coming six months ahead.",
-   body:`<p>The Conference Board's Leading Economic Index (LEI) is a composite of ten indicators chosen because they tend to move before the broader economy does. Components include: the average manufacturing workweek, initial jobless claims, new orders for consumer goods, the ISM new orders index, building permits, stock prices, the yield spread, credit conditions, consumer expectations, and new orders for capital goods.</p><p>The LEI is reported as a monthly percentage change. A rising LEI suggests expansion ahead; a falling LEI suggests contraction. It captures information from multiple parts of the economy simultaneously, making it harder for sector-specific noise to distort the signal.</p><div class="explain-callout"><p>The rule of thumb: six consecutive monthly declines in the LEI, combined with broad-based weakness across components, is historically a reliable recession signal.</p></div><p>Recession Radar uses +0.1% monthly change for green, between −0.3% and +0.1% for amber, and below −0.3% for red. The real signal comes from watching the trend over several months rather than any single reading.</p>`},
-  {id:"causes",icon:"⚡",title:"What Causes Recessions?",preview:"Economists have debated this for decades. Here's what the evidence actually says.",
-   body:`<p>A recession is technically defined as two consecutive quarters of negative GDP growth — though the NBER uses a broader definition involving multiple indicators over a sustained period. The causes vary considerably across history, but several recurring mechanisms stand out.</p><p><strong>Demand shocks</strong> occur when consumer or business spending falls sharply. COVID is the clearest example: forced closures eliminated demand for entire sectors almost overnight. Demand can also fall more gradually as households pay down debt after a borrowing binge, as happened after 2008.</p><p><strong>Supply shocks</strong> reduce the economy's productive capacity. The 1973 and 1990 recessions were triggered partly by oil price spikes that raised costs across the economy. <strong>Financial crises</strong> are particularly severe because they impair the credit system the whole economy depends on — when banks stop lending, even healthy businesses can't access working capital.</p><div class="explain-callout"><p>Most recessions are not caused by a single factor but by the interaction of several: an external shock that exposes underlying vulnerabilities built up during the preceding expansion.</p></div><p><strong>Policy errors</strong> also matter significantly. The Volcker recession was deliberately engineered by the Federal Reserve to break inflation. The Fed's failure to ease adequately in 1929–31 turned a market crash into the Great Depression.</p>`},
-  {id:"fedresponse",icon:"🏛",title:"How the Fed Fights Recessions",preview:"Interest rates, money printing, and forward guidance — the Federal Reserve's toolkit explained.",
-   body:`<p>The Federal Reserve has a dual mandate set by Congress: maximum employment and stable prices. When a recession threatens, the Fed's primary response is to cut interest rates — specifically the federal funds rate, the rate at which banks lend to each other overnight. Lower short-term rates cascade through the economy: mortgage rates fall, business borrowing costs decline, and the lower return on savings nudges consumers toward spending.</p><p>But interest rates can only go to zero. When they hit that floor — as in 2008 and 2020 — the Fed deploys less conventional tools. <strong>Quantitative easing (QE)</strong> involves purchasing large quantities of government bonds and mortgage-backed securities, injecting money into the financial system and pushing down long-term rates. Between 2008 and 2022, the Fed's balance sheet grew from under $1 trillion to nearly $9 trillion.</p><div class="explain-callout"><p>Central bank communication is itself a policy tool. When the Fed signals rates will stay low for an extended period, it shifts long-term expectations and affects borrowing decisions immediately — without changing any actual rate setting.</p></div><p>The 2022 experience showed the opposite challenge: when inflation surged to 9%, the Fed raised rates from near-zero to over 5% in 18 months — the fastest tightening cycle in 40 years. This is the eternal tension: the same tools used to fight recession can fuel the inflation that makes the next recession necessary.</p>`}
+  {id:"yieldcurve",icon:"📈",title:"The Yield Curve",preview:"Why a line on a chart has predicted every US recession since the 1970s.",body:`<p>The yield curve is a graph showing interest rates on US government bonds of different maturities. In normal times, long-term bonds pay higher rates than short-term ones. This creates an upward-sloping "normal" curve. An inverted yield curve occurs when short-term rates rise above long-term rates — investors pile into long-term bonds because they expect the Fed will cut rates sharply in the future to fight a recession.</p><p>It is a market consensus view that things are about to get worse. Recession Radar tracks the 10Y–2Y spread. When it's positive, the curve is normal. When it crosses into negative territory, history says pay close attention.</p><div class="explain-callout"><p>The 2Y–10Y Treasury spread has inverted before every US recession since the 1970s, with a typical lead time of 12 to 24 months.</p></div><p>The curve inverted in 2019 before COVID, in 2006 before the Great Recession, and in 2000 before the dot-com bust. A false signal has been rare but not impossible — which is why this dashboard combines it with four other indicators.</p>`},
+  {id:"joblessclaims",icon:"📋",title:"Jobless Claims",preview:"The economic indicator released every Thursday morning — and why Wall Street watches it so closely.",body:`<p>Initial jobless claims measure the number of people who filed for unemployment insurance for the first time in a given week. The Department of Labor releases this every Thursday at 8:30am Eastern. Because it captures new layoffs in near real-time, it is one of the first places economic distress shows up in official data.</p><p>In normal conditions, initial claims run between 200,000 and 250,000 per week. When claims start rising consistently above 300,000, it signals layoffs are outpacing hiring.</p><div class="explain-callout"><p>Jobless claims are a leading indicator because they rise before the unemployment rate does. By the time monthly unemployment rises significantly, the labour market has already been deteriorating for weeks or months.</p></div><p>Recession Radar uses 220,000 as the green threshold, 220,000–270,000 for amber, and above 270,000 for red. A rising trend over four or more weeks is signal.</p>`},
+  {id:"sentiment",icon:"🧭",title:"Consumer Sentiment",preview:"Why what people think about the economy matters almost as much as what's actually happening.",body:`<p>The University of Michigan Consumer Sentiment Index has been surveying American households since 1946. Each month, researchers call approximately 500 households and ask five questions about their personal finances and economic conditions. Consumer spending accounts for roughly 70% of US GDP — so confidence is not just a reflection of the economy, it is a driver of it.</p><p>When households feel pessimistic, they spend less, save more, and defer major purchases. This reduced spending then becomes the economic weakness they were worried about — a self-fulfilling prophecy.</p><div class="explain-callout"><p>During COVID, the Michigan index dropped 30 points in a single month — signalling the coming shock before most hard data had responded.</p></div><p>A reading above 80 is considered healthy. Between 65 and 80 signals caution. Below 65 has historically been associated with recessions or near-recession conditions.</p>`},
+  {id:"lei",icon:"🔭",title:"The Leading Index",preview:"Ten different signals combined into one number designed to see what's coming six months ahead.",body:`<p>The Conference Board's Leading Economic Index (LEI) is a composite of ten indicators chosen because they tend to move before the broader economy does. Components include jobless claims, building permits, stock prices, the yield spread, and manufacturing new orders. The LEI is reported as a monthly percentage change.</p><p>It captures information from multiple parts of the economy simultaneously, making it harder for sector-specific noise to distort the signal.</p><div class="explain-callout"><p>Six consecutive monthly declines in the LEI — especially if broad-based — is historically a reliable recession signal.</p></div><p>One or two negative months are common even in healthy expansions and should not be over-interpreted. Watch the trend, not any single month.</p>`},
+  {id:"causes",icon:"⚡",title:"What Causes Recessions?",preview:"Economists have debated this for decades. Here's what the evidence actually says.",body:`<p>A recession is technically defined as two consecutive quarters of negative GDP growth — though the NBER uses a broader definition. The causes vary considerably across history. <strong>Demand shocks</strong> occur when consumer or business spending falls sharply. COVID is the clearest example. <strong>Supply shocks</strong> reduce productive capacity — the 1973 and 1990 recessions were triggered partly by oil price spikes.</p><p><strong>Financial crises</strong> are particularly severe because they impair the credit system the whole economy depends on. When banks stop lending, even healthy businesses can't access working capital.</p><div class="explain-callout"><p>Most recessions are not caused by a single factor but by the interaction of several: an external shock that exposes underlying vulnerabilities built up during the preceding expansion.</p></div><p><strong>Policy errors</strong> matter significantly. The Volcker recession was deliberately engineered by the Fed. The Fed's failure to ease in 1929–31 turned a crash into the Great Depression.</p>`},
+  {id:"fedresponse",icon:"🏛",title:"How the Fed Fights Recessions",preview:"Interest rates, money printing, and forward guidance — the Federal Reserve's toolkit explained.",body:`<p>The Federal Reserve has a dual mandate: maximum employment and stable prices. When recession threatens, the Fed's primary response is cutting the federal funds rate. Lower short-term rates cascade through the economy — mortgage rates fall, business borrowing costs decline, and the lower return on savings nudges consumers toward spending.</p><p>But interest rates can only go to zero. When they hit that floor — as in 2008 and 2020 — the Fed deploys <strong>quantitative easing (QE)</strong>: purchasing large quantities of bonds to push down long-term rates. Between 2008 and 2022, the Fed's balance sheet grew from under $1 trillion to nearly $9 trillion.</p><div class="explain-callout"><p>Central bank communication is itself a policy tool. When the Fed signals rates will stay low for an extended period, it shifts expectations and affects borrowing decisions immediately.</p></div><p>The 2022 experience showed the opposite challenge: when inflation surged to 9%, the Fed raised rates from near-zero to over 5% in 18 months — the fastest tightening cycle in 40 years.</p>`}
 ];
 
+/* ── NAV ── */
 function showPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
@@ -367,7 +429,7 @@ function renderArchiveDetail(rec){
       <div class="detail-stat"><div class="detail-stat-label">DURATION</div><div class="detail-stat-value">${rec.duration}</div></div>
       <div class="detail-stat"><div class="detail-stat-label">GDP FALL</div><div class="detail-stat-value">${rec.gdpFall}</div></div>
       <div class="detail-stat"><div class="detail-stat-label">PEAK UNEMPLOYMENT</div><div class="detail-stat-value">${rec.peakUnemp}</div></div>
-      <div class="detail-stat"><div class="detail-stat-label">S&P 500 PEAK-TO-TROUGH</div><div class="detail-stat-value">${rec.sp500}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">S&P 500</div><div class="detail-stat-value">${rec.sp500}</div></div>
     </div>
     <div class="detail-section"><div class="detail-section-title">OVERVIEW</div><div class="detail-body">${rec.narrative}</div></div>
     <div class="detail-section"><div class="detail-section-title">TIMELINE OF KEY EVENTS</div><div class="timeline">${rec.timeline.map(t=>`<div class="timeline-item"><div class="timeline-date">${t.date}</div><div class="timeline-dot"></div><div><div class="timeline-event">${t.event}</div><div class="timeline-desc">${t.desc}</div></div></div>`).join('')}</div></div>
@@ -392,6 +454,8 @@ function toggleExplain(id){
   const d=document.getElementById(`explain-detail-${id}`),l=document.getElementById(`explain-link-${id}`),o=d.classList.contains('open');
   d.classList.toggle('open',!o);l.textContent=o?'Read more →':'↑ Close';
 }
+
+/* ── CHART PLUGIN ── */
 const recessionPlugin={id:'recessionBands',beforeDraw(chart){
   const{ctx,chartArea,scales}=chart;if(!chartArea||!scales.x)return;
   const labels=chart.data.labels;
@@ -406,6 +470,7 @@ const recessionPlugin={id:'recessionBands',beforeDraw(chart){
 }};
 Chart.register(recessionPlugin);
 
+/* ── API ── */
 async function apiFetch(id,history){
   const r=await fetch(history?`/api/fred?series_id=${id}&history=true`:`/api/fred?series_id=${id}`);
   if(!r.ok)throw new Error(`HTTP ${r.status}`);
@@ -423,15 +488,18 @@ function toMonthly(obs,tx){
 }
 function formatMonth(s){const[y,m]=s.split('-');return`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} '${y.substring(2)}`;}
 
+/* ── DASHBOARD ── */
 async function loadData(){
   setStatus("loading");
   try{
     const[results,probVal]=await Promise.all([Promise.allSettled(INDICATORS.map(i=>getLatest(i.id))),getLatest(PROB_ID).catch(()=>null)]);
     if(results.every(r=>r.status==="rejected"))throw new Error(results[0].reason?.message||"All requests failed.");
     renderDashboard(results.map(r=>r.status==="fulfilled"?r.value:null));
-    renderProbability(probVal);loadCharts();
+    renderProbability(probVal);
+    loadCharts();
   }catch(e){setStatus("error",e.message);}
 }
+
 async function loadCharts(){
   try{
     const h=await Promise.allSettled(INDICATORS.map(i=>getHistory(i.id)));
@@ -439,25 +507,214 @@ async function loadCharts(){
     const grid=document.getElementById("charts-grid");grid.innerHTML="";
     INDICATORS.forEach((ind,i)=>{
       if(h[i].status!=="fulfilled")return;
-      const m=toMonthly(h[i].value,ind.tx);if(m.length<2)return;historicalData[ind.id]=m;
+      const monthly=toMonthly(h[i].value,ind.tx);if(monthly.length<2)return;
+      historicalData[ind.id]=monthly;
       const card=document.createElement("div");card.className="chart-card";
-      card.innerHTML=`<div class="chart-name">${ind.name}</div><div class="chart-sub">${ind.sub}</div><div class="chart-wrap"><canvas id="chart-${ind.id}"></canvas></div>`;
-      grid.appendChild(card);setTimeout(()=>createChart(ind,m),50);
+      card.innerHTML=`
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">${ind.name}</div><div class="chart-card-sub">${ind.sub}</div></div>
+          <div class="chart-controls">
+            <button class="btn-sm" onclick="event.stopPropagation();resetMiniZoom('${ind.id}')">Reset</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="mini-chart-${ind.id}"></canvas></div>`;
+      card.style.cursor='pointer';
+      card.onclick=()=>openIndicatorModal(ind.id);
+      grid.appendChild(card);
+      setTimeout(()=>createMiniChart(ind,monthly),50);
     });
   }catch(e){console.warn("Charts failed:",e);}
 }
-function createChart(ind,monthly){
-  const canvas=document.getElementById(`chart-${ind.id}`);if(!canvas)return;
+
+const miniCharts={};
+function createMiniChart(ind,monthly){
+  const canvas=document.getElementById(`mini-chart-${ind.id}`);if(!canvas)return;
   const labels=monthly.map(p=>p.label),data=monthly.map(p=>p.value),[t1,t2]=ind.thresholds;
-  new Chart(canvas,{type:'line',plugins:[recessionPlugin],data:{labels,datasets:[
-    {data,borderColor:'#1B2A4A',borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:false},
-    {data:labels.map(()=>t1),borderColor:'rgba(99,153,34,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
-    {data:labels.map(()=>t2),borderColor:'rgba(226,75,74,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>formatMonth(ctx[0].label),label:ctx=>{if(ctx.datasetIndex!==0)return null;const v=ctx.raw,p=ind.unit==="%"&&v>=0?"+":"";return`${p}${v.toFixed(ind.dp)}${ind.unit}`;}},filter:i=>i.datasetIndex===0},recessionBands:true},
-    scales:{x:{ticks:{maxTicksLimit:8,maxRotation:0,callback:(v,i)=>formatMonth(labels[i]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
-      y:{ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}});
+  const c=new Chart(canvas,{
+    type:'line',plugins:[recessionPlugin],
+    data:{labels,datasets:[
+      {data,borderColor:'#1B2A4A',borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:false},
+      {data:labels.map(()=>t1),borderColor:'rgba(99,153,34,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+      {data:labels.map(()=>t2),borderColor:'rgba(226,75,74,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{title:ctx=>formatMonth(ctx[0].label),label:ctx=>{if(ctx.datasetIndex!==0)return null;const v=ctx.raw,p=ind.showSign&&v>=0?'+':'';return`${p}${v.toFixed(ind.dp)}${ind.unit}`;}},filter:i=>i.datasetIndex===0},
+        recessionBands:true,
+        zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'},pan:{enabled:true,mode:'x'}}
+      },
+      scales:{
+        x:{ticks:{maxTicksLimit:6,maxRotation:0,callback:(v,i)=>formatMonth(labels[i]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
+        y:{ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}
+      }
+    }
+  });
+  miniCharts[ind.id]=c;
 }
+
+function resetMiniZoom(id){if(miniCharts[id])miniCharts[id].resetZoom();}
+
+/* ── MODAL ── */
+let modalChart=null;
+let currentModalMonthly=[];
+let currentModalInd=null;
+
+function computeStats(monthly,currentVal){
+  if(!monthly||monthly.length===0)return null;
+  const last12=monthly.slice(-12).map(p=>p.value);
+  const high12=Math.max(...last12),low12=Math.min(...last12);
+  const all=monthly.map(p=>p.value).sort((a,b)=>a-b);
+  const rank=all.filter(v=>v<=currentVal).length;
+  const percentile=Math.round((rank/all.length)*100);
+  const prev=monthly.length>=2?monthly[monthly.length-2].value:null;
+  const mom=prev!==null?currentVal-prev:null;
+  return{high12,low12,percentile,mom};
+}
+
+async function openIndicatorModal(indId){
+  const ind=INDICATORS.find(i=>i.id===indId);if(!ind)return;
+  currentModalInd=ind;
+  document.getElementById('ind-modal').style.display='block';
+  document.getElementById('modal-ind-name').textContent=ind.name;
+  document.getElementById('modal-ind-sub').textContent=ind.sub;
+  document.getElementById('modal-loading').style.display='block';
+  document.getElementById('modal-loaded').style.display='none';
+
+  let monthly=historicalData[indId];
+  if(!monthly){
+    try{const obs=await getHistory(indId);monthly=toMonthly(obs,ind.tx);historicalData[indId]=monthly;}
+    catch(e){monthly=[];}
+  }
+  currentModalMonthly=monthly;
+
+  const latestVal=monthly.length>0?monthly[monthly.length-1].value:null;
+  const sig=latestVal!==null?ind.sig(latestVal):null;
+  const prefix=ind.showSign&&latestVal!==null&&latestVal>=0?'+':'';
+  const valStr=latestVal!==null?`${prefix}${latestVal.toFixed(ind.dp)}${ind.unit}`:'—';
+
+  document.getElementById('modal-value').textContent=valStr;
+  document.getElementById('modal-value').style.color=sig?HEX[sig]:'var(--muted)';
+  const badge=document.getElementById('modal-badge');
+  if(sig){badge.textContent=ind.lbl[sig];badge.style.background=BGS[sig];badge.style.color=TXT[sig];badge.style.display='inline-block';}
+  else{badge.style.display='none';}
+
+  const stats=latestVal!==null?computeStats(monthly,latestVal):null;
+  if(stats){
+    const fmt=v=>{const p=ind.showSign&&v>=0?'+':'';return`${p}${v.toFixed(ind.dp)}${ind.unit}`;};
+    document.getElementById('modal-stat-high').textContent=fmt(stats.high12);
+    document.getElementById('modal-stat-low').textContent=fmt(stats.low12);
+    document.getElementById('modal-stat-pct').textContent=`${stats.percentile}th`;
+    document.getElementById('modal-stat-mom').textContent=stats.mom!==null?fmt(stats.mom):'—';
+  }
+
+  const detail=IND_DETAIL[indId]||{};
+  document.getElementById('modal-about-text').innerHTML=`<p>${detail.about||''}</p>`;
+  document.getElementById('modal-watch-text').innerHTML=`<p>${detail.watch||''}</p>`;
+
+  // Toggle buttons for threshold lines
+  const toggleRow=document.getElementById('modal-toggle-row');
+  toggleRow.innerHTML=`
+    <button class="btn-sm active" id="toggle-main" onclick="toggleDataset(0,'toggle-main')">● ${ind.name}</button>
+    <button class="btn-sm active" id="toggle-t1" onclick="toggleDataset(1,'toggle-t1')" style="color:var(--green)">— Green threshold</button>
+    <button class="btn-sm active" id="toggle-t2" onclick="toggleDataset(2,'toggle-t2')" style="color:var(--red)">— Red threshold</button>`;
+
+  buildModalChart(monthly,ind);
+
+  document.getElementById('modal-loading').style.display='none';
+  document.getElementById('modal-loaded').style.display='block';
+}
+
+function buildModalChart(monthly,ind){
+  if(modalChart){modalChart.destroy();modalChart=null;}
+  const canvas=document.getElementById('modal-chart-canvas');
+  const labels=monthly.map(p=>p.label),data=monthly.map(p=>p.value);
+  const[t1,t2]=ind.thresholds;
+  modalChart=new Chart(canvas,{
+    type:'line',plugins:[recessionPlugin],
+    data:{labels,datasets:[
+      {label:ind.name,data,borderColor:'#1B2A4A',borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:0.3,fill:false},
+      {label:'Green threshold',data:labels.map(()=>t1),borderColor:'rgba(99,153,34,0.5)',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+      {label:'Red threshold',data:labels.map(()=>t2),borderColor:'rgba(226,75,74,0.5)',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      onClick:(e,els)=>{
+        if(els.length>0&&els[0].datasetIndex===0){
+          const idx=els[0].index;
+          const lbl=formatMonth(labels[idx]);
+          const v=data[idx];
+          const p=ind.showSign&&v>=0?'+':'';
+          showPointDetail(`${lbl}: ${p}${v.toFixed(ind.dp)}${ind.unit}`);
+        }
+      },
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{title:ctx=>formatMonth(ctx[0].label),label:ctx=>{const v=ctx.raw,p=ind.showSign&&v>=0?'+':'';return`${ctx.dataset.label}: ${p}${v.toFixed(ind.dp)}${ind.unit}`;}},},
+        recessionBands:true,
+        zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoomComplete:updateZoomButtons},pan:{enabled:true,mode:'x',onPanComplete:updateZoomButtons}}
+      },
+      scales:{
+        x:{ticks:{maxTicksLimit:10,maxRotation:0,callback:(v,i)=>formatMonth(labels[i]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
+        y:{ticks:{maxTicksLimit:6,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}
+      }
+    }
+  });
+}
+
+function showPointDetail(text){
+  let el=document.getElementById('point-detail');
+  if(!el){el=document.createElement('div');el.id='point-detail';el.style.cssText='text-align:center;font-family:IBM Plex Mono,monospace;font-size:12px;color:var(--navy);margin-bottom:8px;padding:6px;background:#F0F4FA;border-radius:6px;';document.getElementById('modal-chart-hint').before(el);}
+  el.textContent=text;
+}
+
+function toggleDataset(idx,btnId){
+  if(!modalChart)return;
+  const ds=modalChart.data.datasets[idx];
+  ds.hidden=!ds.hidden;
+  modalChart.update();
+  document.getElementById(btnId)?.classList.toggle('active',!ds.hidden);
+}
+
+function updateZoomButtons(){}
+
+function setRange(range){
+  if(!modalChart||!currentModalMonthly.length)return;
+  const all=currentModalMonthly;
+  const now=new Date();
+  let cutoff;
+  if(range==='1y'){cutoff=new Date(now);cutoff.setFullYear(cutoff.getFullYear()-1);}
+  else if(range==='3y'){cutoff=new Date(now);cutoff.setFullYear(cutoff.getFullYear()-3);}
+  else{buildModalChart(currentModalMonthly,currentModalInd);updateRangeButtons(range);return;}
+  const cutStr=cutoff.toISOString().substring(0,7);
+  const filtered=all.filter(p=>p.label>=cutStr);
+  if(filtered.length<2){updateRangeButtons(range);return;}
+  buildModalChart(filtered,currentModalInd);
+  updateRangeButtons(range);
+}
+
+function updateRangeButtons(active){
+  ['1y','3y','7y'].forEach(r=>{
+    const el=document.querySelector(`.modal-chart-controls .btn-sm[onclick="setRange('${r}')"]`);
+    if(el)el.classList.toggle('active',r===active);
+  });
+}
+
+function resetZoom(){
+  if(!modalChart)return;
+  buildModalChart(currentModalMonthly,currentModalInd);
+  updateRangeButtons('7y');
+}
+
+function closeModal(){
+  if(modalChart){modalChart.destroy();modalChart=null;}
+  document.getElementById('ind-modal').style.display='none';
+  const pd=document.getElementById('point-detail');if(pd)pd.remove();
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.getElementById('ind-modal').addEventListener('click',e=>{if(e.target===document.getElementById('ind-modal'))closeModal();});
+
+/* ── RENDER ── */
 function renderProbability(val){
   const el=document.getElementById("prob-value"),bar=document.getElementById("prob-bar"),st=document.getElementById("prob-status");
   if(val===null){el.textContent="N/A";return;}
@@ -469,6 +726,7 @@ function renderProbability(val){
   bar.style.width=`${Math.min(val,100)}%`;bar.style.background=hex;
   st.textContent=label;st.style.color=hex;
 }
+
 function setStatus(state,msg){
   document.getElementById("dashboard-content").style.display="none";
   document.getElementById("status-screen").style.display="block";
@@ -487,6 +745,7 @@ function setStatus(state,msg){
     document.getElementById("retry-btn").style.display="inline-block";
   }
 }
+
 function renderDashboard(values){
   document.getElementById("status-screen").style.display="none";
   document.getElementById("dashboard-content").style.display="block";
@@ -504,17 +763,20 @@ function renderDashboard(values){
     const sig=(v!==null&&v!==undefined)?ind.sig(dv):null;
     const prefix=(ind.showSign&&dv!==null&&dv>=0)?"+":"";
     const valStr=(v!==null&&v!==undefined)?`${prefix}${dv.toFixed(ind.dp)}${ind.unit}`:"—";
-    const card=document.createElement("div");card.className="ind-card";card.style.cursor="pointer";card.onclick=()=>openIndicatorModal(ind.id);
+    const card=document.createElement("div");card.className="ind-card";
+    card.onclick=()=>openIndicatorModal(ind.id);
     card.innerHTML=`${sig?`<div class="ind-accent" style="background:${HEX[sig]}"></div>`:""}
       <div class="ind-body">
         <div class="ind-header"><span class="ind-name">${ind.name}</span>${sig?`<span class="ind-badge" style="background:${BGS[sig]};color:${TXT[sig]}">${ind.lbl[sig]}</span>`:""}</div>
         <div class="ind-sub">${ind.sub}</div>
         <div class="ind-value" style="color:${sig?HEX[sig]:"var(--muted)"}"> ${valStr}</div>
         <div class="ind-note">${ind.note}</div>
+        <div class="ind-card-hint">Click for detail →</div>
       </div>`;
     grid.appendChild(card);
   });
 }
+
 function updateGauge(signals){
   const reds=signals.filter(s=>s==="red").length,ambs=signals.filter(s=>s==="amber").length,n=signals.length||5;
   const score=Math.min(1,(reds*2+ambs)/(n*2)),angle=Math.PI*(1-score);
@@ -531,143 +793,8 @@ function updateGauge(signals){
   document.getElementById("gauge-label").textContent=label;
   document.getElementById("gauge-label").style.color=hex;
 }
-const IND_DETAIL={
-  T10Y2Y:{
-    about:"The difference between 10-year and 2-year US Treasury yields. When long-term rates exceed short-term rates the curve is normal — investors expect growth. When it inverts (goes negative) it signals that markets expect the Fed to cut rates sharply, usually because a recession is anticipated.",
-    watch:"Sustained inversion below −0.25% for more than a quarter has preceded every US recession since 1970, typically with a 12–18 month lead time."
-  },
-  ICSA:{
-    about:"The number of Americans filing for unemployment benefits for the first time each week. Released every Thursday by the Department of Labor. Because it captures new layoffs in near real-time, it is one of the fastest-moving economic indicators available.",
-    watch:"A sustained move above 300,000 per week signals labour market stress. Readings above 400,000 have historically accompanied recessions. One elevated week is noise — a rising trend over four or more weeks is a genuine signal."
-  },
-  UNRATE:{
-    about:"The percentage of the labour force actively seeking work but unable to find it, released monthly by the Bureau of Labor Statistics. Unlike jobless claims, unemployment is a lagging indicator — it rises after a recession has already begun, confirming weakness rather than predicting it.",
-    watch:"The Sahm Rule: if the 3-month average unemployment rate rises 0.5 percentage points above its 12-month low, a recession has historically already started. Watch the trend, not the level."
-  },
-  UMCSENT:{
-    about:"A monthly index compiled by the University of Michigan from surveys of approximately 500 US households. Measures confidence in personal finances and broader economic conditions. Since consumer spending drives roughly 70% of GDP, this is one of the most powerful leading indicators of economic direction.",
-    watch:"Single-month drops of 10 or more points have historically signalled major economic disruptions ahead. Prolonged readings below 65 have accompanied or preceded recessions."
-  },
-  USSLIND:{
-    about:"A composite of 10 forward-looking indicators published monthly by the Conference Board, designed to signal turning points in the economic cycle approximately 6 months before they occur. Components include jobless claims, building permits, stock prices, the yield spread, and manufacturing new orders.",
-    watch:"Six consecutive monthly declines — especially if broad-based across components — have historically flagged recessions reliably. One or two negative months are common even in healthy expansions and should not be over-interpreted."
-  }
-};
 
-let modalChart=null;
-
-function computeStats(monthly,currentVal,ind){
-  if(!monthly||monthly.length===0)return null;
-  const last12=monthly.slice(-12).map(p=>p.value);
-  const high12=Math.max(...last12),low12=Math.min(...last12);
-  const all=monthly.map(p=>p.value).sort((a,b)=>a-b);
-  const rank=all.filter(v=>v<=currentVal).length;
-  const percentile=Math.round((rank/all.length)*100);
-  const prev=monthly.length>=2?monthly[monthly.length-2].value:null;
-  const mom=prev!==null?currentVal-prev:null;
-  return{high12,low12,percentile,mom};
-}
-
-async function openIndicatorModal(indId){
-  const ind=INDICATORS.find(i=>i.id===indId);
-  if(!ind)return;
-  const modal=document.getElementById('ind-modal');
-  modal.style.display='block';
-  document.getElementById('modal-ind-name').textContent=ind.name;
-  document.getElementById('modal-ind-sub').textContent=ind.sub;
-  document.getElementById('modal-loading').style.display='block';
-  document.getElementById('modal-loaded').style.display='none';
-
-  let monthly=historicalData[indId];
-  if(!monthly){
-    try{const obs=await getHistory(indId);monthly=toMonthly(obs,ind.tx);historicalData[indId]=monthly;}
-    catch(e){monthly=[];}
-  }
-
-  const latestVal=monthly.length>0?monthly[monthly.length-1].value:null;
-  const sig=latestVal!==null?ind.sig(latestVal):null;
-  const prefix=ind.showSign&&latestVal>=0?'+':'';
-  const valStr=latestVal!==null?`${prefix}${latestVal.toFixed(ind.dp)}${ind.unit}`:'—';
-
-  document.getElementById('modal-value').textContent=valStr;
-  document.getElementById('modal-value').style.color=sig?HEX[sig]:'var(--muted)';
-
-  const badge=document.getElementById('modal-badge');
-  if(sig){badge.textContent=ind.lbl[sig];badge.style.background=BGS[sig];badge.style.color=TXT[sig];badge.style.display='inline-block';}
-  else{badge.style.display='none';}
-
-  const stats=latestVal!==null?computeStats(monthly,latestVal,ind):null;
-  if(stats){
-    const fmt=v=>{const p=ind.showSign&&v>=0?'+':'';return`${p}${v.toFixed(ind.dp)}${ind.unit}`;};
-    document.getElementById('modal-stat-high').textContent=fmt(stats.high12);
-    document.getElementById('modal-stat-low').textContent=fmt(stats.low12);
-    document.getElementById('modal-stat-pct').textContent=`${stats.percentile}th`;
-    document.getElementById('modal-stat-mom').textContent=stats.mom!==null?fmt(stats.mom):'—';
-  }
-
-  const detail=IND_DETAIL[indId]||{};
-  document.getElementById('modal-about-text').innerHTML=`<p>${detail.about||''}</p>`;
-  document.getElementById('modal-watch-text').innerHTML=`<p>${detail.watch||''}</p>`;
-
-  if(modalChart){modalChart.destroy();modalChart=null;}
-  if(monthly.length>1){
-    const labels=monthly.map(p=>p.label),data=monthly.map(p=>p.value),[t1,t2]=ind.thresholds;
-    const canvas=document.getElementById('modal-chart-canvas');
-    modalChart=new Chart(canvas,{
-      type:'line',plugins:[recessionPlugin],
-      data:{labels,datasets:[
-        {data,borderColor:'#1B2A4A',borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:false},
-        {data:labels.map(()=>t1),borderColor:'rgba(99,153,34,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
-        {data:labels.map(()=>t2),borderColor:'rgba(226,75,74,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-        plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>formatMonth(ctx[0].label),label:ctx=>{if(ctx.datasetIndex!==0)return null;const v=ctx.raw,p=ind.showSign&&v>=0?'+':'';return`${p}${v.toFixed(ind.dp)}${ind.unit}`;}},filter:i=>i.datasetIndex===0},recessionBands:true},
-        scales:{x:{ticks:{maxTicksLimit:8,maxRotation:0,callback:(v,i)=>formatMonth(labels[i]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
-          y:{ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}
-    });
-  }
-
-  document.getElementById('modal-loading').style.display='none';
-  document.getElementById('modal-loaded').style.display='block';
-}
-
-function closeModal(){
-  if(modalChart){modalChart.destroy();modalChart=null;}
-  document.getElementById('ind-modal').style.display='none';
-}
-
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 buildDropdown();buildArchiveGrid();buildExplainGrid();loadData();
 </script>
-<div id="ind-modal">
-  <div class="modal-panel">
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="modal-ind-name" id="modal-ind-name"></div>
-        <div class="modal-ind-sub" id="modal-ind-sub"></div>
-      </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="modal-loading" style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;">Loading…</div>
-      <div id="modal-loaded" style="display:none">
-        <div class="modal-value-row">
-          <div class="modal-value" id="modal-value">—</div>
-          <span class="modal-badge" id="modal-badge"></span>
-        </div>
-        <div class="modal-chart-wrap"><canvas id="modal-chart-canvas"></canvas></div>
-        <div class="modal-stats">
-          <div class="modal-stat"><div class="modal-stat-label">1Y HIGH</div><div class="modal-stat-value" id="modal-stat-high">—</div></div>
-          <div class="modal-stat"><div class="modal-stat-label">1Y LOW</div><div class="modal-stat-value" id="modal-stat-low">—</div></div>
-          <div class="modal-stat"><div class="modal-stat-label">HISTORICAL PERCENTILE</div><div class="modal-stat-value" id="modal-stat-pct">—</div></div>
-          <div class="modal-stat" style="grid-column:1/-1"><div class="modal-stat-label">MONTH-ON-MONTH CHANGE</div><div class="modal-stat-value" id="modal-stat-mom">—</div></div>
-        </div>
-        <div class="modal-about-title">ABOUT THIS INDICATOR</div>
-        <div class="modal-about" id="modal-about-text"></div>
-        <div class="modal-about-watch" id="modal-watch-text"></div>
-      </div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
