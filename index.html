@@ -1578,16 +1578,18 @@ function buildProbChart(monthly) {
   var data = filtered.map(function(p) { return p.value; });
 
   if (probMiniChart) { probMiniChart.destroy(); }
+  if (probMiniChart) { probMiniChart.destroy(); }
   probMiniChart = new Chart(canvas, {
     type: 'line',
-    plugins: [recPlugin],
+    plugins: [recPlugin, gradientPlugin],
     data: {labels: labels, datasets: [{
       data: data,
       borderColor: '#E24B4A',
       borderWidth: 2,
       pointRadius: 0,
+      pointHoverRadius: 5,
       tension: 0.3,
-      fill: true,
+      fill: false,
       backgroundColor: 'rgba(226,75,74,0.08)'
     }]},
     options: {
@@ -1617,6 +1619,9 @@ function buildProbChart(monthly) {
       }
     }
   });
+  probMiniChart.chartIndicator = {
+    sig: function(v) { return v > 30 ? 'r' : v > 5 ? 'a' : 'g'; }
+  };
 }
 
 function openProbModal() {
@@ -1708,6 +1713,7 @@ function setProbModalRange(range) {
           }
         },
         zoom: {
+          limits: {y: {min: 0, max: 100}},
           zoom: {wheel: {enabled: true, modifierKey: 'ctrl'}, pinch: {enabled: true}, mode: 'xy'},
           pan: {enabled: true, mode: 'xy', threshold: 5}
         }
@@ -1742,6 +1748,9 @@ function setProbModalRange(range) {
   canvas.addEventListener('mouseup', function() { isDragging = false; });
   canvas.addEventListener('mouseleave', function() { isDragging = false; });
 
+  chart.chartIndicator = {
+    sig: function(v) { return v > 30 ? 'r' : v > 5 ? 'a' : 'g'; }
+  };
   probModalChart = chart;
 }
 
