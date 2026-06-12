@@ -32,6 +32,8 @@ nav{background:var(--navy);height:52px;display:flex;align-items:center;padding:0
 main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .btn{padding:9px 18px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif}
 .btn-primary{background:var(--navy);color:#fff}
+.btn-secondary{background:#fff;color:var(--navy);border:1px solid var(--border);transition:all 0.15s}
+.btn-secondary:hover{border-color:var(--navy);background:#F5F5F3}
 .btn-sm{padding:5px 10px;font-size:11px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted);font-family:'Inter',sans-serif;transition:all 0.15s}
 .btn-sm:hover{border-color:var(--navy);color:var(--navy)}
 .btn-sm.active{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -189,7 +191,36 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .cal-disc{margin-top:20px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6}
 .cal-disc a{color:var(--navy)}
 .site-footer{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);letter-spacing:0.04em}
-@media(max-width:640px){nav{padding:0 16px}main{padding:16px 14px 48px}.detail-title{font-size:26px}.charts-grid{grid-template-columns:1fr}.modal-stats{grid-template-columns:repeat(2,1fr)}.cal-event-row>:nth-child(5),.cal-event-row>:nth-child(6){display:none}}
+.customize-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:999;opacity:0;transition:opacity 250ms ease;pointer-events:none}.customize-overlay.active{opacity:1;pointer-events:auto}
+.customize-panel{position:fixed;right:0;top:0;bottom:0;width:340px;background:white;box-shadow:-2px 0 12px rgba(0,0,0,0.1);z-index:1000;transform:translateX(100%);transition:transform 250ms ease;overflow-y:auto;display:flex;flex-direction:column}.customize-panel.active{transform:translateX(0)}
+.customize-header{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.customize-title{font-size:16px;font-weight:600;color:var(--navy)}
+.customize-close{background:none;border:none;font-size:24px;color:var(--navy);cursor:pointer;padding:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.customize-close:hover{color:var(--muted)}
+.customize-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column}
+.customize-subheading{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.reset-link{color:var(--navy);text-decoration:none;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:12px;display:inline-block}
+.reset-link:hover{text-decoration:underline}
+.search-box{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;margin-bottom:16px;box-sizing:border-box}
+.search-box:focus{outline:none;border-color:var(--navy)}
+.customize-groups{margin-bottom:16px}
+.customize-group{margin-bottom:16px}
+.customize-group-title{font-size:11px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;padding:0 12px}
+.customize-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #F5F5F3}
+.customize-item:last-child{border-bottom:none}
+.customize-item-info{flex:1;margin-right:12px;min-width:0}
+.customize-item-name{font-size:13px;font-weight:500;color:var(--navy)}
+.customize-item-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.3}
+.toggle-checkbox{appearance:none;width:44px;height:24px;background:#D0D4DC;border-radius:12px;cursor:pointer;transition:background 200ms ease;border:none;position:relative;flex-shrink:0}
+.toggle-checkbox::before{content:'';position:absolute;width:20px;height:20px;background:white;border-radius:50%;top:2px;left:2px;transition:left 200ms ease}
+.toggle-checkbox:checked{background:var(--navy)}
+.toggle-checkbox:checked::before{left:22px}
+.toggle-checkbox:disabled{opacity:0.5;cursor:not-allowed}
+.customize-note{font-size:11px;color:var(--muted);margin-top:auto;padding-top:12px;border-top:1px solid var(--border);line-height:1.5}
+.customize-error{font-size:11px;color:var(--red);margin:8px 12px;padding:8px;background:rgba(226,75,74,0.05);border-radius:4px;display:none}
+.customize-error.show{display:block}
+.custom-dot{font-size:10px;color:var(--navy);display:inline}
+@media(max-width:640px){nav{padding:0 16px}main{padding:16px 14px 48px}.detail-title{font-size:26px}.charts-grid{grid-template-columns:1fr}.modal-stats{grid-template-columns:repeat(2,1fr)}.cal-event-row>:nth-child(5),.cal-event-row>:nth-child(6){display:none}.customize-panel{width:100%}}
 </style>
 </head>
 <body>
@@ -248,13 +279,18 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
         <div class="gauge-label" id="gauge-label">-</div>
       </div>
       <div class="breakdown">
-        <div class="breakdown-title">SIGNAL BREAKDOWN - 5 KEY INDICATORS</div>
+        <div class="breakdown-title">SIGNAL BREAKDOWN</div>
         <div class="breakdown-counts">
           <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">-</div><div class="count-lbl">alert</div></div>
           <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">-</div><div class="count-lbl">warning</div></div>
           <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">-</div><div class="count-lbl">clear</div></div>
         </div>
-        <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:7px 14px;">Refresh</button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:7px 14px;flex:1">Refresh</button>
+          <button class="btn btn-secondary" id="edit-btn" onclick="openCustomizePanel()" style="font-size:12px;padding:7px 14px;flex:1">
+            Edit<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span>
+          </button>
+        </div>
       </div>
     </div>
     <div class="section-label">RECESSION SIGNALS</div>
@@ -280,6 +316,20 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
       <div class="charts-grid" id="charts-grid"></div>
     </div>
     <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
+    <div id="customize-overlay" class="customize-overlay" style="display:none" onclick="closeCustomizePanel()"></div>
+    <div id="customize-panel" class="customize-panel" style="display:none">
+      <div class="customize-header">
+        <div class="customize-title">Customise Dashboard</div>
+        <button class="customize-close" onclick="closeCustomizePanel()">×</button>
+      </div>
+      <div class="customize-body">
+        <div class="customize-subheading">Choose which indicators appear in your dashboard. Your selection is saved automatically.</div>
+        <a class="reset-link" onclick="resetToDefault()">Reset to default</a>
+        <input type="text" id="search-indicators" class="search-box" placeholder="Search indicators...">
+        <div class="customize-groups" id="customize-groups"></div>
+        <div class="customize-note">Changes are saved to this browser automatically.</div>
+      </div>
+    </div>
   </div>
 </main>
 </div>
@@ -532,6 +582,166 @@ var HEX = {g:"#639922", a:"#BA7517", r:"#E24B4A"};
 var BGS = {g:"var(--gbg)", a:"var(--abg)", r:"var(--rbg)"};
 var TXT = {g:"var(--gtxt)", a:"var(--atxt)", r:"var(--rtxt)"};
 var histData = {};
+
+// ── CUSTOMIZABLE DASHBOARD ──────────────────────────────────────────────────
+var selectedIndicatorIds = [];
+var defaultIndicatorIds = ["T10Y2Y", "ICSA", "UNRATE", "UMCSENT", "USALOLITONOSTSAM"];
+
+function getSelectedIndicators() {
+  return INDICATORS.filter(function(ind) { return selectedIndicatorIds.indexOf(ind.id) >= 0; });
+}
+
+function initializeSelectedIndicators() {
+  try {
+    var saved = localStorage.getItem('rr_selected_indicators');
+    if (saved) {
+      var parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.length <= 10) {
+        selectedIndicatorIds = parsed;
+        return;
+      }
+    }
+  } catch (e) {}
+  selectedIndicatorIds = defaultIndicatorIds.slice();
+}
+
+function saveSelectedIndicators() {
+  localStorage.setItem('rr_selected_indicators', JSON.stringify(selectedIndicatorIds));
+}
+
+function updateCustomDot() {
+  var isCustom = selectedIndicatorIds.length !== defaultIndicatorIds.length ||
+    selectedIndicatorIds.some(function(id) { return defaultIndicatorIds.indexOf(id) === -1; });
+  var dot = document.getElementById('custom-dot');
+  if (dot) { dot.style.display = isCustom ? 'inline' : 'none'; }
+}
+
+function openCustomizePanel() {
+  document.getElementById('customize-overlay').classList.add('active');
+  document.getElementById('customize-panel').classList.add('active');
+  buildCustomizePanel();
+}
+
+function closeCustomizePanel() {
+  document.getElementById('customize-overlay').classList.remove('active');
+  document.getElementById('customize-panel').classList.remove('active');
+}
+
+function buildCustomizePanel(searchTerm) {
+  searchTerm = (searchTerm || '').toLowerCase();
+  var container = document.getElementById('customize-groups');
+  container.innerHTML = '';
+
+  var categories = ['labour', 'output', 'housing', 'financial', 'prices', 'consumer'];
+  var categoryNames = {labour:'Labour', output:'Output', housing:'Housing', financial:'Financial', prices:'Prices', consumer:'Consumer'};
+
+  categories.forEach(function(cat) {
+    var items = INDICATORS.filter(function(ind) { return ind.cat === cat; });
+    var filtered = items.filter(function(ind) {
+      return (ind.name.toLowerCase().indexOf(searchTerm) >= 0 ||
+              ind.sub.toLowerCase().indexOf(searchTerm) >= 0);
+    });
+
+    if (filtered.length === 0) { return; }
+
+    var group = document.createElement('div');
+    group.className = 'customize-group';
+
+    var title = document.createElement('div');
+    title.className = 'customize-group-title';
+    title.textContent = categoryNames[cat];
+    group.appendChild(title);
+
+    filtered.forEach(function(ind) {
+      var item = document.createElement('div');
+      item.className = 'customize-item';
+
+      var info = document.createElement('div');
+      info.className = 'customize-item-info';
+      var name = document.createElement('div');
+      name.className = 'customize-item-name';
+      name.textContent = ind.name;
+      var desc = document.createElement('div');
+      desc.className = 'customize-item-desc';
+      desc.textContent = ind.sub;
+      info.appendChild(name);
+      info.appendChild(desc);
+
+      var toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.className = 'toggle-checkbox';
+      toggle.checked = selectedIndicatorIds.indexOf(ind.id) >= 0;
+      toggle.onchange = function() { toggleIndicator(ind.id, toggle); };
+
+      item.appendChild(info);
+      item.appendChild(toggle);
+      group.appendChild(item);
+    });
+
+    container.appendChild(group);
+  });
+}
+
+function toggleIndicator(id, checkboxElement) {
+  var idx = selectedIndicatorIds.indexOf(id);
+  if (checkboxElement.checked) {
+    if (selectedIndicatorIds.length >= 10) {
+      checkboxElement.checked = false;
+      showError('Maximum 10 indicators selected');
+      return;
+    }
+    if (idx === -1) { selectedIndicatorIds.push(id); }
+  } else {
+    if (selectedIndicatorIds.length === 1) {
+      checkboxElement.checked = true;
+      showError('You must have at least one indicator selected');
+      return;
+    }
+    if (idx >= 0) { selectedIndicatorIds.splice(idx, 1); }
+  }
+  saveSelectedIndicators();
+  updateCustomDot();
+  updateDashboard();
+}
+
+function showError(message) {
+  var panel = document.getElementById('customize-panel');
+  var existing = document.getElementById('customize-error');
+  if (existing) { existing.remove(); }
+
+  var errorEl = document.createElement('div');
+  errorEl.id = 'customize-error';
+  errorEl.className = 'customize-error show';
+  errorEl.textContent = message;
+
+  var body = document.querySelector('.customize-body');
+  if (body) { body.insertBefore(errorEl, body.firstChild); }
+
+  setTimeout(function() {
+    if (errorEl && errorEl.parentNode) { errorEl.remove(); }
+  }, 3000);
+}
+
+function resetToDefault() {
+  selectedIndicatorIds = defaultIndicatorIds.slice();
+  saveSelectedIndicators();
+  updateCustomDot();
+  buildCustomizePanel();
+  updateDashboard();
+}
+
+function updateDashboard() {
+  loadData();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var searchInput = document.getElementById('search-indicators');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      buildCustomizePanel(this.value);
+    });
+  }
+});
 
 // ── INDICATOR DETAIL TEXT ──────────────────────────────────────────────────
 var IND_DETAIL = {
@@ -1127,7 +1337,8 @@ function setStatus(state, msg) {
 
 function loadData() {
   setStatus('loading');
-  var hlPromises = HEADLINE.map(function(ind) { return getLatestValue(ind); });
+  var selected = getSelectedIndicators();
+  var hlPromises = selected.map(function(ind) { return getLatestValue(ind); });
   var probPromise = getLatestValue({id: PROB_ID});
 
   Promise.allSettled(hlPromises).then(function(hlResults) {
@@ -1167,7 +1378,8 @@ function renderDashboard(values) {
   var now = new Date();
   document.getElementById('nav-live').style.display = 'inline';
   document.getElementById('nav-ts').textContent = now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
-  var signals = HEADLINE.map(function(ind, i) {
+  var selected = getSelectedIndicators();
+  var signals = selected.map(function(ind, i) {
     var v = values[i];
     return (v !== null && v !== undefined) ? ind.sig(v) : null;
   });
@@ -1178,7 +1390,7 @@ function renderDashboard(values) {
   document.getElementById('count-green').textContent = signals.filter(function(s) { return s === 'g'; }).length;
   var grid = document.getElementById('headline-grid');
   grid.innerHTML = '';
-  HEADLINE.forEach(function(ind, i) { createCard(ind, values[i], grid); });
+  selected.forEach(function(ind, i) { createCard(ind, values[i], grid); });
 }
 
 function updateGauge(signals) {
@@ -1627,6 +1839,8 @@ buildDropdown();
 buildArchiveGrid();
 buildExplainGrid();
 buildCalendar();
+initializeSelectedIndicators();
+updateCustomDot();
 loadData();
 
 </script>
