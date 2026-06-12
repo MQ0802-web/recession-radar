@@ -1572,8 +1572,8 @@ function buildMiniChartOnCanvas(canvas, ind, monthly) {
           filter: function(item) { return item.datasetIndex === 0; }
         },
         zoom: {
-  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'},
-  pan: {enabled: true, mode: 'x', threshold: 5}
+  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'xy'},
+  pan: {enabled: true, mode: 'xy', threshold: 5}
 }
       },
       scales: {
@@ -1686,8 +1686,8 @@ function buildMiniChart(ind, monthly) {
           filter: function(item) { return item.datasetIndex === 0; }
         },
         zoom: {
-  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'},
-  pan: {enabled: true, mode: 'x', threshold: 5}
+  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'xy'},
+  pan: {enabled: true, mode: 'xy', threshold: 5}
 }
       },
       scales: {
@@ -1699,18 +1699,22 @@ function buildMiniChart(ind, monthly) {
   chart.chartIndicator = ind;
   miniCharts[ind.id] = chart;
 
-  var isDragging = false;
+var isDragging = false;
   var lastDragX = 0;
+  var lastDragY = 0;
   canvas.addEventListener('mousedown', function(e) {
     isDragging = true;
     lastDragX = e.clientX;
+    lastDragY = e.clientY;
     e.preventDefault();
   });
   canvas.addEventListener('mousemove', function(e) {
     if (!isDragging) { return; }
     var dx = e.clientX - lastDragX;
+    var dy = e.clientY - lastDragY;
     lastDragX = e.clientX;
-    chart.pan({x: -dx});
+    lastDragY = e.clientY;
+    chart.pan({x: -dx, y: -dy});
   });
   canvas.addEventListener('mouseup', function() { isDragging = false; });
   canvas.addEventListener('mouseleave', function() { isDragging = false; });
@@ -1818,8 +1822,8 @@ function buildModalChart(monthly, ind) {
           callbacks: {title: function(c) { return fmtMonth(c[0].label); }, label: function(c) { return c.dataset.label + ': ' + fmtVal(ind, c.raw); }}
         },
         zoom: {
-  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'},
-  pan: {enabled: true, mode: 'x', threshold: 5}
+  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'xy'},
+  pan: {enabled: true, mode: 'xy', threshold: 5}
 }
       },
       scales: {
@@ -1831,18 +1835,22 @@ function buildModalChart(monthly, ind) {
   chart.chartIndicator = ind;
   modalChart = chart;
 
-  var isDragging = false;
+var isDragging = false;
   var lastDragX = 0;
+  var lastDragY = 0;
   canvas.addEventListener('mousedown', function(e) {
     isDragging = true;
     lastDragX = e.clientX;
+    lastDragY = e.clientY;
     e.preventDefault();
   });
   canvas.addEventListener('mousemove', function(e) {
     if (!isDragging) { return; }
     var dx = e.clientX - lastDragX;
+    var dy = e.clientY - lastDragY;
     lastDragX = e.clientX;
-    chart.pan({x: -dx});
+    lastDragY = e.clientY;
+    chart.pan({x: -dx, y: -dy});
   });
   canvas.addEventListener('mouseup', function() { isDragging = false; });
   canvas.addEventListener('mouseleave', function() { isDragging = false; });
