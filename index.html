@@ -272,7 +272,7 @@ const INDICATORS = [
   { id:"ICSA", name:"Jobless claims", sub:"Weekly initial claims", unit:"K", dp:0, tx:v=>v/1000, sig:v=>v<220?"green":v<270?"amber":"red", lbl:{green:"Low",amber:"Elevated",red:"Surging"}, note:"Sharp rises tend to lead broader unemployment by several weeks.", thresholds:[220,270] },
   { id:"UNRATE", name:"Unemployment", sub:"US unemployment rate", unit:"%", dp:1, sig:v=>v<4.5?"green":v<5.5?"amber":"red", lbl:{green:"Low",amber:"Rising",red:"Elevated"}, note:"A rising unemployment rate is a classic recession confirmation signal.", thresholds:[4.5,5.5] },
   { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index", unit:"", dp:1, sig:v=>v>80?"green":v>65?"amber":"red", lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"}, note:"Sentiment collapses reliably precede spending contractions.", thresholds:[80,65] },
-  { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, showSign:true,
+  { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, showSign:true, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"}, note:"Six consecutive monthly declines have historically flagged recessions.", thresholds:[0.1,-0.3] },
 ];
 const historicalData={};  
 const PROB_ID="RECPROUSM156N";
