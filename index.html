@@ -139,6 +139,27 @@
     .explain-close { display:inline-block; margin-top:16px; font-size:12px; color:var(--muted); cursor:pointer; }
     .explain-close:hover { color:var(--navy); }
     .site-footer { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-align:center; margin-top:40px; padding-top:20px; border-top:1px solid var(--border); letter-spacing:0.04em; }
+    #ind-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);overflow-y:auto;padding:40px 16px;}
+.modal-panel{background:#fff;max-width:720px;margin:0 auto;border-radius:12px;overflow:hidden;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+.modal-header-left{}
+.modal-ind-name{font-size:18px;font-weight:600;color:var(--navy);margin-bottom:2px;}
+.modal-ind-sub{font-size:12px;color:var(--muted);}
+.modal-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;padding:0;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:24px;}
+.modal-value-row{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+.modal-value{font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:500;}
+.modal-badge{font-size:12px;padding:4px 10px;border-radius:99px;}
+.modal-chart-wrap{position:relative;height:240px;margin-bottom:24px;}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px;}
+.modal-stat{background:#fff;padding:14px 16px;}
+.modal-stat-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px;}
+.modal-stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500;color:var(--text);}
+.modal-about-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.modal-about-watch{background:#F0F4FA;border-left:3px solid var(--navy);padding:12px 16px;border-radius:0 6px 6px 0;margin-top:12px;}
+.modal-about-watch p{font-size:13px;color:var(--navy);font-weight:500;line-height:1.6;margin:0;}
+.modal-about p{font-size:14px;line-height:1.75;color:#2a2a2a;margin-bottom:12px;}
     @media (max-width:640px) { nav { padding:0 16px; } main { padding:16px 14px 48px; } .detail-title { font-size:26px; } .charts-grid { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -247,12 +268,13 @@
 </div>
 <script>
 const INDICATORS = [
-  { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, sig:v=>v>0.25?"green":v>-0.25?"amber":"red", lbl:{green:"Positive",amber:"Flattening",red:"Inverted"}, note:"Inversion has preceded every US recession since the 1970s.", thresholds:[0.25,-0.25] },
+  { id:"T10Y2Y", name:"Yield curve", sub:"10Y − 2Y Treasury spread", unit:"%", dp:2, showSign:true,
   { id:"ICSA", name:"Jobless claims", sub:"Weekly initial claims", unit:"K", dp:0, tx:v=>v/1000, sig:v=>v<220?"green":v<270?"amber":"red", lbl:{green:"Low",amber:"Elevated",red:"Surging"}, note:"Sharp rises tend to lead broader unemployment by several weeks.", thresholds:[220,270] },
   { id:"UNRATE", name:"Unemployment", sub:"US unemployment rate", unit:"%", dp:1, sig:v=>v<4.5?"green":v<5.5?"amber":"red", lbl:{green:"Low",amber:"Rising",red:"Elevated"}, note:"A rising unemployment rate is a classic recession confirmation signal.", thresholds:[4.5,5.5] },
   { id:"UMCSENT", name:"Consumer sentiment", sub:"U. of Michigan index", unit:"", dp:1, sig:v=>v>80?"green":v>65?"amber":"red", lbl:{green:"Confident",amber:"Cautious",red:"Pessimistic"}, note:"Sentiment collapses reliably precede spending contractions.", thresholds:[80,65] },
-  { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, sig:v=>v>0.1?"green":v>-0.3?"amber":"red", lbl:{green:"Advancing",amber:"Slowing",red:"Declining"}, note:"Six consecutive monthly declines have historically flagged recessions.", thresholds:[0.1,-0.3] },
+  { id:"USSLIND", name:"Leading index", sub:"Conference Board LEI", unit:"%", dp:2, showSign:true,
 ];
+const historicalData={};  
 const PROB_ID="RECPROUSM156N";
 const HEX={green:"#639922",amber:"#BA7517",red:"#E24B4A"};
 const BGS={green:"var(--gbg)",amber:"var(--abg)",red:"var(--rbg)"};
@@ -417,7 +439,7 @@ async function loadCharts(){
     const grid=document.getElementById("charts-grid");grid.innerHTML="";
     INDICATORS.forEach((ind,i)=>{
       if(h[i].status!=="fulfilled")return;
-      const m=toMonthly(h[i].value,ind.tx);if(m.length<2)return;
+      const m=toMonthly(h[i].value,ind.tx);if(m.length<2)return;historicalData[ind.id]=m;
       const card=document.createElement("div");card.className="chart-card";
       card.innerHTML=`<div class="chart-name">${ind.name}</div><div class="chart-sub">${ind.sub}</div><div class="chart-wrap"><canvas id="chart-${ind.id}"></canvas></div>`;
       grid.appendChild(card);setTimeout(()=>createChart(ind,m),50);
@@ -480,9 +502,9 @@ function renderDashboard(values){
   INDICATORS.forEach((ind,i)=>{
     const v=values[i],dv=(v!==null&&v!==undefined&&ind.tx)?ind.tx(v):v;
     const sig=(v!==null&&v!==undefined)?ind.sig(dv):null;
-    const prefix=(ind.unit==="%"&&dv!==null&&dv>=0)?"+":"";
+    const prefix=(ind.showSign&&dv!==null&&dv>=0)?"+":"";
     const valStr=(v!==null&&v!==undefined)?`${prefix}${dv.toFixed(ind.dp)}${ind.unit}`:"—";
-    const card=document.createElement("div");card.className="ind-card";
+    const card=document.createElement("div");card.className="ind-card";card.style.cursor="pointer";card.onclick=()=>openIndicatorModal(ind.id);
     card.innerHTML=`${sig?`<div class="ind-accent" style="background:${HEX[sig]}"></div>`:""}
       <div class="ind-body">
         <div class="ind-header"><span class="ind-name">${ind.name}</span>${sig?`<span class="ind-badge" style="background:${BGS[sig]};color:${TXT[sig]}">${ind.lbl[sig]}</span>`:""}</div>
@@ -509,7 +531,143 @@ function updateGauge(signals){
   document.getElementById("gauge-label").textContent=label;
   document.getElementById("gauge-label").style.color=hex;
 }
+const IND_DETAIL={
+  T10Y2Y:{
+    about:"The difference between 10-year and 2-year US Treasury yields. When long-term rates exceed short-term rates the curve is normal — investors expect growth. When it inverts (goes negative) it signals that markets expect the Fed to cut rates sharply, usually because a recession is anticipated.",
+    watch:"Sustained inversion below −0.25% for more than a quarter has preceded every US recession since 1970, typically with a 12–18 month lead time."
+  },
+  ICSA:{
+    about:"The number of Americans filing for unemployment benefits for the first time each week. Released every Thursday by the Department of Labor. Because it captures new layoffs in near real-time, it is one of the fastest-moving economic indicators available.",
+    watch:"A sustained move above 300,000 per week signals labour market stress. Readings above 400,000 have historically accompanied recessions. One elevated week is noise — a rising trend over four or more weeks is a genuine signal."
+  },
+  UNRATE:{
+    about:"The percentage of the labour force actively seeking work but unable to find it, released monthly by the Bureau of Labor Statistics. Unlike jobless claims, unemployment is a lagging indicator — it rises after a recession has already begun, confirming weakness rather than predicting it.",
+    watch:"The Sahm Rule: if the 3-month average unemployment rate rises 0.5 percentage points above its 12-month low, a recession has historically already started. Watch the trend, not the level."
+  },
+  UMCSENT:{
+    about:"A monthly index compiled by the University of Michigan from surveys of approximately 500 US households. Measures confidence in personal finances and broader economic conditions. Since consumer spending drives roughly 70% of GDP, this is one of the most powerful leading indicators of economic direction.",
+    watch:"Single-month drops of 10 or more points have historically signalled major economic disruptions ahead. Prolonged readings below 65 have accompanied or preceded recessions."
+  },
+  USSLIND:{
+    about:"A composite of 10 forward-looking indicators published monthly by the Conference Board, designed to signal turning points in the economic cycle approximately 6 months before they occur. Components include jobless claims, building permits, stock prices, the yield spread, and manufacturing new orders.",
+    watch:"Six consecutive monthly declines — especially if broad-based across components — have historically flagged recessions reliably. One or two negative months are common even in healthy expansions and should not be over-interpreted."
+  }
+};
+
+let modalChart=null;
+
+function computeStats(monthly,currentVal,ind){
+  if(!monthly||monthly.length===0)return null;
+  const last12=monthly.slice(-12).map(p=>p.value);
+  const high12=Math.max(...last12),low12=Math.min(...last12);
+  const all=monthly.map(p=>p.value).sort((a,b)=>a-b);
+  const rank=all.filter(v=>v<=currentVal).length;
+  const percentile=Math.round((rank/all.length)*100);
+  const prev=monthly.length>=2?monthly[monthly.length-2].value:null;
+  const mom=prev!==null?currentVal-prev:null;
+  return{high12,low12,percentile,mom};
+}
+
+async function openIndicatorModal(indId){
+  const ind=INDICATORS.find(i=>i.id===indId);
+  if(!ind)return;
+  const modal=document.getElementById('ind-modal');
+  modal.style.display='block';
+  document.getElementById('modal-ind-name').textContent=ind.name;
+  document.getElementById('modal-ind-sub').textContent=ind.sub;
+  document.getElementById('modal-loading').style.display='block';
+  document.getElementById('modal-loaded').style.display='none';
+
+  let monthly=historicalData[indId];
+  if(!monthly){
+    try{const obs=await getHistory(indId);monthly=toMonthly(obs,ind.tx);historicalData[indId]=monthly;}
+    catch(e){monthly=[];}
+  }
+
+  const latestVal=monthly.length>0?monthly[monthly.length-1].value:null;
+  const sig=latestVal!==null?ind.sig(latestVal):null;
+  const prefix=ind.showSign&&latestVal>=0?'+':'';
+  const valStr=latestVal!==null?`${prefix}${latestVal.toFixed(ind.dp)}${ind.unit}`:'—';
+
+  document.getElementById('modal-value').textContent=valStr;
+  document.getElementById('modal-value').style.color=sig?HEX[sig]:'var(--muted)';
+
+  const badge=document.getElementById('modal-badge');
+  if(sig){badge.textContent=ind.lbl[sig];badge.style.background=BGS[sig];badge.style.color=TXT[sig];badge.style.display='inline-block';}
+  else{badge.style.display='none';}
+
+  const stats=latestVal!==null?computeStats(monthly,latestVal,ind):null;
+  if(stats){
+    const fmt=v=>{const p=ind.showSign&&v>=0?'+':'';return`${p}${v.toFixed(ind.dp)}${ind.unit}`;};
+    document.getElementById('modal-stat-high').textContent=fmt(stats.high12);
+    document.getElementById('modal-stat-low').textContent=fmt(stats.low12);
+    document.getElementById('modal-stat-pct').textContent=`${stats.percentile}th`;
+    document.getElementById('modal-stat-mom').textContent=stats.mom!==null?fmt(stats.mom):'—';
+  }
+
+  const detail=IND_DETAIL[indId]||{};
+  document.getElementById('modal-about-text').innerHTML=`<p>${detail.about||''}</p>`;
+  document.getElementById('modal-watch-text').innerHTML=`<p>${detail.watch||''}</p>`;
+
+  if(modalChart){modalChart.destroy();modalChart=null;}
+  if(monthly.length>1){
+    const labels=monthly.map(p=>p.label),data=monthly.map(p=>p.value),[t1,t2]=ind.thresholds;
+    const canvas=document.getElementById('modal-chart-canvas');
+    modalChart=new Chart(canvas,{
+      type:'line',plugins:[recessionPlugin],
+      data:{labels,datasets:[
+        {data,borderColor:'#1B2A4A',borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:false},
+        {data:labels.map(()=>t1),borderColor:'rgba(99,153,34,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+        {data:labels.map(()=>t2),borderColor:'rgba(226,75,74,0.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>formatMonth(ctx[0].label),label:ctx=>{if(ctx.datasetIndex!==0)return null;const v=ctx.raw,p=ind.showSign&&v>=0?'+':'';return`${p}${v.toFixed(ind.dp)}${ind.unit}`;}},filter:i=>i.datasetIndex===0},recessionBands:true},
+        scales:{x:{ticks:{maxTicksLimit:8,maxRotation:0,callback:(v,i)=>formatMonth(labels[i]),font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},
+          y:{ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:'#8892A4',callback:v=>`${v}${ind.unit}`},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}}}}
+    });
+  }
+
+  document.getElementById('modal-loading').style.display='none';
+  document.getElementById('modal-loaded').style.display='block';
+}
+
+function closeModal(){
+  if(modalChart){modalChart.destroy();modalChart=null;}
+  document.getElementById('ind-modal').style.display='none';
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 buildDropdown();buildArchiveGrid();buildExplainGrid();loadData();
 </script>
+<div id="ind-modal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-ind-name" id="modal-ind-name"></div>
+        <div class="modal-ind-sub" id="modal-ind-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-loading" style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px;">Loading…</div>
+      <div id="modal-loaded" style="display:none">
+        <div class="modal-value-row">
+          <div class="modal-value" id="modal-value">—</div>
+          <span class="modal-badge" id="modal-badge"></span>
+        </div>
+        <div class="modal-chart-wrap"><canvas id="modal-chart-canvas"></canvas></div>
+        <div class="modal-stats">
+          <div class="modal-stat"><div class="modal-stat-label">1Y HIGH</div><div class="modal-stat-value" id="modal-stat-high">—</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">1Y LOW</div><div class="modal-stat-value" id="modal-stat-low">—</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">HISTORICAL PERCENTILE</div><div class="modal-stat-value" id="modal-stat-pct">—</div></div>
+          <div class="modal-stat" style="grid-column:1/-1"><div class="modal-stat-label">MONTH-ON-MONTH CHANGE</div><div class="modal-stat-value" id="modal-stat-mom">—</div></div>
+        </div>
+        <div class="modal-about-title">ABOUT THIS INDICATOR</div>
+        <div class="modal-about" id="modal-about-text"></div>
+        <div class="modal-about-watch" id="modal-watch-text"></div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
