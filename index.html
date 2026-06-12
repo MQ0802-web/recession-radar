@@ -228,6 +228,7 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
   <div class="nav-logo" onclick="showPage('dashboard')">RECESSION RADAR</div>
   <ul class="nav-links">
     <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
+    <li class="nav-item" id="nav-indicators"><a onclick="showPage('indicators')">Indicators</a></li>
     <li class="nav-item" id="nav-archive">
       <a>Archive &#9660;</a>
       <div class="nav-dropdown" id="archive-dropdown"></div>
@@ -279,7 +280,7 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
         <div class="gauge-label" id="gauge-label">-</div>
       </div>
       <div class="breakdown">
-        <div class="breakdown-title">SIGNAL BREAKDOWN</div>
+        <div class="breakdown-title" id="breakdown-title">SIGNAL BREAKDOWN</div>
         <div class="breakdown-counts">
           <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">-</div><div class="count-lbl">alert</div></div>
           <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">-</div><div class="count-lbl">warning</div></div>
@@ -291,39 +292,20 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
             Edit<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span>
           </button>
         </div>
+        <a style="font-size:12px;color:var(--navy);cursor:pointer;margin-top:8px;display:inline-block" onclick="showPage('indicators')">Explore all indicators →</a>
       </div>
     </div>
-    <div class="section-label">RECESSION SIGNALS</div>
+    <div class="section-label">YOUR INDICATORS</div>
     <div class="ind-grid" id="headline-grid"></div>
-    <div class="lib-header">
-      <div class="lib-title">ECONOMIC DATA LIBRARY - <span id="lib-count">-</span> INDICATORS</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="filter-btn active" onclick="filterCat('all',this)">All</button>
-        <button class="filter-btn" onclick="filterCat('labour',this)">Labour</button>
-        <button class="filter-btn" onclick="filterCat('output',this)">Output</button>
-        <button class="filter-btn" onclick="filterCat('housing',this)">Housing</button>
-        <button class="filter-btn" onclick="filterCat('financial',this)">Financial</button>
-        <button class="filter-btn" onclick="filterCat('prices',this)">Prices</button>
-        <button class="filter-btn" onclick="filterCat('consumer',this)">Consumer</button>
-      </div>
-    </div>
-    <div class="ind-grid" id="library-grid"></div>
-    <div id="charts-section" style="display:none;margin-top:8px">
-      <div class="lib-header" style="margin-top:16px">
-        <div class="lib-title">HISTORICAL CHARTS - 7 YEARS</div>
-        <div style="font-size:11px;color:var(--muted)">Drag to zoom &middot; Click card for detail</div>
-      </div>
-      <div class="charts-grid" id="charts-grid"></div>
-    </div>
     <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
     <div id="customize-overlay" class="customize-overlay" onclick="closeCustomizePanel()"></div>
     <div id="customize-panel" class="customize-panel">
       <div class="customize-header">
-        <div class="customize-title">Customise Dashboard</div>
+        <div class="customize-title">Your Indicators</div>
         <button class="customize-close" onclick="closeCustomizePanel()">×</button>
       </div>
       <div class="customize-body">
-        <div class="customize-subheading">Choose which indicators appear in your dashboard. Your selection is saved automatically.</div>
+        <div class="customize-subheading">Select up to 10 indicators to show on your dashboard. All indicators are always available in the Indicators tab.</div>
         <a class="reset-link" onclick="resetToDefault()">Reset to default</a>
         <input type="text" id="search-indicators" class="search-box" placeholder="Search indicators...">
         <div class="customize-groups" id="customize-groups"></div>
@@ -331,6 +313,41 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
       </div>
     </div>
   </div>
+</main>
+</div>
+
+<div id="page-indicators" class="page">
+<main>
+  <div class="page-header">
+    <div class="page-eyebrow">ECONOMIC INDICATORS</div>
+    <div class="page-title">Economic Indicators</div>
+    <div class="page-subtitle">Full library of 30 US economic indicators. Click any card for detail and 7-year history.</div>
+  </div>
+  <div style="margin-bottom:18px;position:relative">
+    <input type="text" id="indicators-search" class="search-box" placeholder="Search indicators by name...">
+    <span class="search-clear" id="indicators-search-clear" onclick="clearIndicatorsSearch()" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:18px;font-weight:300">×</span>
+  </div>
+  <div class="lib-header" style="margin-bottom:14px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="filter-btn active" onclick="filterCat('all',this)">All</button>
+      <button class="filter-btn" onclick="filterCat('labour',this)">Labour</button>
+      <button class="filter-btn" onclick="filterCat('output',this)">Output</button>
+      <button class="filter-btn" onclick="filterCat('housing',this)">Housing</button>
+      <button class="filter-btn" onclick="filterCat('financial',this)">Financial</button>
+      <button class="filter-btn" onclick="filterCat('prices',this)">Prices</button>
+      <button class="filter-btn" onclick="filterCat('consumer',this)">Consumer</button>
+    </div>
+  </div>
+  <div class="ind-grid" id="library-grid"></div>
+  <div id="no-indicators-msg" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;display:none">No indicators match your search.</div>
+  <div id="charts-section" style="display:none;margin-top:32px">
+    <div class="lib-header" style="margin-top:16px">
+      <div class="lib-title">HISTORICAL CHARTS - 7 YEARS</div>
+      <div style="font-size:11px;color:var(--muted)">Drag to zoom · Click card for detail</div>
+    </div>
+    <div class="charts-grid" id="charts-grid"></div>
+  </div>
+  <div class="site-footer">DATA: FRED (ST. LOUIS FED) · INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
 </main>
 </div>
 
@@ -870,7 +887,7 @@ var IMP_CLR = {high:"#E24B4A", medium:"#BA7517"};
 var IMP_LBL = {high:"HIGH", medium:"MED"};
 var WDAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var MTHS    = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-var ALL_PAGES = ["dashboard","archive","calendar","explain"];
+var ALL_PAGES = ["dashboard","indicators","archive","calendar","explain"];
 
 // ── NAVIGATION ─────────────────────────────────────────────────────────────
 function showPage(p) {
@@ -1351,7 +1368,6 @@ function loadData() {
     var values = hlResults.map(function(r) { return r.status === 'fulfilled' ? r.value : null; });
     renderDashboard(values);
     probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
-    loadLibrary();
   });
 }
 
@@ -1385,6 +1401,7 @@ function renderDashboard(values) {
   });
   var validSigs = signals.filter(function(s) { return s !== null; });
   updateGauge(validSigs);
+  document.getElementById('breakdown-title').textContent = 'SIGNAL BREAKDOWN — ' + selected.length + ' INDICATORS';
   document.getElementById('count-red').textContent   = signals.filter(function(s) { return s === 'r'; }).length;
   document.getElementById('count-amber').textContent = signals.filter(function(s) { return s === 'a'; }).length;
   document.getElementById('count-green').textContent = signals.filter(function(s) { return s === 'g'; }).length;
@@ -1420,6 +1437,8 @@ function createCard(ind, val, container) {
   card.className = 'ind-card';
   card.setAttribute('data-category', ind.cat);
   card.setAttribute('data-indid', ind.id);
+  card.setAttribute('data-name', ind.name);
+  card.setAttribute('data-sub', ind.sub);
   if (sig) {
     var accent = document.createElement('div');
     accent.className = 'ind-accent';
@@ -1834,6 +1853,37 @@ document.getElementById('library-grid').addEventListener('click', function(e) {
   if (card) { openModal(card.getAttribute('data-indid')); }
 });
 
+// ── INDICATORS PAGE ────────────────────────────────────────────────────────
+function loadIndicatorsPage() {
+  var grid = document.getElementById('library-grid');
+  if (grid.children.length > 0) { return; }
+  loadLibrary();
+}
+
+function searchIndicators(searchTerm) {
+  searchTerm = (searchTerm || '').toLowerCase();
+  var grid = document.getElementById('library-grid');
+  var cards = grid.querySelectorAll('.ind-card');
+  var matchCount = 0;
+  cards.forEach(function(card) {
+    var name = card.getAttribute('data-name') || '';
+    var sub = card.getAttribute('data-sub') || '';
+    var matches = name.toLowerCase().indexOf(searchTerm) >= 0 || sub.toLowerCase().indexOf(searchTerm) >= 0;
+    card.style.display = matches ? 'block' : 'none';
+    if (matches) { matchCount++; }
+  });
+  var noMsg = document.getElementById('no-indicators-msg');
+  if (noMsg) { noMsg.style.display = matchCount === 0 && searchTerm !== '' ? 'block' : 'none'; }
+  var clearBtn = document.getElementById('indicators-search-clear');
+  if (clearBtn) { clearBtn.style.display = searchTerm !== '' ? 'inline' : 'none'; }
+}
+
+function clearIndicatorsSearch() {
+  var input = document.getElementById('indicators-search');
+  if (input) { input.value = ''; input.focus(); }
+  searchIndicators('');
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
 buildDropdown();
 buildArchiveGrid();
@@ -1842,6 +1892,23 @@ buildCalendar();
 initializeSelectedIndicators();
 updateCustomDot();
 loadData();
+
+// Set up search listener for indicators page
+var searchInput = document.getElementById('indicators-search');
+if (searchInput) {
+  searchInput.addEventListener('input', function() {
+    searchIndicators(this.value);
+  });
+}
+
+// Update showPage to load indicators when needed
+var originalShowPage = showPage;
+showPage = function(p) {
+  originalShowPage(p);
+  if (p === 'indicators') {
+    loadIndicatorsPage();
+  }
+};
 
 </script>
 </body>
