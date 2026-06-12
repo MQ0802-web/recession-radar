@@ -2111,7 +2111,6 @@ var isDragging = false;
     isDragging = true;
     lastDragX = e.clientX;
     lastDragY = e.clientY;
-    e.preventDefault();
   });
   canvas.addEventListener('mousemove', function(e) {
     if (!isDragging) { return; }
