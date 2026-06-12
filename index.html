@@ -1471,7 +1471,7 @@ function openModal(indId) {
     document.getElementById('mt-0').onclick = function() { toggleDS(0, 'mt-0'); };
     document.getElementById('mt-1').onclick = function() { toggleDS(1, 'mt-1'); };
     document.getElementById('mt-2').onclick = function() { toggleDS(2, 'mt-2'); };
-    buildModalChart(m, ind);
+    setRange('7y');
     document.getElementById('modal-loading').style.display = 'none';
     document.getElementById('modal-loaded').style.display  = 'block';
   }).catch(function() {
