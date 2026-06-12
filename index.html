@@ -1619,12 +1619,7 @@ function buildProbChart(monthly) {
   if (!canvas || monthly.length < 2) { return; }
 document.getElementById('prob-chart-card').style.display = 'flex';
   document.getElementById('prob-chart-card').style.flexDirection = 'column';
-  var now = new Date();
-  var cutoff = new Date(now);
-  cutoff.setFullYear(cutoff.getFullYear() - 7);
-  var cut = cutoff.toISOString().substring(0, 7);
-  var filtered = monthly.filter(function(p) { return p.label >= cut; });
-  if (filtered.length < 2) { filtered = monthly; }
+  var filtered = monthly;
 
   var labels = filtered.map(function(p) { return p.label; });
   var data = filtered.map(function(p) { return p.value; });
