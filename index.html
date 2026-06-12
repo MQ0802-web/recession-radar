@@ -291,8 +291,9 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
     <div id="dashboard-charts-section" style="display:none;margin-top:24px">
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
-<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:24px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">FED RECESSION PROBABILITY</div>
-    <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px;cursor:pointer" onclick="openProbModal()">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:24px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CONTEXT</div>    
+<div style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:start"></div>
+<div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px;cursor:pointer" onclick="openProbModal()">
       <div class="chart-card-hdr">
         <div>
           <div class="chart-card-name">Recession Probability</div>
@@ -301,6 +302,15 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
       </div>
       <div style="position:relative;height:150px">
         <canvas id="prob-chart-canvas"></canvas>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">METHODOLOGY</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">The <strong style="color:var(--text)">Composite Risk Score</strong> is computed live from your selected indicators. Each indicator is assigned a signal — green, amber, or red — based on fixed thresholds derived from historical recession patterns.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">Scoring: <span style="color:var(--red);font-weight:600">Red = 2 pts</span> &nbsp;·&nbsp; <span style="color:var(--amber);font-weight:600">Amber = 1 pt</span> &nbsp;·&nbsp; <span style="color:var(--green);font-weight:600">Green = 0 pts</span>. The score is the sum divided by the maximum possible, expressed as 0–100.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">The <strong style="color:var(--text)">Federal Reserve probability</strong> shown below uses the Chauvet-Piger dynamic factor model, published monthly by the St. Louis Fed with a 2–3 month lag. It is shown for historical context only.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">Default indicators were selected based on their <strong style="color:var(--text)">historical predictive track record</strong>: yield curve inversion has preceded every US recession since 1970; credit spreads lead economic downturns by weeks to months; jobless claims provide near real-time labour market signals.</div>
+        <div style="font-size:11px;color:var(--muted);font-style:italic;padding-top:12px;border-top:1px solid var(--border)">This is an indicative signal index, not a statistical model. It should not be used as the sole basis for any financial decision.</div>
       </div>
     </div>
     <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>    <div id="customize-overlay" class="customize-overlay" onclick="closeCustomizePanel()"></div>
