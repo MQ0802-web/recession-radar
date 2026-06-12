@@ -1659,16 +1659,7 @@ function buildMiniChart(ind, monthly) {
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: {mode: 'index', intersect: false},
-      onHover: function(e, els) {
-        if (els.length > 0) {
-          chart.crosshairActive = true;
-          chart.crosshairX = e.x;
-          chart.render();
-        } else {
-          chart.crosshairActive = false;
-          chart.render();
-        }
-      },
+    
       plugins: {
         legend: {display: false},
         tooltip: {
@@ -1788,16 +1779,7 @@ function buildModalChart(monthly, ind) {
           showPinned(fmtMonth(labels[idx]) + ': ' + fmtVal(ind, data[idx]));
         }
       },
-      onHover: function(e, els) {
-        if (els.length > 0) {
-          chart.crosshairActive = true;
-          chart.crosshairX = e.x;
-          chart.render();
-        } else {
-          chart.crosshairActive = false;
-          chart.render();
-        }
-      },
+      
       plugins: {
         legend: {display: false},
         tooltip: {
