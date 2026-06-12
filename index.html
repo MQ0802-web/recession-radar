@@ -239,16 +239,6 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
     <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
   </div>
   <div id="dashboard-content" style="display:none">
-    <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-      <div>
-        <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px">US Recession Monitor</div>
-        <div style="font-size:13px;color:var(--muted)" id="hero-summary">Loading indicators...</div>
-      </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right">
-        <div id="hero-date"></div>
-        <div style="margin-top:2px">Live data from FRED</div>
-      </div>
-    </div>
     <div class="prob-card">
       <div>
         <div class="prob-eyebrow">RECESSION PROBABILITY</div>
@@ -273,8 +263,7 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
             Edit<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span>
           </button>
         </div>
-        <a style="font-size:12px;color:var(--navy);cursor:pointer;margin-top:8px;display:inline-block" onclick="showPage('indicators')">Explore all indicators →</a>
-      </div>
+<a style="font-size:12px;color:var(--navy);cursor:pointer;margin-top:16px;margin-bottom:8px;display:inline-block" onclick="showPage('indicators')">Explore all indicators →</a>      </div>
     </div>
     <div class="score-card" id="score-card" style="display:none">
       <div>
@@ -295,7 +284,6 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
         </div>
       </div>
     </div>
-    <div class="section-label">YOUR INDICATORS</div>
     <div class="section-label">YOUR INDICATORS</div>
     <div class="ind-grid" id="headline-grid"></div>
     <div id="dashboard-charts-section" style="display:none;margin-top:24px">
@@ -659,6 +647,35 @@ function buildCustomizePanel(searchTerm) {
   searchTerm = (searchTerm || '').toLowerCase();
   var container = document.getElementById('customize-groups');
   container.innerHTML = '';
+  var container = document.getElementById('customize-groups');
+  container.innerHTML = '';
+  var selectAllRow = document.createElement('div');
+  selectAllRow.style.cssText = 'display:flex;gap:8px;margin-bottom:16px';
+  var selectAllBtn = document.createElement('button');
+  selectAllBtn.className = 'btn-sm';
+  selectAllBtn.textContent = 'Select all 30';
+  selectAllBtn.onclick = function() {
+    var ids = INDICATORS.map(function(ind) { return ind.id; }).slice(0, 10);
+    selectedIndicatorIds = ids;
+    saveSelectedIndicators();
+    updateCustomDot();
+    buildCustomizePanel(searchTerm);
+    updateDashboard();
+    showError('Maximum 10 indicators — showing first 10. Deselect some to add others.');
+  };
+  var clearAllBtn = document.createElement('button');
+  clearAllBtn.className = 'btn-sm';
+  clearAllBtn.textContent = 'Clear all';
+  clearAllBtn.onclick = function() {
+    selectedIndicatorIds = [defaultIndicatorIds[0]];
+    saveSelectedIndicators();
+    updateCustomDot();
+    buildCustomizePanel(searchTerm);
+    updateDashboard();
+  };
+  selectAllRow.appendChild(selectAllBtn);
+  selectAllRow.appendChild(clearAllBtn);
+  container.appendChild(selectAllRow);
 
   var categories = ['labour', 'output', 'housing', 'financial', 'prices', 'consumer'];
   var categoryNames = {labour:'Labour', output:'Output', housing:'Housing', financial:'Financial', prices:'Prices', consumer:'Consumer'};
@@ -675,10 +692,38 @@ function buildCustomizePanel(searchTerm) {
     var group = document.createElement('div');
     group.className = 'customize-group';
 
+    var titleRow = document.createElement('div');
+    titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 12px;margin-bottom:8px';
     var title = document.createElement('div');
     title.className = 'customize-group-title';
+    title.style.margin = '0';
+    title.style.padding = '0';
     title.textContent = categoryNames[cat];
-    group.appendChild(title);
+    var selectAllCat = document.createElement('span');
+    selectAllCat.textContent = 'Select all';
+    selectAllCat.style.cssText = 'font-size:11px;color:var(--navy);cursor:pointer;font-weight:500';
+    (function(catName, catItems) {
+      selectAllCat.onclick = function() {
+        var toAdd = catItems.filter(function(ind) {
+          return selectedIndicatorIds.indexOf(ind.id) === -1;
+        });
+        var remaining = 10 - selectedIndicatorIds.length;
+        if (remaining <= 0) { showError('Maximum 10 indicators selected'); return; }
+        toAdd.slice(0, remaining).forEach(function(ind) {
+          selectedIndicatorIds.push(ind.id);
+        });
+        if (toAdd.length > remaining) {
+          showError('Maximum 10 reached — added ' + remaining + ' from ' + categoryNames[catName]);
+        }
+        saveSelectedIndicators();
+        updateCustomDot();
+        buildCustomizePanel(searchTerm);
+        updateDashboard();
+      };
+    })(cat, filtered);
+    titleRow.appendChild(title);
+    titleRow.appendChild(selectAllCat);
+    group.appendChild(titleRow);
 
     filtered.forEach(function(ind) {
       var item = document.createElement('div');
@@ -1486,7 +1531,6 @@ function renderDashboard(values) {
   grid.innerHTML = '';
   selected.forEach(function(ind, i) { createCard(ind, values[i], grid); });
   renderCompositeScore(selected, values);
-  renderHero(selected, values);
   loadDashboardCharts();
 }
 
