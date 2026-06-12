@@ -267,24 +267,15 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
         </div>
 <a style="font-size:12px;color:var(--navy);cursor:pointer;margin-top:16px;margin-bottom:8px;display:inline-block" onclick="showPage('indicators')">Explore all indicators →</a>      </div>
     </div>
-    <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px">
+    <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px;cursor:pointer" onclick="openProbModal()">
       <div class="chart-card-hdr">
         <div>
           <div class="chart-card-name">Recession Probability</div>
-          <div class="chart-card-sub">Federal Reserve model (Chauvet & Piger) — monthly</div>
-        </div>
-        <div style="display:flex;gap:4px">
-          <button class="btn-sm" id="prob-range-3y" onclick="setProbRange('3y')">3Y</button>
-          <button class="btn-sm active" id="prob-range-7y" onclick="setProbRange('7y')">7Y</button>
-          <button class="btn-sm" id="prob-range-max" onclick="setProbRange('max')">Max</button>
+          <div class="chart-card-sub">Federal Reserve model (Chauvet & Piger) — click to expand</div>
         </div>
       </div>
-      <<div style="position:relative;height:180px">
+      <div style="position:relative;height:150px">
         <canvas id="prob-chart-canvas"></canvas>
-        <div class="chart-zoom-btns">
-          <button class="chart-zoom-btn" onclick="probZoomIn()">+</button>
-          <button class="chart-zoom-btn" onclick="probZoomOut()">−</button>
-        </div>
       </div>
     </div>
     <div class="score-card" id="score-card" style="display:none">
@@ -426,6 +417,45 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
 </main>
 </div>
 
+<div id="prob-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);overflow-y:auto;padding:40px 16px">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div>
+        <div class="modal-ind-name">Recession Probability</div>
+        <div class="modal-ind-sub">Federal Reserve model (Chauvet &amp; Piger) &middot; Updated monthly</div>
+      </div>
+      <button class="modal-close" onclick="closeProbModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-value-row">
+        <div class="modal-value" id="prob-modal-value">-</div>
+        <span class="modal-badge" id="prob-modal-badge"></span>
+      </div>
+      <div class="modal-chart-hdr">
+        <div class="modal-chart-title">HISTORICAL DATA</div>
+        <div class="modal-chart-controls">
+          <button class="btn-sm" id="prob-modal-1y" onclick="setProbModalRange('1y')">1Y</button>
+          <button class="btn-sm" id="prob-modal-3y" onclick="setProbModalRange('3y')">3Y</button>
+          <button class="btn-sm active" id="prob-modal-7y" onclick="setProbModalRange('7y')">7Y</button>
+          <button class="btn-sm" id="prob-modal-15y" onclick="setProbModalRange('15y')">15Y</button>
+          <button class="btn-sm" id="prob-modal-max" onclick="setProbModalRange('max')">Max</button>
+          <button class="btn-sm" onclick="resetProbModalZoom()">Reset zoom</button>
+        </div>
+      </div>
+      <div class="modal-chart-wrap">
+        <canvas id="prob-modal-canvas"></canvas>
+        <div class="chart-zoom-btns">
+          <button class="chart-zoom-btn" onclick="probModalZoomIn()">+</button>
+          <button class="chart-zoom-btn" onclick="probModalZoomOut()">−</button>
+        </div>
+      </div>
+      <div class="modal-chart-hint">Drag to pan &middot; Pinch to zoom &middot; Hover for values</div>
+      <div style="margin-top:16px;padding:14px 16px;background:#F0F4FA;border-left:3px solid var(--navy);border-radius:0 6px 6px 0">
+        <p style="font-size:13px;color:var(--navy);font-weight:500;line-height:1.6;margin:0">The Chauvet-Piger model estimates the probability that the US economy is currently in recession using a dynamic factor model applied to four monthly indicators: non-farm payrolls, industrial production, real personal income, and real manufacturing sales. It is published monthly by the Federal Reserve Bank of St. Louis with a lag of approximately 2-3 months.</p>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="ind-modal">
 <div class="modal-panel">
   <div class="modal-header">
@@ -1527,15 +1557,75 @@ probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { ren
     }).catch(function() {});  });
 }
 
-var probChartInstance = null;
 var probMonthlyAll = [];
+var probMiniChart = null;
+var probModalChart = null;
 
 function buildProbChart(monthly) {
   probMonthlyAll = monthly;
-  setProbRange('7y');
+  var canvas = document.getElementById('prob-chart-canvas');
+  if (!canvas || monthly.length < 2) { return; }
+  document.getElementById('prob-chart-card').style.display = 'block';
+
+  var now = new Date();
+  var cutoff = new Date(now);
+  cutoff.setFullYear(cutoff.getFullYear() - 7);
+  var cut = cutoff.toISOString().substring(0, 7);
+  var filtered = monthly.filter(function(p) { return p.label >= cut; });
+  if (filtered.length < 2) { filtered = monthly; }
+
+  var labels = filtered.map(function(p) { return p.label; });
+  var data = filtered.map(function(p) { return p.value; });
+
+  if (probMiniChart) { probMiniChart.destroy(); }
+  probMiniChart = new Chart(canvas, {
+    type: 'line',
+    plugins: [recPlugin],
+    data: {labels: labels, datasets: [{
+      data: data,
+      borderColor: '#E24B4A',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true,
+      backgroundColor: 'rgba(226,75,74,0.08)'
+    }]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {enabled: false},
+        zoom: {zoom: {wheel: {enabled: false}, pinch: {enabled: false}}, pan: {enabled: false}}
+      },
+      scales: {
+        x: {ticks: {maxTicksLimit: 6, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
+        y: {min: 0, max: 100, ticks: {maxTicksLimit: 4, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return v + '%'; }}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}}
+      }
+    }
+  });
 }
 
-function setProbRange(range) {
+function openProbModal() {
+  if (!probMonthlyAll.length) { return; }
+  document.getElementById('prob-modal').style.display = 'block';
+  var lv = probMonthlyAll[probMonthlyAll.length - 1].value;
+  var el = document.getElementById('prob-modal-value');
+  var badge = document.getElementById('prob-modal-badge');
+  el.textContent = lv.toFixed(1) + '%';
+  var hex, label, bg, txt;
+  if (lv < 5)       { hex = '#639922'; label = 'Low';      bg = 'var(--gbg)'; txt = 'var(--gtxt)'; }
+  else if (lv < 30) { hex = '#BA7517'; label = 'Elevated'; bg = 'var(--abg)'; txt = 'var(--atxt)'; }
+  else              { hex = '#E24B4A'; label = 'High';     bg = 'var(--rbg)'; txt = 'var(--rtxt)'; }
+  el.style.color = hex;
+  badge.textContent = label;
+  badge.style.background = bg;
+  badge.style.color = txt;
+  badge.style.display = 'inline-block';
+  setProbModalRange('7y');
+}
+
+function setProbModalRange(range) {
   var monthly = probMonthlyAll;
   if (!monthly || monthly.length < 2) { return; }
   var filtered;
@@ -1544,23 +1634,23 @@ function setProbRange(range) {
   } else {
     var now = new Date();
     var cutoff = new Date(now);
-    if (range === '3y') { cutoff.setFullYear(cutoff.getFullYear() - 3); }
-    else { cutoff.setFullYear(cutoff.getFullYear() - 7); }
+    if (range === '1y')       { cutoff.setFullYear(cutoff.getFullYear() - 1); }
+    else if (range === '3y')  { cutoff.setFullYear(cutoff.getFullYear() - 3); }
+    else if (range === '7y')  { cutoff.setFullYear(cutoff.getFullYear() - 7); }
+    else if (range === '15y') { cutoff.setFullYear(cutoff.getFullYear() - 15); }
     var cut = cutoff.toISOString().substring(0, 7);
     filtered = monthly.filter(function(p) { return p.label >= cut; });
     if (filtered.length < 2) { filtered = monthly; }
   }
 
-  ['3y','7y','max'].forEach(function(r) {
-    var el = document.getElementById('prob-range-' + r);
+  ['1y','3y','7y','15y','max'].forEach(function(r) {
+    var el = document.getElementById('prob-modal-' + r);
     if (el) { el.classList.toggle('active', r === range); }
   });
 
-  var canvas = document.getElementById('prob-chart-canvas');
+  var canvas = document.getElementById('prob-modal-canvas');
   if (!canvas) { return; }
-  if (probChartInstance) { probChartInstance.destroy(); probChartInstance = null; }
-
-  document.getElementById('prob-chart-card').style.display = 'block';
+  if (probModalChart) { probModalChart.destroy(); probModalChart = null; }
 
   var labels = filtered.map(function(p) { return p.label; });
   var data = filtered.map(function(p) { return p.value; });
@@ -1569,9 +1659,10 @@ function setProbRange(range) {
     type: 'line',
     plugins: [recPlugin],
     data: {labels: labels, datasets: [{
+      label: 'Recession Probability',
       data: data,
       borderColor: '#E24B4A',
-      borderWidth: 2,
+      borderWidth: 2.5,
       pointRadius: 0,
       pointHoverRadius: 5,
       tension: 0.3,
@@ -1582,6 +1673,12 @@ function setProbRange(range) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: {mode: 'index', intersect: false},
+      onClick: function(e, els) {
+        if (els.length > 0) {
+          var idx = els[0].index;
+          showPinned(fmtMonth(labels[idx]) + ': ' + data[idx].toFixed(1) + '%');
+        }
+      },
       plugins: {
         legend: {display: false},
         tooltip: {
@@ -1604,12 +1701,12 @@ function setProbRange(range) {
       },
       scales: {
         x: {
-          ticks: {maxTicksLimit: 8, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'},
+          ticks: {maxTicksLimit: 10, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'},
           grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
         },
         y: {
           min: 0, max: 100,
-          ticks: {maxTicksLimit: 5, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return v + '%'; }},
+          ticks: {maxTicksLimit: 6, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return v + '%'; }},
           grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
         }
       }
@@ -1620,22 +1717,36 @@ function setProbRange(range) {
   var lastDragX = 0;
   var lastDragY = 0;
   canvas.addEventListener('mousedown', function(e) {
-    isDragging = true;
-    lastDragX = e.clientX;
-    lastDragY = e.clientY;
+    isDragging = true; lastDragX = e.clientX; lastDragY = e.clientY;
   });
   canvas.addEventListener('mousemove', function(e) {
     if (!isDragging) { return; }
     var dx = e.clientX - lastDragX;
     var dy = e.clientY - lastDragY;
-    lastDragX = e.clientX;
-    lastDragY = e.clientY;
+    lastDragX = e.clientX; lastDragY = e.clientY;
     chart.pan({x: dx, y: dy});
   });
   canvas.addEventListener('mouseup', function() { isDragging = false; });
   canvas.addEventListener('mouseleave', function() { isDragging = false; });
 
-  probChartInstance = chart;
+  probModalChart = chart;
+}
+
+function resetProbModalZoom() { setProbModalRange('7y'); }
+
+function probModalZoomIn() {
+  if (!probModalChart) { return; }
+  probModalChart.zoom(1.3);
+}
+
+function probModalZoomOut() {
+  if (!probModalChart) { return; }
+  probModalChart.zoom(0.7);
+}
+
+function closeProbModal() {
+  if (probModalChart) { probModalChart.destroy(); probModalChart = null; }
+  document.getElementById('prob-modal').style.display = 'none';
 }
 function renderProbability(val) {
   var el = document.getElementById('prob-value');
@@ -2199,16 +2310,6 @@ function modalZoomOut() {
   modalChart.zoom(0.7);
 }
 
-function probZoomIn() {
-  if (!probChartInstance) { return; }
-  probChartInstance.zoom(1.3);
-}
-
-function probZoomOut() {
-  if (!probChartInstance) { return; }
-  probChartInstance.zoom(0.7);
-}
-
 function closeModal() {
   if (modalChart) { modalChart.destroy(); modalChart = null; }
   document.getElementById('ind-modal').style.display = 'none';
@@ -2217,9 +2318,14 @@ function closeModal() {
 }
 
 // Close modal on Escape or background click
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); } });
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeModal(); closeProbModal(); }
+});
 document.getElementById('ind-modal').addEventListener('click', function(e) {
   if (e.target === document.getElementById('ind-modal')) { closeModal(); }
+});
+document.getElementById('prob-modal').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('prob-modal')) { closeProbModal(); }
 });
 
 // Indicator cards click delegation
