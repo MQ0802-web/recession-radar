@@ -54,11 +54,6 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .prob-bar{height:100%;border-radius:3px;transition:width 1s ease}
 .prob-scale{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
 .prob-status{font-size:11px;margin-top:7px}
-.agg-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 28px;margin-bottom:16px;display:flex;align-items:center;gap:36px;flex-wrap:wrap}
-.gauge-wrap{text-align:center;flex-shrink:0}
-.gauge-label{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.08em;margin-top:4px}
-.breakdown{flex:1;min-width:160px}
-.breakdown-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-bottom:12px}
 .section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:12px}
 .ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:11px;margin-bottom:24px}
 .ind-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s}
@@ -260,21 +255,7 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
         </div>
       </div>
     </div>
-    <div class="agg-card">
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 200 100" width="200" height="100">
-          <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E8E8E6" stroke-width="10" stroke-linecap="round"/>
-          <path d="M 32 88 A 68 68 0 0 1 66 23" fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <path d="M 66 23 A 68 68 0 0 1 134 23" fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-          <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
-          <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/>
-          <circle cx="100" cy="88" r="3" fill="white"/>
-          <text x="22" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
-          <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
-        </svg>
-        <div class="gauge-label" id="gauge-label">-</div>
-      </div>
+  
       <div class="breakdown">
         <div class="breakdown-title" id="breakdown-title">SIGNAL BREAKDOWN</div>
         <div style="display:flex;gap:8px;margin-top:12px">
@@ -1390,39 +1371,14 @@ function renderDashboard(values) {
   document.getElementById('nav-live').style.display = 'inline';
   document.getElementById('nav-ts').textContent = now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
   var selected = getSelectedIndicators();
-  var signals = selected.map(function(ind, i) {
-    var v = values[i];
-    return (v !== null && v !== undefined) ? ind.sig(v) : null;
-  });
-  var validSigs = signals.filter(function(s) { return s !== null; });
-  updateGauge(validSigs);
-  document.getElementById('breakdown-title').textContent = 'SIGNAL BREAKDOWN — ' + selected.length + ' INDICATORS';
+  
   var grid = document.getElementById('headline-grid');
   grid.innerHTML = '';
   selected.forEach(function(ind, i) { createCard(ind, values[i], grid); });
   loadDashboardCharts();
 }
 
-function updateGauge(signals) {
-  var reds = signals.filter(function(s) { return s === 'r'; }).length;
-  var ambs = signals.filter(function(s) { return s === 'a'; }).length;
-  var n = signals.length || 5;
-  var score = Math.min(1, (reds * 2 + ambs) / (n * 2));
-  var angle = Math.PI * (1 - score);
-  var nx = 100 + 56 * Math.cos(angle);
-  var ny = 88 - 56 * Math.sin(angle);
-  var label, hex;
-  if (reds >= 4)           { label = 'HIGH RISK';      hex = HEX.r; }
-  else if (reds >= 2)      { label = 'ELEVATED RISK';  hex = HEX.a; }
-  else if (reds === 1 || ambs >= 3) { label = 'MODERATE RISK'; hex = HEX.a; }
-  else                     { label = 'LOW RISK';       hex = HEX.g; }
-  document.getElementById('needle-line').setAttribute('x2', nx);
-  document.getElementById('needle-line').setAttribute('y2', ny);
-  document.getElementById('needle-line').setAttribute('stroke', hex);
-  document.getElementById('needle-hub').setAttribute('fill', hex);
-  document.getElementById('gauge-label').textContent = label;
-  document.getElementById('gauge-label').style.color = hex;
-}
+
 
 function createCard(ind, val, container) {
   var sig = (val !== null && val !== undefined) ? ind.sig(val) : null;
