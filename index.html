@@ -50,8 +50,7 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
 .prob-bar{height:100%;border-radius:3px;transition:width 1s ease}
 .prob-scale{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
 .prob-status{font-size:11px;margin-top:7px}
-.section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:12px}
-.ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px}.ind-card{background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:box-shadow 0.2s,border-color 0.2s,transform 0.2s}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:4px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4}.ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px}.ind-card{background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:box-shadow 0.2s,border-color 0.2s,transform 0.2s}
 .ind-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.09);border-color:#D8D8D6;transform:translateY(-1px)}
 .ind-accent{position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:0 2px 2px 0}.ind-body{padding-left:12px}
 .ind-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;gap:6px}
@@ -254,19 +253,21 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
       </div>
     </div>
   
-      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-      <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:6px 16px">↻ Refresh</button>
-      <button class="btn btn-secondary" id="edit-btn" onclick="openCustomizePanel()" style="font-size:12px;padding:6px 16px">
-        Edit indicators<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span>
-      </button>
-      <a style="font-size:12px;color:var(--navy);cursor:pointer;margin-left:auto" onclick="showPage('indicators')">Explore all indicators →</a>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:10px 16px;background:var(--card);border:1px solid #EEEEEC;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em">DASHBOARD CONTROLS</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a style="font-size:12px;color:var(--muted);cursor:pointer" onclick="showPage('indicators')">Explore all indicators →</a>
+        <button class="btn btn-secondary" id="edit-btn" onclick="openCustomizePanel()" style="font-size:12px;padding:5px 14px">
+          Edit indicators<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span>
+        </button>
+        <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:5px 14px">↻ Refresh</button>
+      </div>
     </div>
     <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px;cursor:pointer" onclick="openProbModal()">
       <div class="chart-card-hdr">
         <div>
           <div class="chart-card-name">Recession Probability</div>
-          <div class="chart-card-sub">Federal Reserve model (Chauvet & Piger) — click to expand</div>
-        </div>
+<div class="chart-card-sub">Federal Reserve model (Chauvet &amp; Piger) &middot; 2-3 month lag &middot; click to expand</div>        </div>
       </div>
       <div style="position:relative;height:150px">
         <canvas id="prob-chart-canvas"></canvas>
@@ -287,15 +288,18 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
         <div class="prob-bar-section">
           <div class="prob-bar-wrap"><div class="prob-bar" id="score-bar" style="width:0%"></div></div>
           <div class="prob-scale"><span>0</span><span>50</span><span>100</span></div>
-          <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;line-height:1.5">Based on <span id="score-ind-count">-</span> indicators &middot; Red=2pts &middot; Amber=1pt &middot; Green=0pts</div>
-        </div>
+<div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;line-height:1.5">Based on <span id="score-ind-count">-</span> indicators &middot; Red=2pts &middot; Amber=1pt &middot; Green=0pts</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic">Equal-weighted signal index — indicative only, not a statistical model</div>        </div>
       </div>
     </div>
-    <div class="section-label">YOUR INDICATORS</div>
-    <div class="ind-grid" id="headline-grid"></div>
+<div style="display:flex;gap:16px;margin-bottom:8px;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--green);opacity:0.7"></div>Clear</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--amber);opacity:0.7"></div>Caution</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--red);opacity:0.7"></div>Alert</div>
+    </div>
+    <div class="section-label">YOUR INDICATORS</div>    <div class="ind-grid" id="headline-grid"></div>
     <div id="dashboard-charts-section" style="display:none;margin-top:24px">
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:12px">HISTORICAL CHARTS</div>
-  <div class="charts-grid" id="dashboard-charts-grid"></div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
     <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
     <div id="customize-overlay" class="customize-overlay" onclick="closeCustomizePanel()"></div>
