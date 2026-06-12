@@ -1593,9 +1593,22 @@ function buildProbChart(monthly) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {mode: 'index', intersect: false},
       plugins: {
         legend: {display: false},
-        tooltip: {enabled: false},
+        tooltip: {
+          backgroundColor: 'rgba(27,42,74,0.95)',
+          titleColor: '#8892A4',
+          bodyColor: '#fff',
+          cornerRadius: 6,
+          padding: 10,
+          titleFont: {family:"'IBM Plex Mono',monospace", size: 10},
+          bodyFont: {family:"'IBM Plex Mono',monospace", size: 12, weight: 'bold'},
+          callbacks: {
+            title: function(c) { return fmtMonth(labels[c[0].index]); },
+            label: function(c) { return 'Probability: ' + c.raw.toFixed(1) + '%'; }
+          }
+        },
         zoom: {zoom: {wheel: {enabled: false}, pinch: {enabled: false}}, pan: {enabled: false}}
       },
       scales: {
