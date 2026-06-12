@@ -1361,8 +1361,16 @@ function buildMiniChart(ind, monthly) {
   var canvas = document.getElementById('mc-' + ind.id);
   if (!canvas) { return; }
   if (miniCharts[ind.id]) { miniCharts[ind.id].destroy(); }
-  var labels = monthly.map(function(p) { return p.label; });
-  var data   = monthly.map(function(p) { return p.value; });
+
+  var now = new Date();
+  var cutoff = new Date(now);
+  cutoff.setFullYear(cutoff.getFullYear() - 7);
+  var cut = cutoff.toISOString().substring(0, 7);
+  var filtered = monthly.filter(function(p) { return p.label >= cut; });
+  if (filtered.length < 2) { filtered = monthly; }
+
+  var labels = filtered.map(function(p) { return p.label; });
+  var data   = filtered.map(function(p) { return p.value; });
   var t1 = ind.th[0];
   var t2 = ind.th[1];
   var t1line = labels.map(function() { return t1; });
