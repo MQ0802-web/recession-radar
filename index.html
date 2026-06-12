@@ -73,7 +73,8 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
 .chart-wrap canvas:active{cursor:grabbing}
 .modal-chart-wrap canvas{cursor:grab;touch-action:none}
 .modal-chart-wrap canvas:active{cursor:grabbing}
-#prob-modal-canvas{touch-action:auto}
+#prob-modal-canvas{touch-action:none;cursor:grab}
+#prob-modal-canvas:active{cursor:grabbing}
 .modal-panel{background:#fff;max-width:780px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.2)}.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
 .modal-ind-name{font-size:18px;font-weight:600;color:var(--navy);margin-bottom:2px}
 .modal-ind-sub{font-size:12px;color:var(--muted)}
@@ -1628,25 +1629,6 @@ function buildProbChart(monthly) {
 function openProbModal() {
   if (!probMonthlyAll.length) { return; }
   document.getElementById('prob-modal').style.display = 'block';
-  if (!openProbModal._listenersAdded) {
-    openProbModal._listenersAdded = true;
-    var probCanvas = document.getElementById('prob-modal-canvas');
-    var isDragging = false;
-    var lastDragX = 0;
-    var lastDragY = 0;
-    probCanvas.addEventListener('mousedown', function(e) {
-      isDragging = true; lastDragX = e.clientX; lastDragY = e.clientY;
-    });
-    probCanvas.addEventListener('mousemove', function(e) {
-      if (!isDragging) { return; }
-      var dx = e.clientX - lastDragX;
-      var dy = e.clientY - lastDragY;
-      lastDragX = e.clientX; lastDragY = e.clientY;
-      if (probModalChart) { probModalChart.pan({x: dx, y: dy}); }
-    });
-    probCanvas.addEventListener('mouseup', function() { isDragging = false; });
-    probCanvas.addEventListener('mouseleave', function() { isDragging = false; });
-  }
   var lv = probMonthlyAll[probMonthlyAll.length - 1].value;
   var el = document.getElementById('prob-modal-value');
   var badge = document.getElementById('prob-modal-badge');
