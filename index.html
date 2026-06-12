@@ -1553,7 +1553,10 @@ function buildMiniChartOnCanvas(canvas, ind, monthly) {
           },
           filter: function(item) { return item.datasetIndex === 0; }
         },
-        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}, pan: {enabled: true, mode: 'x'}}
+        zoom: {
+  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'},
+  pan: {enabled: true, mode: 'x', threshold: 5}
+}
       },
       scales: {
         x: {ticks: {maxTicksLimit: 6, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
@@ -1673,7 +1676,10 @@ function buildMiniChart(ind, monthly) {
           },
           filter: function(item) { return item.datasetIndex === 0; }
         },
-        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}, pan: {enabled: true, mode: 'x'}}
+        zoom: {
+  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'},
+  pan: {enabled: true, mode: 'x', threshold: 5}
+}
       },
       scales: {
         x: {ticks: {maxTicksLimit: 6, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
@@ -1795,7 +1801,10 @@ function buildModalChart(monthly, ind) {
           bodyFont: {family:"'IBM Plex Mono',monospace", size: 12, weight: 'bold'},
           callbacks: {title: function(c) { return fmtMonth(c[0].label); }, label: function(c) { return c.dataset.label + ': ' + fmtVal(ind, c.raw); }}
         },
-        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}, pan: {enabled: true, mode: 'x'}}
+        zoom: {
+  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'},
+  pan: {enabled: true, mode: 'x', threshold: 5}
+}
       },
       scales: {
         x: {ticks: {maxTicksLimit: 10, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
