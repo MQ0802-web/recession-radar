@@ -267,6 +267,22 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
         </div>
 <a style="font-size:12px;color:var(--navy);cursor:pointer;margin-top:16px;margin-bottom:8px;display:inline-block" onclick="showPage('indicators')">Explore all indicators →</a>      </div>
     </div>
+    <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px">
+      <div class="chart-card-hdr">
+        <div>
+          <div class="chart-card-name">Recession Probability</div>
+          <div class="chart-card-sub">Federal Reserve model (Chauvet & Piger) — monthly</div>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-sm" id="prob-range-3y" onclick="setProbRange('3y')">3Y</button>
+          <button class="btn-sm active" id="prob-range-7y" onclick="setProbRange('7y')">7Y</button>
+          <button class="btn-sm" id="prob-range-max" onclick="setProbRange('max')">Max</button>
+        </div>
+      </div>
+      <div style="position:relative;height:180px">
+        <canvas id="prob-chart-canvas"></canvas>
+      </div>
+    </div>
     <div class="score-card" id="score-card" style="display:none">
       <div>
         <div class="prob-eyebrow">COMPOSITE RISK SCORE</div>
@@ -1503,28 +1519,57 @@ function loadData() {
 probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
     apiFetch(PROB_ID, true, null).then(function(d) {
       var monthly = toMonthly(d.observations || [], null);
-      buildProbSparkline(monthly);
+      buildProbChart(monthly);
     }).catch(function() {});  });
 }
 
-function buildProbSparkline(monthly) {
-  var canvas = document.getElementById('prob-sparkline');
-  if (!canvas || monthly.length < 2) { return; }
-  var now = new Date();
-  var cutoff = new Date(now);
-  cutoff.setFullYear(cutoff.getFullYear() - 5);
-  var cut = cutoff.toISOString().substring(0, 7);
-  var filtered = monthly.filter(function(p) { return p.label >= cut; });
-  if (filtered.length < 2) { filtered = monthly; }
+var probChartInstance = null;
+var probMonthlyAll = [];
+
+function buildProbChart(monthly) {
+  probMonthlyAll = monthly;
+  setProbRange('7y');
+}
+
+function setProbRange(range) {
+  var monthly = probMonthlyAll;
+  if (!monthly || monthly.length < 2) { return; }
+  var filtered;
+  if (range === 'max') {
+    filtered = monthly;
+  } else {
+    var now = new Date();
+    var cutoff = new Date(now);
+    if (range === '3y') { cutoff.setFullYear(cutoff.getFullYear() - 3); }
+    else { cutoff.setFullYear(cutoff.getFullYear() - 7); }
+    var cut = cutoff.toISOString().substring(0, 7);
+    filtered = monthly.filter(function(p) { return p.label >= cut; });
+    if (filtered.length < 2) { filtered = monthly; }
+  }
+
+  ['3y','7y','max'].forEach(function(r) {
+    var el = document.getElementById('prob-range-' + r);
+    if (el) { el.classList.toggle('active', r === range); }
+  });
+
+  var canvas = document.getElementById('prob-chart-canvas');
+  if (!canvas) { return; }
+  if (probChartInstance) { probChartInstance.destroy(); probChartInstance = null; }
+
+  document.getElementById('prob-chart-card').style.display = 'block';
+
   var labels = filtered.map(function(p) { return p.label; });
   var data = filtered.map(function(p) { return p.value; });
-  new Chart(canvas, {
+
+  var chart = new Chart(canvas, {
     type: 'line',
+    plugins: [recPlugin],
     data: {labels: labels, datasets: [{
       data: data,
       borderColor: '#E24B4A',
-      borderWidth: 1.5,
+      borderWidth: 2,
       pointRadius: 0,
+      pointHoverRadius: 5,
       tension: 0.3,
       fill: true,
       backgroundColor: 'rgba(226,75,74,0.08)'
@@ -1532,7 +1577,7 @@ function buildProbSparkline(monthly) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: false,
+      interaction: {mode: 'index', intersect: false},
       plugins: {
         legend: {display: false},
         tooltip: {
@@ -1540,19 +1585,46 @@ function buildProbSparkline(monthly) {
           titleColor: '#8892A4',
           bodyColor: '#fff',
           cornerRadius: 6,
-          padding: 8,
+          padding: 10,
+          titleFont: {family:"'IBM Plex Mono',monospace", size: 10},
+          bodyFont: {family:"'IBM Plex Mono',monospace", size: 12, weight: 'bold'},
           callbacks: {
             title: function(c) { return fmtMonth(labels[c[0].index]); },
-            label: function(c) { return c.raw.toFixed(1) + '%'; }
+            label: function(c) { return 'Probability: ' + c.raw.toFixed(1) + '%'; }
           }
+        },
+        zoom: {
+          zoom: {wheel: {enabled: true, modifierKey: 'ctrl'}, pinch: {enabled: true}, mode: 'x'},
+          pan: {enabled: true, mode: 'x', threshold: 5}
         }
       },
       scales: {
-        x: {display: false},
-        y: {display: false, min: 0, max: 100}
+        x: {
+          ticks: {maxTicksLimit: 8, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'},
+          grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
+        },
+        y: {
+          min: 0, max: 100,
+          ticks: {maxTicksLimit: 5, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return v + '%'; }},
+          grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
+        }
       }
     }
   });
+
+  var isDragging = false;
+  var lastDragX = 0;
+  canvas.addEventListener('mousedown', function(e) { isDragging = true; lastDragX = e.clientX; e.preventDefault(); });
+  canvas.addEventListener('mousemove', function(e) {
+    if (!isDragging) { return; }
+    var dx = e.clientX - lastDragX;
+    lastDragX = e.clientX;
+    chart.pan({x: dx});
+  });
+  canvas.addEventListener('mouseup', function() { isDragging = false; });
+  canvas.addEventListener('mouseleave', function() { isDragging = false; });
+
+  probChartInstance = chart;
 }
 function renderProbability(val) {
   var el = document.getElementById('prob-value');
