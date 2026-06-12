@@ -1517,7 +1517,7 @@ function loadData() {
     var values = hlResults.map(function(r) { return r.status === 'fulfilled' ? r.value : null; });
     renderDashboard(values);
 probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
-    apiFetch(PROB_ID, true, null).then(function(d) {
+    apiFetch(PROB_ID, false, null, true, null).then(function(d) {
       var monthly = toMonthly(d.observations || [], null);
       buildProbChart(monthly);
     }).catch(function() {});  });
@@ -1614,8 +1614,7 @@ function setProbRange(range) {
 
   var isDragging = false;
   var lastDragX = 0;
-  canvas.addEventListener('mousedown', function(e) { isDragging = true; lastDragX = e.clientX; e.preventDefault(); });
-  canvas.addEventListener('mousemove', function(e) {
+canvas.addEventListener('mousedown', function(e) { isDragging = true; lastDragX = e.clientX; });  canvas.addEventListener('mousemove', function(e) {
     if (!isDragging) { return; }
     var dx = e.clientX - lastDragX;
     lastDragX = e.clientX;
