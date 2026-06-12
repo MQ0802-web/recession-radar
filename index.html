@@ -292,14 +292,14 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:24px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CONTEXT</div>    
-<div style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:stretch;margin-bottom:12px">      <div class="chart-card" id="prob-chart-card" style="display:none;cursor:pointer;display:flex;flex-direction:column" onclick="openProbModal()">
+<div style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:stretch;margin-bottom:12px">      <div class="chart-card" id="prob-chart-card" style="display:none;flex-direction:column;cursor:pointer" onclick="openProbModal()">
         <div class="chart-card-hdr">
           <div>
             <div class="chart-card-name">Recession Probability</div>
             <div class="chart-card-sub">Federal Reserve model (Chauvet &amp; Piger) &middot; 2-3 month lag &middot; click to expand</div>
           </div>
         </div>
-        <div style="position:relative;flex:1;min-height:150px">
+        <div style="position:relative;flex:1;min-height:150px;height:100%">
           <canvas id="prob-chart-canvas"></canvas>
         </div>
       </div>
