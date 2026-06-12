@@ -22,7 +22,7 @@ nav{background:var(--navy);height:52px;display:flex;align-items:center;padding:0
 .nav-item.active>a{box-shadow:inset 0 -2px 0 #fff}
 .nav-dropdown{display:none;position:absolute;top:52px;left:0;background:#fff;min-width:240px;border:1px solid var(--border);border-top:2px solid var(--navy);box-shadow:0 6px 16px rgba(0,0,0,0.1);z-index:300}
 .nav-item:hover .nav-dropdown{display:block}
-.nav-dropdown a{display:block;padding:11px 16px;font-size:13px;color:var(--text);text-decoration:none;border-bottom:1px solid #F2F2F0}
+.nav-dropdown a{display:block;padding:11px 16px;font-size:13px;color:var(--text);text-decoration:none;border-bottom:1px solid #F2F2F0;cursor:pointer}
 .nav-dropdown a:hover{background:#F5F5F3;color:var(--navy)}
 .nav-dropdown a:last-child{border-bottom:none}
 .dd-period{font-size:11px;color:var(--muted);display:block;margin-top:2px}
@@ -72,7 +72,6 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .ind-badge{font-size:9px;padding:2px 6px;border-radius:99px;white-space:nowrap;flex-shrink:0}
 .ind-sub{font-size:10px;color:var(--muted);margin-bottom:7px;line-height:1.3}
 .ind-value{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:500;margin-bottom:5px}
-.ind-value.loading{color:var(--border)}
 .ind-note{font-size:10px;color:var(--muted);line-height:1.5}
 .ind-hint{font-size:9px;color:var(--muted);margin-top:5px;font-family:'IBM Plex Mono',monospace}
 .lib-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;padding-top:8px;border-top:1px solid var(--border)}
@@ -173,12 +172,12 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .cal-week-hdr{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;padding:16px 0 8px;border-bottom:2px solid var(--border)}
 .cal-day-hdr{font-size:12px;font-weight:600;color:var(--navy);padding:10px 0 4px;font-family:'IBM Plex Mono',monospace}
 .cal-day-hdr.today-hdr{color:var(--green)}
-.cal-event-row{display:grid;grid-template-columns:80px 36px 48px 1fr 76px 76px;gap:0 8px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--border);border-radius:4px;transition:background 0.12s}
+.cal-event-row{display:grid;grid-template-columns:80px 36px 48px 1fr 76px 76px;gap:0 8px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--border);transition:background 0.12s}
 .cal-event-row:hover{background:#F5F5F3}
 .cal-event-row.past{opacity:0.35}
 .cal-event-row.today-event{background:#F0F4FA}
 .cal-etime{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
-.cal-eflag{font-size:14px;text-align:center}
+.cal-eflag{font-size:13px;text-align:center;font-weight:600;color:var(--muted)}
 .cal-eimp{display:flex;align-items:center;gap:3px}
 .cal-eimp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .cal-eimp-txt{font-family:'IBM Plex Mono',monospace;font-size:9px}
@@ -198,7 +197,10 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
   <div class="nav-logo" onclick="showPage('dashboard')">RECESSION RADAR</div>
   <ul class="nav-links">
     <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
-    <li class="nav-item" id="nav-archive"><a>Archive <span style="font-size:9px;opacity:0.6">&#9660;</span></a><div class="nav-dropdown" id="archive-dropdown"></div></li>
+    <li class="nav-item" id="nav-archive">
+      <a>Archive &#9660;</a>
+      <div class="nav-dropdown" id="archive-dropdown"></div>
+    </li>
     <li class="nav-item" id="nav-calendar"><a onclick="showPage('calendar')">Calendar</a></li>
     <li class="nav-item" id="nav-explain"><a onclick="showPage('explain')">Explain It</a></li>
   </ul>
@@ -207,111 +209,138 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 
 <div id="page-dashboard" class="page active">
 <main>
-<div id="status-screen">
-  <div class="spinner" id="spinner"></div>
-  <h2 id="status-title">Loading data&#8230;</h2>
-  <p id="status-msg">Fetching US economic indicators.</p>
-  <div id="err-box" class="error-box" style="display:none"></div>
-  <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
-</div>
-<div id="dashboard-content" style="display:none">
-<div class="prob-card">
-  <div><div class="prob-eyebrow">RECESSION PROBABILITY</div><div class="prob-title">Federal Reserve model estimate</div><div class="prob-source">Chauvet &amp; Piger &middot; Updated monthly</div></div>
-  <div class="prob-right">
-    <div class="prob-value" id="prob-value">&#8212;</div>
-    <div class="prob-bar-section">
-      <div class="prob-bar-wrap"><div class="prob-bar" id="prob-bar" style="width:0%"></div></div>
-      <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
-      <div class="prob-status" id="prob-status"></div>
+  <div id="status-screen">
+    <div class="spinner" id="spinner"></div>
+    <h2 id="status-title">Loading data...</h2>
+    <p id="status-msg">Fetching US economic indicators.</p>
+    <div id="err-box" class="error-box" style="display:none"></div>
+    <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
+  </div>
+  <div id="dashboard-content" style="display:none">
+    <div class="prob-card">
+      <div>
+        <div class="prob-eyebrow">RECESSION PROBABILITY</div>
+        <div class="prob-title">Federal Reserve model estimate</div>
+        <div class="prob-source">Chauvet &amp; Piger &middot; Updated monthly</div>
+      </div>
+      <div class="prob-right">
+        <div class="prob-value" id="prob-value">-</div>
+        <div class="prob-bar-section">
+          <div class="prob-bar-wrap"><div class="prob-bar" id="prob-bar" style="width:0%"></div></div>
+          <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+          <div class="prob-status" id="prob-status"></div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div class="agg-card">
-  <div class="gauge-wrap">
-    <svg viewBox="0 0 200 100" width="200" height="100">
-      <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E8E8E6" stroke-width="10" stroke-linecap="round"/>
-      <path d="M 32 88 A 68 68 0 0 1 66 23" fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-      <path d="M 66 23 A 68 68 0 0 1 134 23" fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-      <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
-      <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
-      <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/><circle cx="100" cy="88" r="3" fill="white"/>
-      <text x="22" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
-      <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
-    </svg>
-    <div class="gauge-label" id="gauge-label">&#8212;</div>
-  </div>
-  <div class="breakdown">
-    <div class="breakdown-title">SIGNAL BREAKDOWN &#8212; 5 KEY INDICATORS</div>
-    <div class="breakdown-counts">
-      <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">&#8212;</div><div class="count-lbl">alert</div></div>
-      <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">&#8212;</div><div class="count-lbl">warning</div></div>
-      <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">&#8212;</div><div class="count-lbl">clear</div></div>
+    <div class="agg-card">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 100" width="200" height="100">
+          <path d="M 32 88 A 68 68 0 0 1 168 88" fill="none" stroke="#E8E8E6" stroke-width="10" stroke-linecap="round"/>
+          <path d="M 32 88 A 68 68 0 0 1 66 23" fill="none" stroke="#639922" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <path d="M 66 23 A 68 68 0 0 1 134 23" fill="none" stroke="#BA7517" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <path d="M 134 23 A 68 68 0 0 1 168 88" fill="none" stroke="#E24B4A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.4"/>
+          <line id="needle-line" x1="100" y1="88" x2="100" y2="30" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/>
+          <circle id="needle-hub" cx="100" cy="88" r="5" fill="#1B2A4A"/>
+          <circle cx="100" cy="88" r="3" fill="white"/>
+          <text x="22" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">LOW</text>
+          <text x="178" y="98" font-size="9" fill="#8892A4" text-anchor="middle" font-family="IBM Plex Mono">HIGH</text>
+        </svg>
+        <div class="gauge-label" id="gauge-label">-</div>
+      </div>
+      <div class="breakdown">
+        <div class="breakdown-title">SIGNAL BREAKDOWN - 5 KEY INDICATORS</div>
+        <div class="breakdown-counts">
+          <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">-</div><div class="count-lbl">alert</div></div>
+          <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">-</div><div class="count-lbl">warning</div></div>
+          <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">-</div><div class="count-lbl">clear</div></div>
+        </div>
+        <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:7px 14px;">Refresh</button>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:7px 14px;">&#8635; Refresh</button>
+    <div class="section-label">RECESSION SIGNALS</div>
+    <div class="ind-grid" id="headline-grid"></div>
+    <div class="lib-header">
+      <div class="lib-title">ECONOMIC DATA LIBRARY - <span id="lib-count">-</span> INDICATORS</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="filter-btn active" onclick="filterCat('all',this)">All</button>
+        <button class="filter-btn" onclick="filterCat('labour',this)">Labour</button>
+        <button class="filter-btn" onclick="filterCat('output',this)">Output</button>
+        <button class="filter-btn" onclick="filterCat('housing',this)">Housing</button>
+        <button class="filter-btn" onclick="filterCat('financial',this)">Financial</button>
+        <button class="filter-btn" onclick="filterCat('prices',this)">Prices</button>
+        <button class="filter-btn" onclick="filterCat('consumer',this)">Consumer</button>
+      </div>
+    </div>
+    <div class="ind-grid" id="library-grid"></div>
+    <div id="charts-section" style="display:none;margin-top:8px">
+      <div class="lib-header" style="margin-top:16px">
+        <div class="lib-title">HISTORICAL CHARTS - 7 YEARS</div>
+        <div style="font-size:11px;color:var(--muted)">Drag to zoom &middot; Click card for detail</div>
+      </div>
+      <div class="charts-grid" id="charts-grid"></div>
+    </div>
+    <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
   </div>
-</div>
-<div class="section-label">RECESSION SIGNALS</div>
-<div class="ind-grid" id="headline-grid"></div>
-<div class="lib-header">
-  <div class="lib-title">ECONOMIC DATA LIBRARY &#8212; <span id="lib-count">&#8212;</span> INDICATORS</div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap">
-    <button class="filter-btn active" onclick="filterCat('all',this)">All</button>
-    <button class="filter-btn" onclick="filterCat('labour',this)">Labour</button>
-    <button class="filter-btn" onclick="filterCat('output',this)">Output</button>
-    <button class="filter-btn" onclick="filterCat('housing',this)">Housing</button>
-    <button class="filter-btn" onclick="filterCat('financial',this)">Financial</button>
-    <button class="filter-btn" onclick="filterCat('prices',this)">Prices</button>
-    <button class="filter-btn" onclick="filterCat('consumer',this)">Consumer</button>
-  </div>
-</div>
-<div class="ind-grid" id="library-grid"></div>
-<div id="charts-section" style="display:none;margin-top:8px">
-  <div class="lib-header" style="margin-top:16px">
-    <div class="lib-title">HISTORICAL CHARTS &#8212; 7 YEARS</div>
-    <div style="font-size:11px;color:var(--muted)">Drag to zoom &middot; Click card for detail</div>
-  </div>
-  <div class="charts-grid" id="charts-grid"></div>
-</div>
-<div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY &#8212; NOT FINANCIAL ADVICE</div>
-</div>
 </main>
 </div>
 
 <div id="page-archive" class="page">
 <main>
   <div id="archive-overview">
-    <div class="page-header"><div class="page-eyebrow">RECESSION ARCHIVE</div><div class="page-title">Every US Recession Since 1980</div><div class="page-subtitle">Deep dives into the causes, timeline, and economic signals behind America's most significant downturns.</div></div>
+    <div class="page-header">
+      <div class="page-eyebrow">RECESSION ARCHIVE</div>
+      <div class="page-title">Every US Recession Since 1980</div>
+      <div class="page-subtitle">Deep dives into the causes, timeline, and economic signals behind America's most significant downturns.</div>
+    </div>
     <div class="archive-grid" id="archive-grid"></div>
   </div>
-  <div id="archive-detail"><a class="back-link" onclick="showArchiveOverview()">&larr; Back to Archive</a><div id="archive-detail-content"></div></div>
+  <div id="archive-detail">
+    <a class="back-link" onclick="showArchiveOverview()">&larr; Back to Archive</a>
+    <div id="archive-detail-content"></div>
+  </div>
   <div class="site-footer" style="margin-top:48px">DATA: BLS, BEA, NBER, FRED &middot; INFORMATIONAL ONLY</div>
 </main>
 </div>
 
 <div id="page-calendar" class="page">
 <main>
-  <div class="page-header"><div class="page-eyebrow">ECONOMIC CALENDAR</div><div class="page-title">Upcoming Releases</div><div class="page-subtitle">Major US and UK economic data releases and central bank decisions. Past events are greyed out.</div></div>
+  <div class="page-header">
+    <div class="page-eyebrow">ECONOMIC CALENDAR</div>
+    <div class="page-title">Upcoming Releases</div>
+    <div class="page-subtitle">Major US and UK economic data releases and central bank decisions. Past events are greyed out.</div>
+  </div>
   <div id="cal-countdown" class="cal-countdown" style="display:none">
-    <div><div class="cal-cd-label">NEXT HIGH-IMPACT RELEASE</div><div class="cal-cd-event" id="cal-cd-event">&#8212;</div><div class="cal-cd-meta" id="cal-cd-meta"></div></div>
-    <div style="text-align:right"><div class="cal-cd-num" id="cal-cd-num">&#8212;</div><div class="cal-cd-unit" id="cal-cd-unit">days away</div></div>
+    <div>
+      <div class="cal-cd-label">NEXT HIGH-IMPACT RELEASE</div>
+      <div class="cal-cd-event" id="cal-cd-event">-</div>
+      <div class="cal-cd-meta" id="cal-cd-meta"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="cal-cd-num" id="cal-cd-num">-</div>
+      <div class="cal-cd-unit" id="cal-cd-unit">days away</div>
+    </div>
   </div>
   <div class="cal-filter-row">
     <button class="filter-btn active" onclick="calFilter('all',this)">All</button>
     <button class="filter-btn" onclick="calFilter('high',this)">High impact</button>
-    <button class="filter-btn" onclick="calFilter('US',this)">&#127482;&#127480; US</button>
-    <button class="filter-btn" onclick="calFilter('UK',this)">&#127468;&#127463; UK</button>
+    <button class="filter-btn" onclick="calFilter('US',this)">US only</button>
+    <button class="filter-btn" onclick="calFilter('UK',this)">UK only</button>
   </div>
   <div id="cal-body"></div>
-  <div class="cal-disc">Release dates based on typical official schedules. Forecasts are approximate consensus estimates. Verify with: <a href="https://www.bls.gov/schedule/" target="_blank">BLS</a> &middot; <a href="https://www.ons.gov.uk/releasecalendar" target="_blank">ONS</a> &middot; <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank">FOMC</a> &middot; <a href="https://www.bankofengland.co.uk/monetary-policy/monetary-policy-committee" target="_blank">Bank of England</a></div>
-  <div class="site-footer" style="margin-top:32px">RECESSION RADAR &nbsp;&middot;&nbsp; INFORMATIONAL ONLY</div>
+  <div class="cal-disc">Release dates based on typical official schedules. Verify with: <a href="https://www.bls.gov/schedule/" target="_blank">BLS</a> &middot; <a href="https://www.ons.gov.uk/releasecalendar" target="_blank">ONS</a> &middot; <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank">FOMC</a> &middot; <a href="https://www.bankofengland.co.uk/monetary-policy/monetary-policy-committee" target="_blank">Bank of England</a></div>
+  <div class="site-footer" style="margin-top:32px">RECESSION RADAR &middot; INFORMATIONAL ONLY</div>
 </main>
 </div>
 
 <div id="page-explain" class="page">
 <main>
-  <div class="page-header"><div class="page-eyebrow">EXPLAIN IT</div><div class="page-title">The Economics, Explained</div><div class="page-subtitle">Plain-English guides to every indicator on this dashboard and the bigger ideas behind them.</div></div>
+  <div class="page-header">
+    <div class="page-eyebrow">EXPLAIN IT</div>
+    <div class="page-title">The Economics, Explained</div>
+    <div class="page-subtitle">Plain-English guides to every indicator on this dashboard and the bigger ideas behind them.</div>
+  </div>
   <div class="explain-grid" id="explain-grid"></div>
-  <div class="site-footer" style="margin-top:48px">RECESSION RADAR &nbsp;&middot;&nbsp; INFORMATIONAL ONLY</div>
+  <div class="site-footer" style="margin-top:48px">RECESSION RADAR &middot; INFORMATIONAL ONLY</div>
 </main>
 </div>
 
@@ -319,18 +348,23 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 <div class="modal-panel">
   <div class="modal-header">
     <div><div class="modal-ind-name" id="modal-ind-name"></div><div class="modal-ind-sub" id="modal-ind-sub"></div></div>
-    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    <button class="modal-close" onclick="closeModal()">X</button>
   </div>
   <div class="modal-body">
-    <div id="modal-loading" style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px"><div class="spinner" style="margin:0 auto 12px"></div>Loading&#8230;</div>
+    <div id="modal-loading" style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">
+      <div class="spinner" style="margin:0 auto 12px"></div>Loading...
+    </div>
     <div id="modal-loaded" style="display:none">
-      <div class="modal-value-row"><div class="modal-value" id="modal-value">&#8212;</div><span class="modal-badge" id="modal-badge"></span></div>
+      <div class="modal-value-row">
+        <div class="modal-value" id="modal-value">-</div>
+        <span class="modal-badge" id="modal-badge"></span>
+      </div>
       <div class="modal-chart-hdr">
         <div class="modal-chart-title">7-YEAR HISTORY</div>
         <div class="modal-chart-controls">
-          <button class="btn-sm" onclick="setRange('1y')">1Y</button>
-          <button class="btn-sm" onclick="setRange('3y')">3Y</button>
-          <button class="btn-sm active" onclick="setRange('7y')">7Y</button>
+          <button class="btn-sm" id="range-1y" onclick="setRange('1y')">1Y</button>
+          <button class="btn-sm" id="range-3y" onclick="setRange('3y')">3Y</button>
+          <button class="btn-sm active" id="range-7y" onclick="setRange('7y')">7Y</button>
           <button class="btn-sm" onclick="resetModalZoom()">Reset zoom</button>
         </div>
       </div>
@@ -338,10 +372,10 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
       <div class="modal-chart-hint">Drag to zoom &middot; Hover for values &middot; Click point to pin</div>
       <div class="modal-toggle-row" id="modal-toggle-row"></div>
       <div class="modal-stats">
-        <div class="modal-stat"><div class="modal-stat-label">1Y HIGH</div><div class="modal-stat-value" id="ms-high">&#8212;</div></div>
-        <div class="modal-stat"><div class="modal-stat-label">1Y LOW</div><div class="modal-stat-value" id="ms-low">&#8212;</div></div>
-        <div class="modal-stat"><div class="modal-stat-label">PERCENTILE</div><div class="modal-stat-value" id="ms-pct">&#8212;</div></div>
-        <div class="modal-stat"><div class="modal-stat-label">MOM CHANGE</div><div class="modal-stat-value" id="ms-mom">&#8212;</div></div>
+        <div class="modal-stat"><div class="modal-stat-label">1Y HIGH</div><div class="modal-stat-value" id="ms-high">-</div></div>
+        <div class="modal-stat"><div class="modal-stat-label">1Y LOW</div><div class="modal-stat-value" id="ms-low">-</div></div>
+        <div class="modal-stat"><div class="modal-stat-label">PERCENTILE</div><div class="modal-stat-value" id="ms-pct">-</div></div>
+        <div class="modal-stat"><div class="modal-stat-label">MOM CHANGE</div><div class="modal-stat-value" id="ms-mom">-</div></div>
       </div>
       <div class="modal-about-title">ABOUT THIS INDICATOR</div>
       <div class="modal-about" id="modal-about"></div>
@@ -351,60 +385,166 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 </div>
 </div>
 <script>
-const INDICATORS=[
-  {id:"T10Y2Y",cat:"financial",hl:true,name:"Yield curve",sub:"10Y-2Y Treasury spread",unit:"%",dp:2,sign:true,sig:v=>v>0.25?"g":v>-0.25?"a":"r",lbl:{g:"Positive",a:"Flattening",r:"Inverted"},note:"Inversion has preceded every US recession since the 1970s.",th:[0.25,-0.25]},
-  {id:"ICSA",cat:"labour",hl:true,name:"Jobless claims",sub:"Weekly initial claims",unit:"K",dp:0,tx:v=>v/1000,sig:v=>v<220?"g":v<270?"a":"r",lbl:{g:"Low",a:"Elevated",r:"Surging"},note:"Sharp rises tend to lead broader unemployment by several weeks.",th:[220,270]},
-  {id:"UNRATE",cat:"labour",hl:true,name:"Unemployment",sub:"US unemployment rate",unit:"%",dp:1,sig:v=>v<4.5?"g":v<5.5?"a":"r",lbl:{g:"Low",a:"Rising",r:"Elevated"},note:"A rising unemployment rate is a classic recession confirmation signal.",th:[4.5,5.5]},
-  {id:"UMCSENT",cat:"consumer",hl:true,name:"Consumer sentiment",sub:"U. of Michigan index",unit:"",dp:1,sig:v=>v>80?"g":v>65?"a":"r",lbl:{g:"Confident",a:"Cautious",r:"Pessimistic"},note:"Sentiment collapses reliably precede spending contractions.",th:[80,65]},
-  {id:"USALOLITONOSTSAM",cat:"output",hl:true,name:"OECD Leading Indicator",sub:"US composite leading indicator",unit:"",dp:2,sig:v=>v>100.5?"g":v>99.5?"a":"r",lbl:{g:"Expanding",a:"Slowing",r:"Contracting"},note:"Designed to anticipate turning points 6-9 months ahead.",th:[100.5,99.5]},
-  {id:"CCSA",cat:"labour",name:"Continued claims",sub:"Continuing unemployment claims",unit:"M",dp:2,tx:v=>v/1000000,sig:v=>v<1.8?"g":v<2.2?"a":"r",lbl:{g:"Low",a:"Elevated",r:"High"},note:"Measures those already receiving unemployment benefits.",th:[1.8,2.2]},
-  {id:"U6RATE",cat:"labour",name:"Underemployment U-6",sub:"Broad unemployment measure",unit:"%",dp:1,sig:v=>v<9?"g":v<11?"a":"r",lbl:{g:"Low",a:"Elevated",r:"High"},note:"Includes part-time workers wanting full-time work.",th:[9,11]},
-  {id:"CIVPART",cat:"labour",name:"Labour participation",sub:"% of working-age population",unit:"%",dp:1,sig:v=>v>62.5?"g":v>61.5?"a":"r",lbl:{g:"Healthy",a:"Declining",r:"Low"},note:"A falling rate often signals workers giving up on finding jobs.",th:[62.5,61.5]},
-  {id:"UEMPMEAN",cat:"labour",name:"Avg unemp. duration",sub:"Average weeks unemployed",unit:"wks",dp:1,sig:v=>v<20?"g":v<26?"a":"r",lbl:{g:"Short",a:"Lengthening",r:"Long"},note:"Longer durations indicate a tougher job market.",th:[20,26]},
-  {id:"JTSJOL",cat:"labour",name:"Job openings",sub:"JOLTS openings (millions)",unit:"M",dp:2,tx:v=>v/1000,sig:v=>v>8?"g":v>6?"a":"r",lbl:{g:"Strong",a:"Cooling",r:"Weak"},note:"High openings signal strong employer demand.",th:[8,6]},
-  {id:"JTSQUR",cat:"labour",name:"Quit rate",sub:"Workers quitting voluntarily",unit:"%",dp:1,sig:v=>v>2.5?"g":v>2?"a":"r",lbl:{g:"Confident",a:"Cautious",r:"Low"},note:"Workers only quit when confident they can find something better.",th:[2.5,2]},
-  {id:"INDPRO",cat:"output",name:"Industrial production",sub:"Fed index (2017=100)",unit:"",dp:1,sig:v=>v>103?"g":v>100?"a":"r",lbl:{g:"Expanding",a:"Flat",r:"Contracting"},note:"Captures output across manufacturing, mining, and utilities.",th:[103,100]},
-  {id:"CAPUTL",cat:"output",name:"Capacity utilization",sub:"% of industrial capacity in use",unit:"%",dp:1,sig:v=>v>78?"g":v>74?"a":"r",lbl:{g:"Strong",a:"Softening",r:"Weak"},note:"Low utilization signals weak demand.",th:[78,74]},
-  {id:"CFNAI",cat:"output",name:"Chicago Fed Activity",sub:"National Activity Index",unit:"",dp:2,sign:true,sig:v=>v>0?"g":v>-0.7?"a":"r",lbl:{g:"Above trend",a:"Below trend",r:"Recession risk"},note:"Based on 85 indicators. Below -0.7 has historically signalled recession.",th:[0,-0.7]},
-  {id:"HOUST",cat:"housing",name:"Housing starts",sub:"New residential units (000s SAAR)",unit:"K",dp:0,sig:v=>v>1400?"g":v>1100?"a":"r",lbl:{g:"Strong",a:"Slowing",r:"Weak"},note:"Housing leads the economic cycle by 6-12 months.",th:[1400,1100]},
-  {id:"PERMIT",cat:"housing",name:"Building permits",sub:"Private housing permits (000s)",unit:"K",dp:0,sig:v=>v>1400?"g":v>1100?"a":"r",lbl:{g:"Strong",a:"Slowing",r:"Weak"},note:"Permits lead starts by 1-2 months.",th:[1400,1100]},
-  {id:"MORTGAGE30US",cat:"housing",name:"30yr mortgage rate",sub:"Average fixed mortgage rate",unit:"%",dp:2,sig:v=>v<5?"g":v<7?"a":"r",lbl:{g:"Accessible",a:"Elevated",r:"Restrictive"},note:"High rates price buyers out of the market.",th:[5,7]},
-  {id:"CSUSHPISA",cat:"housing",name:"Case-Shiller HPI",sub:"Home price index YoY %",unit:"%",dp:1,sign:true,yoy:true,sig:v=>v>3?"g":v>0?"a":"r",lbl:{g:"Appreciating",a:"Flat",r:"Declining"},note:"Year-over-year declines were a key warning sign before 2008.",th:[3,0]},
-  {id:"BAMLH0A0HYM2",cat:"financial",name:"High yield spread",sub:"Option-adjusted spread (OAS)",unit:"%",dp:2,sig:v=>v<4?"g":v<6?"a":"r",lbl:{g:"Tight",a:"Widening",r:"Stressed"},note:"Credit spreads widen when investors demand more compensation for default risk.",th:[4,6]},
-  {id:"VIXCLS",cat:"financial",name:"VIX volatility",sub:"CBOE implied volatility",unit:"",dp:1,sig:v=>v<20?"g":v<30?"a":"r",lbl:{g:"Calm",a:"Elevated",r:"Fearful"},note:"The fear gauge. Spikes above 30 accompany financial stress.",th:[20,30]},
-  {id:"FEDFUNDS",cat:"financial",name:"Fed funds rate",sub:"Effective federal funds rate",unit:"%",dp:2,sig:v=>v<3?"g":v<5?"a":"r",lbl:{g:"Accommodative",a:"Neutral",r:"Restrictive"},note:"The Fed cuts aggressively when recession threatens.",th:[3,5]},
-  {id:"DRCCLACBS",cat:"financial",name:"Credit card delinquency",sub:"% of balances 30+ days late",unit:"%",dp:2,sig:v=>v<2.5?"g":v<3.5?"a":"r",lbl:{g:"Low",a:"Rising",r:"Elevated"},note:"Credit cards are the first obligation consumers fall behind on.",th:[2.5,3.5]},
-  {id:"T10YIE",cat:"financial",name:"Inflation expectations",sub:"10yr breakeven inflation",unit:"%",dp:2,sig:v=>v>1.5&&v<2.8?"g":v>0.5&&v<3.2?"a":"r",lbl:{g:"Anchored",a:"Drifting",r:"Unanchored"},note:"Deviations far from the Fed's 2% target signal stress.",th:[2.8,3.2]},
-  {id:"CPIAUCSL",cat:"prices",name:"CPI inflation",sub:"Consumer prices YoY %",unit:"%",dp:1,sign:true,yoy:true,sig:v=>v<3&&v>0?"g":v<5&&v>-0.5?"a":"r",lbl:{g:"On target",a:"Elevated",r:"High/Deflation"},note:"Persistent inflation above 5% forces rate hikes that tip the economy into recession.",th:[3,5]},
-  {id:"CPILFESL",cat:"prices",name:"Core CPI",sub:"CPI ex food & energy YoY %",unit:"%",dp:1,sign:true,yoy:true,sig:v=>v<3&&v>0?"g":v<5&&v>-0.5?"a":"r",lbl:{g:"On target",a:"Elevated",r:"High"},note:"Strips out volatile food and energy to show underlying inflation.",th:[3,5]},
-  {id:"PPIACO",cat:"prices",name:"Producer prices",sub:"PPI YoY %",unit:"%",dp:1,sign:true,yoy:true,sig:v=>v<3&&v>-1?"g":v<7&&v>-3?"a":"r",lbl:{g:"Stable",a:"Elevated",r:"Extreme"},note:"Producer price changes feed through to consumer prices with a lag.",th:[3,7]},
-  {id:"GASREGCOVW",cat:"prices",name:"Gas prices",sub:"US regular gasoline ($/gallon)",unit:"$",dp:2,sig:v=>v<3.5?"g":v<4.5?"a":"r",lbl:{g:"Low",a:"Elevated",r:"High"},note:"Energy price spikes reduce consumer purchasing power.",th:[3.5,4.5]},
-  {id:"PSAVERT",cat:"consumer",name:"Personal saving rate",sub:"% of disposable income saved",unit:"%",dp:1,sig:v=>v>6?"g":v>3?"a":"r",lbl:{g:"Healthy",a:"Low",r:"Very low"},note:"A very low saving rate means households are vulnerable to income disruption.",th:[6,3]},
-  {id:"RSAFS",cat:"consumer",name:"Retail sales",sub:"Monthly change (MoM %)",unit:"%",dp:1,sign:true,mom:true,sig:v=>v>0.3?"g":v>-0.3?"a":"r",lbl:{g:"Growing",a:"Flat",r:"Declining"},note:"Sustained monthly declines signal a contracting consumer.",th:[0.3,-0.3]},
-  {id:"PCE",cat:"consumer",name:"Personal consumption",sub:"Monthly change (MoM %)",unit:"%",dp:1,sign:true,mom:true,sig:v=>v>0.3?"g":v>-0.2?"a":"r",lbl:{g:"Growing",a:"Flat",r:"Declining"},note:"The broadest measure of consumer spending.",th:[0.3,-0.2]},
-];
-const HEADLINE=INDICATORS.filter(i=>i.hl);
-const LIBRARY=INDICATORS.filter(i=>!i.hl);
-const PROB_ID="RECPROUSM156N";
-const HEX={g:"#639922",a:"#BA7517",r:"#E24B4A"};
-const BGS={g:"var(--gbg)",a:"var(--abg)",r:"var(--rbg)"};
-const TXT={g:"var(--gtxt)",a:"var(--atxt)",r:"var(--rtxt)"};
-const RBANDS=[["2020-02","2020-04"]];
-const histData={};
 
-const IND_DETAIL={
-  T10Y2Y:{about:"The difference between 10-year and 2-year US Treasury yields. When the curve inverts short rates exceed long rates, signalling markets expect the Fed to cut rates sharply due to anticipated recession.",watch:"Sustained inversion below -0.25% for more than a quarter has preceded every US recession since 1970, typically with a 12-18 month lead."},
-  ICSA:{about:"The number of Americans filing for unemployment benefits for the first time each week. Released every Thursday, it captures new layoffs in near real-time.",watch:"A sustained move above 300,000 per week signals labour market stress. Readings above 400,000 have historically accompanied recessions."},
+// ── INDICATOR DEFINITIONS ──────────────────────────────────────────────────
+// Using function() everywhere - no arrow functions to avoid linter issues
+
+var INDICATORS = [
+  // Headline (drive gauge)
+  {id:"T10Y2Y",    cat:"financial", hl:true,  name:"Yield curve",           sub:"10Y-2Y Treasury spread",       unit:"%",   dp:2, sign:true,
+   sig:function(v){return v>0.25?"g":v>-0.25?"a":"r";}, lbl:{g:"Positive",a:"Flattening",r:"Inverted"},
+   note:"Inversion has preceded every US recession since the 1970s.", th:[0.25,-0.25]},
+
+  {id:"ICSA",      cat:"labour",    hl:true,  name:"Jobless claims",        sub:"Weekly initial claims",        unit:"K",   dp:0, tx:function(v){return v/1000;},
+   sig:function(v){return v<220?"g":v<270?"a":"r";}, lbl:{g:"Low",a:"Elevated",r:"Surging"},
+   note:"Sharp rises tend to lead broader unemployment by several weeks.", th:[220,270]},
+
+  {id:"UNRATE",    cat:"labour",    hl:true,  name:"Unemployment",          sub:"US unemployment rate",         unit:"%",   dp:1,
+   sig:function(v){return v<4.5?"g":v<5.5?"a":"r";}, lbl:{g:"Low",a:"Rising",r:"Elevated"},
+   note:"A rising unemployment rate is a classic recession confirmation signal.", th:[4.5,5.5]},
+
+  {id:"UMCSENT",   cat:"consumer",  hl:true,  name:"Consumer sentiment",    sub:"U. of Michigan index",         unit:"",    dp:1,
+   sig:function(v){return v>80?"g":v>65?"a":"r";}, lbl:{g:"Confident",a:"Cautious",r:"Pessimistic"},
+   note:"Sentiment collapses reliably precede spending contractions.", th:[80,65]},
+
+  {id:"USALOLITONOSTSAM", cat:"output", hl:true, name:"OECD Leading Indicator", sub:"US composite leading indicator", unit:"", dp:2,
+   sig:function(v){return v>100.5?"g":v>99.5?"a":"r";}, lbl:{g:"Expanding",a:"Slowing",r:"Contracting"},
+   note:"Designed to anticipate turning points 6-9 months ahead.", th:[100.5,99.5]},
+
+  // Labour
+  {id:"CCSA",      cat:"labour",    name:"Continued claims",    sub:"Continuing unemployment claims",   unit:"M",   dp:2, tx:function(v){return v/1000000;},
+   sig:function(v){return v<1.8?"g":v<2.2?"a":"r";}, lbl:{g:"Low",a:"Elevated",r:"High"},
+   note:"Measures those already receiving unemployment benefits.", th:[1.8,2.2]},
+
+  {id:"U6RATE",    cat:"labour",    name:"Underemployment U-6", sub:"Broad unemployment measure",       unit:"%",   dp:1,
+   sig:function(v){return v<9?"g":v<11?"a":"r";}, lbl:{g:"Low",a:"Elevated",r:"High"},
+   note:"Includes part-time workers wanting full-time work.", th:[9,11]},
+
+  {id:"CIVPART",   cat:"labour",    name:"Labour participation",sub:"% of working-age population",      unit:"%",   dp:1,
+   sig:function(v){return v>62.5?"g":v>61.5?"a":"r";}, lbl:{g:"Healthy",a:"Declining",r:"Low"},
+   note:"A falling rate often signals workers giving up on finding jobs.", th:[62.5,61.5]},
+
+  {id:"UEMPMEAN",  cat:"labour",    name:"Avg unemp. duration", sub:"Average weeks unemployed",         unit:"wks", dp:1,
+   sig:function(v){return v<20?"g":v<26?"a":"r";}, lbl:{g:"Short",a:"Lengthening",r:"Long"},
+   note:"Longer durations indicate a tougher job market.", th:[20,26]},
+
+  {id:"JTSJOL",    cat:"labour",    name:"Job openings",        sub:"JOLTS openings (millions)",        unit:"M",   dp:2, tx:function(v){return v/1000;},
+   sig:function(v){return v>8?"g":v>6?"a":"r";}, lbl:{g:"Strong",a:"Cooling",r:"Weak"},
+   note:"High openings signal strong employer demand.", th:[8,6]},
+
+  {id:"JTSQUR",    cat:"labour",    name:"Quit rate",           sub:"Workers quitting voluntarily",     unit:"%",   dp:1,
+   sig:function(v){return v>2.5?"g":v>2?"a":"r";}, lbl:{g:"Confident",a:"Cautious",r:"Low"},
+   note:"Workers only quit when confident they can find something better.", th:[2.5,2]},
+
+  // Output
+  {id:"INDPRO",    cat:"output",    name:"Industrial production", sub:"Fed index (2017=100)",            unit:"",    dp:1,
+   sig:function(v){return v>103?"g":v>100?"a":"r";}, lbl:{g:"Expanding",a:"Flat",r:"Contracting"},
+   note:"Captures output across manufacturing, mining, and utilities.", th:[103,100]},
+
+  {id:"CAPUTL",    cat:"output",    name:"Capacity utilization", sub:"% of industrial capacity in use", unit:"%",   dp:1,
+   sig:function(v){return v>78?"g":v>74?"a":"r";}, lbl:{g:"Strong",a:"Softening",r:"Weak"},
+   note:"Low utilization signals weak demand.", th:[78,74]},
+
+  {id:"CFNAI",     cat:"output",    name:"Chicago Fed Activity", sub:"National Activity Index",          unit:"",    dp:2, sign:true,
+   sig:function(v){return v>0?"g":v>-0.7?"a":"r";}, lbl:{g:"Above trend",a:"Below trend",r:"Recession risk"},
+   note:"Based on 85 indicators. Below -0.7 has historically signalled recession.", th:[0,-0.7]},
+
+  // Housing
+  {id:"HOUST",     cat:"housing",   name:"Housing starts",      sub:"New residential units (000s SAAR)", unit:"K",  dp:0,
+   sig:function(v){return v>1400?"g":v>1100?"a":"r";}, lbl:{g:"Strong",a:"Slowing",r:"Weak"},
+   note:"Housing leads the economic cycle by 6-12 months.", th:[1400,1100]},
+
+  {id:"PERMIT",    cat:"housing",   name:"Building permits",    sub:"Private housing permits (000s)",    unit:"K",  dp:0,
+   sig:function(v){return v>1400?"g":v>1100?"a":"r";}, lbl:{g:"Strong",a:"Slowing",r:"Weak"},
+   note:"Permits lead starts by 1-2 months.", th:[1400,1100]},
+
+  {id:"MORTGAGE30US", cat:"housing",name:"30yr mortgage rate",  sub:"Average fixed mortgage rate",       unit:"%",  dp:2,
+   sig:function(v){return v<5?"g":v<7?"a":"r";}, lbl:{g:"Accessible",a:"Elevated",r:"Restrictive"},
+   note:"High rates price buyers out of the market.", th:[5,7]},
+
+  {id:"CSUSHPISA", cat:"housing",   name:"Case-Shiller HPI",   sub:"Home price index YoY %",            unit:"%",  dp:1, sign:true, yoy:true,
+   sig:function(v){return v>3?"g":v>0?"a":"r";}, lbl:{g:"Appreciating",a:"Flat",r:"Declining"},
+   note:"Year-over-year declines were a key warning sign before 2008.", th:[3,0]},
+
+  // Financial
+  {id:"BAMLH0A0HYM2", cat:"financial", name:"High yield spread", sub:"Option-adjusted spread (OAS)",   unit:"%",  dp:2,
+   sig:function(v){return v<4?"g":v<6?"a":"r";}, lbl:{g:"Tight",a:"Widening",r:"Stressed"},
+   note:"Credit spreads widen when investors demand more compensation for default risk.", th:[4,6]},
+
+  {id:"VIXCLS",    cat:"financial", name:"VIX volatility",      sub:"CBOE implied volatility",           unit:"",   dp:1,
+   sig:function(v){return v<20?"g":v<30?"a":"r";}, lbl:{g:"Calm",a:"Elevated",r:"Fearful"},
+   note:"The fear gauge. Spikes above 30 accompany financial stress.", th:[20,30]},
+
+  {id:"FEDFUNDS",  cat:"financial", name:"Fed funds rate",      sub:"Effective federal funds rate",      unit:"%",  dp:2,
+   sig:function(v){return v<3?"g":v<5?"a":"r";}, lbl:{g:"Accommodative",a:"Neutral",r:"Restrictive"},
+   note:"The Fed cuts aggressively when recession threatens.", th:[3,5]},
+
+  {id:"DRCCLACBS", cat:"financial", name:"Credit card delinquency", sub:"% of balances 30+ days late", unit:"%",  dp:2,
+   sig:function(v){return v<2.5?"g":v<3.5?"a":"r";}, lbl:{g:"Low",a:"Rising",r:"Elevated"},
+   note:"Credit cards are the first obligation consumers fall behind on.", th:[2.5,3.5]},
+
+  {id:"T10YIE",    cat:"financial", name:"Inflation expectations", sub:"10yr breakeven inflation",      unit:"%",  dp:2,
+   sig:function(v){return (v>1.5&&v<2.8)?"g":(v>0.5&&v<3.2)?"a":"r";}, lbl:{g:"Anchored",a:"Drifting",r:"Unanchored"},
+   note:"Deviations far from the Fed's 2% target signal stress.", th:[2.8,3.2]},
+
+  // Prices
+  {id:"CPIAUCSL",  cat:"prices",    name:"CPI inflation",       sub:"Consumer prices YoY %",             unit:"%",  dp:1, sign:true, yoy:true,
+   sig:function(v){return (v<3&&v>0)?"g":(v<5&&v>-0.5)?"a":"r";}, lbl:{g:"On target",a:"Elevated",r:"High/Deflation"},
+   note:"Persistent inflation above 5% forces rate hikes that tip the economy into recession.", th:[3,5]},
+
+  {id:"CPILFESL",  cat:"prices",    name:"Core CPI",            sub:"CPI ex food & energy YoY %",       unit:"%",  dp:1, sign:true, yoy:true,
+   sig:function(v){return (v<3&&v>0)?"g":(v<5&&v>-0.5)?"a":"r";}, lbl:{g:"On target",a:"Elevated",r:"High"},
+   note:"Strips out volatile food and energy to show underlying inflation.", th:[3,5]},
+
+  {id:"PPIACO",    cat:"prices",    name:"Producer prices",     sub:"PPI YoY %",                         unit:"%",  dp:1, sign:true, yoy:true,
+   sig:function(v){return (v<3&&v>-1)?"g":(v<7&&v>-3)?"a":"r";}, lbl:{g:"Stable",a:"Elevated",r:"Extreme"},
+   note:"Producer price changes feed through to consumer prices with a lag.", th:[3,7]},
+
+  {id:"GASREGCOVW",cat:"prices",    name:"Gas prices",          sub:"US regular gasoline ($/gallon)",    unit:"$",  dp:2,
+   sig:function(v){return v<3.5?"g":v<4.5?"a":"r";}, lbl:{g:"Low",a:"Elevated",r:"High"},
+   note:"Energy price spikes reduce consumer purchasing power.", th:[3.5,4.5]},
+
+  // Consumer
+  {id:"PSAVERT",   cat:"consumer",  name:"Personal saving rate",sub:"% of disposable income saved",      unit:"%",  dp:1,
+   sig:function(v){return v>6?"g":v>3?"a":"r";}, lbl:{g:"Healthy",a:"Low",r:"Very low"},
+   note:"A very low saving rate means households are vulnerable to income disruption.", th:[6,3]},
+
+  {id:"RSAFS",     cat:"consumer",  name:"Retail sales",        sub:"Monthly change (MoM %)",            unit:"%",  dp:1, sign:true, mom:true,
+   sig:function(v){return v>0.3?"g":v>-0.3?"a":"r";}, lbl:{g:"Growing",a:"Flat",r:"Declining"},
+   note:"Sustained monthly declines signal a contracting consumer.", th:[0.3,-0.3]},
+
+  {id:"PCE",       cat:"consumer",  name:"Personal consumption",sub:"Monthly change (MoM %)",            unit:"%",  dp:1, sign:true, mom:true,
+   sig:function(v){return v>0.3?"g":v>-0.2?"a":"r";}, lbl:{g:"Growing",a:"Flat",r:"Declining"},
+   note:"The broadest measure of consumer spending.", th:[0.3,-0.2]}
+];
+
+var HEADLINE = [];
+var LIBRARY = [];
+for (var ii = 0; ii < INDICATORS.length; ii++) {
+  if (INDICATORS[ii].hl) { HEADLINE.push(INDICATORS[ii]); }
+  else { LIBRARY.push(INDICATORS[ii]); }
+}
+
+var PROB_ID = "RECPROUSM156N";
+var HEX = {g:"#639922", a:"#BA7517", r:"#E24B4A"};
+var BGS = {g:"var(--gbg)", a:"var(--abg)", r:"var(--rbg)"};
+var TXT = {g:"var(--gtxt)", a:"var(--atxt)", r:"var(--rtxt)"};
+var histData = {};
+
+// ── INDICATOR DETAIL TEXT ──────────────────────────────────────────────────
+var IND_DETAIL = {
+  T10Y2Y:{about:"The difference between 10-year and 2-year US Treasury yields. When short rates exceed long rates the curve inverts, signalling markets expect the Fed to cut rates sharply due to anticipated recession.",watch:"Sustained inversion below -0.25% for more than a quarter has preceded every US recession since 1970, typically with a 12-18 month lead."},
+  ICSA:{about:"The number of Americans filing for unemployment benefits for the first time each week. Released every Thursday, it captures new layoffs in near real-time.",watch:"A sustained move above 300,000 per week signals labour market stress. A rising trend over four or more weeks is signal; one elevated week is noise."},
   UNRATE:{about:"The percentage of the labour force actively seeking work but unable to find it. Unemployment is a lagging indicator - it rises after a recession has already begun.",watch:"The Sahm Rule: if the 3-month average unemployment rate rises 0.5 percentage points above its 12-month low, a recession has historically already started."},
   UMCSENT:{about:"A monthly index from surveys of approximately 500 US households covering confidence in personal finances and economic conditions. Consumer spending drives roughly 70% of US GDP.",watch:"Single-month drops of 10+ points have historically signalled major disruptions ahead. Prolonged readings below 65 have accompanied or preceded recessions."},
   USALOLITONOSTSAM:{about:"The OECD Composite Leading Indicator for the US is constructed from statistics selected for their ability to anticipate economic activity 6-9 months ahead. Normalised around a trend of 100.",watch:"Values above 100 signal above-trend growth; below 100 signals below-trend. A sustained decline toward 99 and below warrants attention."},
-  CCSA:{about:"Continued claims measure the number of people actively receiving unemployment insurance. They provide a running count of ongoing unemployment.",watch:"Sustained readings above 2 million signal significant ongoing unemployment. A rising trend alongside rising initial claims indicates a deteriorating labour market."},
+  CCSA:{about:"Continued claims measure the number of people actively receiving unemployment insurance - not new filers. They provide a running count of ongoing unemployment.",watch:"Sustained readings above 2 million signal significant ongoing unemployment. A rising trend alongside rising initial claims indicates a deteriorating labour market."},
   U6RATE:{about:"The U-6 rate is the broadest official measure of labour underutilization, including those working part-time who want full-time work.",watch:"Typically runs 3-5 percentage points above headline unemployment. A divergence where U-6 rises faster than U-3 is an early stress signal."},
-  CIVPART:{about:"The labor force participation rate measures the percentage of the working-age population that is either employed or actively looking for work.",watch:"A declining participation rate can make the headline unemployment rate look better than it actually is."},
+  CIVPART:{about:"The labor force participation rate measures the percentage of the working-age population that is either employed or actively looking for work.",watch:"A declining participation rate can make the headline unemployment rate look better than it actually is - it may reflect discouraged workers leaving the labour force."},
   UEMPMEAN:{about:"The average duration of unemployment measures how long the typical unemployed person has been without work.",watch:"Readings above 20 weeks signal structural labour market difficulties. Above 26 weeks indicates severe long-term unemployment."},
   JTSJOL:{about:"The JOLTS Job Openings and Labor Turnover Survey measures the number of unfilled positions each month.",watch:"Openings above 8 million signal strong employer demand. A sharp sustained decline is a leading indicator of future layoffs by 3-6 months."},
   JTSQUR:{about:"The quit rate measures the percentage of workers who voluntarily left their jobs in a given month. A high quit rate signals worker confidence.",watch:"A quit rate above 2.5% indicates a strong labour market. A declining quit rate signals growing worker anxiety."},
-  INDPRO:{about:"The Industrial Production Index measures real output across manufacturing, mining, and electric and gas utilities. One of the four indicators the NBER uses in its official recession dating.",watch:"Sustained declines - especially if broad-based - are a strong recession signal. The index often turns before GDP does."},
+  INDPRO:{about:"The Industrial Production Index measures real output across manufacturing, mining, and electric and gas utilities. One of the four indicators the NBER uses in its official recession dating.",watch:"Sustained declines are a strong recession signal. The index often turns before GDP does."},
   CAPUTL:{about:"Capacity utilization measures the percentage of productive capacity actually being used in the industrial sector.",watch:"Readings below 74% have historically been associated with recessions."},
   CFNAI:{about:"The Chicago Fed National Activity Index is based on 85 economic indicators. Designed to measure overall economic activity relative to its historical trend.",watch:"A 3-month moving average below -0.7 has historically indicated a high probability that a recession has begun."},
   HOUST:{about:"Housing starts measure the number of new residential construction projects begun in a given month. Housing leads the broader economic cycle by 6-12 months.",watch:"Sustained falls below 1.1 million annualized starts have accompanied every recession of the past 50 years."},
@@ -419,168 +559,336 @@ const IND_DETAIL={
   CPIAUCSL:{about:"The Consumer Price Index measures the average change in prices paid by urban consumers. Shown here as year-over-year percentage change.",watch:"Persistent inflation above 5% forces the Federal Reserve to raise interest rates aggressively."},
   CPILFESL:{about:"Core CPI excludes the volatile food and energy components to reveal the underlying inflation trend.",watch:"Core CPI above 4% sustained for several months typically triggers an aggressive Fed response."},
   PPIACO:{about:"The Producer Price Index measures the average change in selling prices received by domestic producers. Producer prices feed through to consumer prices with a lag.",watch:"Rapid PPI increases signal cost pressures building in the production pipeline."},
-  GASREGCOVW:{about:"The weekly national average retail price of regular gasoline published by the Energy Information Administration.",watch:"Rapid gas price spikes of 50%+ in a 12-month period have preceded several recessions."},
+  GASREGCOVW:{about:"The weekly national average retail price of regular gasoline published by the Energy Information Administration.",watch:"Rapid gas price spikes of 50% or more in a 12-month period have preceded several recessions."},
   PSAVERT:{about:"The personal saving rate measures the percentage of after-tax income that households save rather than spend.",watch:"A saving rate below 4% indicates households living close to or beyond their means."},
   RSAFS:{about:"Retail and food services sales cover about 30% of total consumer spending. Shown here as month-over-month percentage change.",watch:"Two or more consecutive monthly declines have historically been associated with recessions."},
-  PCE:{about:"Personal Consumption Expenditures is the broadest measure of consumer spending. Shown here as MoM change.",watch:"Sustained monthly declines in real PCE are a strong recession signal."},
+  PCE:{about:"Personal Consumption Expenditures is the broadest measure of consumer spending. Shown here as MoM change.",watch:"Sustained monthly declines in real PCE are a strong recession signal."}
 };
 
-const ARCHIVE_DATA=[
-  {id:"covid",title:"The COVID Recession",period:"February 2020 - April 2020",duration:"2 months",gdpFall:"-31.4%",peakUnemp:"14.7%",sp500:"-34%",
-   narrative:"<p>In early March 2020, the United States economy simply stopped. What had begun as a health crisis in Wuhan became the sharpest contraction in recorded American history - a recession so brief it lasted just two months, yet so violent it erased 22 million jobs in five weeks.</p><p>This recession was driven by a deliberate decision to shut down economic activity to save lives. GDP fell at an annualised rate of 31.4% in Q2 2020.</p><p>The Federal Reserve cut rates to zero in two emergency weekend moves. Congress passed the $2.2 trillion CARES Act within weeks. While the recession was the sharpest on record, the recovery was also the fastest.</p>",
+// ── ARCHIVE DATA ───────────────────────────────────────────────────────────
+var ARCHIVE_DATA = [
+  {id:"covid", title:"The COVID Recession", period:"Feb 2020 - Apr 2020", duration:"2 months", gdpFall:"-31.4%", peakUnemp:"14.7%", sp500:"-34%",
+   narrative:"<p>In early March 2020, the United States economy simply stopped. What had begun as a health crisis in Wuhan became the sharpest contraction in recorded American history - a recession so brief it lasted just two months, yet so violent it erased 22 million jobs in five weeks.</p><p>This recession was driven by a deliberate decision to shut down economic activity to save lives. GDP fell at an annualised rate of 31.4% in Q2 2020.</p><p>The Federal Reserve cut rates to zero in two emergency weekend moves. Congress passed the $2.2 trillion CARES Act within weeks.</p>",
    timeline:[{date:"Jan 2020",event:"WHO reports novel coronavirus",desc:"A cluster of pneumonia cases reported in Wuhan, China."},{date:"Mar 11",event:"Global pandemic declared",desc:"WHO declares COVID-19 a pandemic. US markets enter bear market territory."},{date:"Mar 15",event:"Fed cuts rates to zero",desc:"Emergency Sunday meeting - federal funds rate slashed to 0-0.25%."},{date:"Mar 27",event:"CARES Act signed",desc:"$2.2 trillion stimulus including $1,200 direct payments."},{date:"Apr 2020",event:"Unemployment hits 14.7%",desc:"20.5 million jobs lost - the worst single month in post-war history."},{date:"Jun 2020",event:"Recession ends",desc:"NBER later determines the recession ended in April 2020."}],
    signals:[{name:"Jobless claims",text:"Claims surged from 200,000 to 6.6 million in a single week - an increase so extreme it appeared to be a data error."},{name:"Consumer sentiment",text:"The Michigan index collapsed from 101.0 in February to 71.8 in March - one of the largest single-month drops ever recorded."},{name:"Leading index",text:"The Conference Board LEI fell 6.7% in March followed by a further 11.9% in April."}]},
-  {id:"great",title:"The Great Recession",period:"December 2007 - June 2009",duration:"18 months",gdpFall:"-4.3%",peakUnemp:"10.0%",sp500:"-57%",
-   narrative:"<p>The Great Recession built slowly over years of excess - cheap credit, inflated house prices, and a financial system that had repackaged toxic mortgage debt into instruments so complex that almost nobody fully understood what they contained.</p><p>The visible crack appeared in March 2008 when Bear Stearns collapsed. Then on September 15, 2008, Lehman Brothers filed for the largest bankruptcy in American history. Credit markets froze. The financial system came within days of total collapse.</p><p>What followed was 18 months of grinding contraction. Four million homes went into foreclosure. The unemployment rate doubled from 5% to 10%. Recovery was painfully slow.</p>",
+
+  {id:"great", title:"The Great Recession", period:"Dec 2007 - Jun 2009", duration:"18 months", gdpFall:"-4.3%", peakUnemp:"10.0%", sp500:"-57%",
+   narrative:"<p>The Great Recession built slowly over years of excess - cheap credit, inflated house prices, and a financial system that had repackaged toxic mortgage debt into instruments so complex that almost nobody fully understood what they contained.</p><p>The visible crack appeared in March 2008 when Bear Stearns collapsed. Then on September 15, 2008, Lehman Brothers filed for the largest bankruptcy in American history. Credit markets froze.</p><p>What followed was 18 months of grinding contraction. Four million homes went into foreclosure. The unemployment rate doubled from 5% to 10%.</p>",
    timeline:[{date:"2006",event:"US house prices peak",desc:"Subprime mortgage delinquencies begin rising."},{date:"Aug 2007",event:"Credit markets seize",desc:"BNP Paribas freezes funds. Interbank lending dysfunctions."},{date:"Mar 2008",event:"Bear Stearns collapses",desc:"Emergency sale to JPMorgan at $2/share."},{date:"Sep 15 2008",event:"Lehman Brothers fails",desc:"Largest bankruptcy in US history. Global credit markets freeze."},{date:"Oct 2008",event:"TARP signed",desc:"Congress passes $700 billion bank rescue."},{date:"Oct 2009",event:"Unemployment peaks at 10%",desc:"Highest level since 1983."}],
    signals:[{name:"Yield curve",text:"The 10Y-2Y spread inverted in December 2005 - more than two years before the recession began."},{name:"Leading index",text:"The Conference Board LEI posted six consecutive monthly falls by mid-2007."},{name:"Credit spreads",text:"High yield spreads began widening sharply in mid-2007, signalling stress months before Lehman."}]},
-  {id:"dotcom",title:"The Dot-Com Recession",period:"March 2001 - November 2001",duration:"8 months",gdpFall:"-0.3%",peakUnemp:"6.3%",sp500:"-78%",
-   narrative:"<p>By the late 1990s, the American stock market had convinced itself that the internet had permanently changed the rules of economics. The NASDAQ rose 400% between 1995 and its peak in March 2000.</p><p>The unwinding began in March 2000 and did not stop for two and a half years. By October 2002 the NASDAQ had fallen 78%, erasing $5 trillion in market capitalisation. But the real economy remained relatively resilient - the recession lasted only eight months.</p><p>What made 2001 worse was September 11. The terrorist attacks devastated the airline and tourism industries. The Fed cut rates aggressively from 6.5% to 1.75% by year-end.</p>",
+
+  {id:"dotcom", title:"The Dot-Com Recession", period:"Mar 2001 - Nov 2001", duration:"8 months", gdpFall:"-0.3%", peakUnemp:"6.3%", sp500:"-78%",
+   narrative:"<p>By the late 1990s, the American stock market had convinced itself that the internet had permanently changed the rules of economics. The NASDAQ rose 400% between 1995 and its peak in March 2000.</p><p>The unwinding began in March 2000 and did not stop for two and a half years. By October 2002 the NASDAQ had fallen 78%, erasing $5 trillion in market capitalisation.</p><p>What made 2001 worse was September 11. The terrorist attacks devastated the airline and tourism industries. The Fed cut rates aggressively from 6.5% to 1.75% by year-end.</p>",
    timeline:[{date:"Mar 2000",event:"NASDAQ peaks",desc:"Reaches 5,048 - a peak it would not revisit for 15 years."},{date:"Jan 2001",event:"Fed begins cutting",desc:"11 rate cuts over the year from 6.5%."},{date:"Mar 2001",event:"Recession begins",desc:"Ends a 10-year expansion."},{date:"Sep 11 2001",event:"Terrorist attacks",desc:"Markets close for four days. Airlines face near-collapse."},{date:"Nov 2001",event:"Recession ends",desc:"After just 8 months."},{date:"Oct 2002",event:"NASDAQ bottoms",desc:"Down 78% from its peak."}],
-   signals:[{name:"Yield curve",text:"The yield curve inverted briefly in 2000, providing an early warning of the 2001 recession."},{name:"Consumer sentiment",text:"The Michigan index declined steadily through 2000 as markets fell, with a sharp drop after 9/11."},{name:"Leading index",text:"The LEI began declining in late 2000 with multiple consecutive monthly falls."}]},
-  {id:"gulf",title:"The Gulf War Recession",period:"July 1990 - March 1991",duration:"8 months",gdpFall:"-1.5%",peakUnemp:"7.8%",sp500:"-20%",
-   narrative:"<p>The recession of 1990-91 arrived from two directions simultaneously. Iraq's invasion of Kuwait triggered an immediate oil price shock - crude prices roughly doubled over the summer. But what made it more severe was the savings and loan crisis, producing a credit crunch that choked off business investment.</p><p>The S&L crisis was one of the most expensive financial disasters in American history. By 1990, the cleanup was costing taxpayers over $130 billion.</p><p>The recession ended in March 1991 as the Gulf War concluded. But unemployment continued rising for more than a year after - a jobless recovery that contributed directly to George H.W. Bush's 1992 defeat.</p>",
+   signals:[{name:"Yield curve",text:"The yield curve inverted briefly in 2000, providing an early warning of the 2001 recession."},{name:"Consumer sentiment",text:"The Michigan index declined steadily through 2000 as markets fell."},{name:"Leading index",text:"The LEI began declining in late 2000 with multiple consecutive monthly falls."}]},
+
+  {id:"gulf", title:"The Gulf War Recession", period:"Jul 1990 - Mar 1991", duration:"8 months", gdpFall:"-1.5%", peakUnemp:"7.8%", sp500:"-20%",
+   narrative:"<p>The recession of 1990-91 arrived from two directions simultaneously. Iraq's invasion of Kuwait triggered an immediate oil price shock - crude prices roughly doubled over the summer. But what made it more severe was the savings and loan crisis, producing a credit crunch that choked off business investment.</p><p>The recession ended in March 1991 as the Gulf War concluded. But unemployment continued rising for more than a year after - a jobless recovery that contributed directly to George H.W. Bush's 1992 defeat.</p>",
    timeline:[{date:"Aug 2 1990",event:"Iraq invades Kuwait",desc:"Oil prices spike immediately."},{date:"Aug 1990",event:"Recession begins",desc:"Credit crunch and oil shock bite."},{date:"Oct 1990",event:"Oil peaks at $46",desc:"Nearly double pre-invasion levels."},{date:"Jan 1991",event:"Gulf War begins",desc:"Operation Desert Storm. Oil prices fall sharply."},{date:"Mar 1991",event:"Recession ends",desc:"But unemployment continues rising."},{date:"Jun 1992",event:"Unemployment peaks",desc:"At 7.8% - 15 months after the recession ended."}],
    signals:[{name:"Yield curve",text:"The yield curve inverted in 1989, providing an early warning confirmed when recession materialised."},{name:"Consumer sentiment",text:"Sentiment dropped sharply on the oil shock news in August 1990."},{name:"Leading index",text:"The LEI began declining in early 1990, well before the invasion."}]},
-  {id:"volcker",title:"The Volcker Recession",period:"July 1981 - November 1982",duration:"16 months",gdpFall:"-2.9%",peakUnemp:"10.8%",sp500:"-27%",
-   narrative:"<p>Paul Volcker arrived at the Federal Reserve in August 1979 with a single mission: kill inflation. Consumer prices were rising at nearly 15% annually. Wages were rising to compensate, driving prices higher still.</p><p>His method: raise interest rates until inflation broke. The federal funds rate climbed to a peak of 20% in June 1981. Mortgage rates reached 18%. Unemployment reached 10.8% - the highest since the Great Depression.</p><p>The strategy worked. Inflation fell from 14.8% in 1980 to 3.2% by 1983.</p>",
+
+  {id:"volcker", title:"The Volcker Recession", period:"Jul 1981 - Nov 1982", duration:"16 months", gdpFall:"-2.9%", peakUnemp:"10.8%", sp500:"-27%",
+   narrative:"<p>Paul Volcker arrived at the Federal Reserve in August 1979 with a single mission: kill inflation. Consumer prices were rising at nearly 15% annually. His method: raise interest rates until inflation broke.</p><p>The federal funds rate climbed to a peak of 20% in June 1981. Mortgage rates reached 18%. Unemployment reached 10.8% - the highest since the Great Depression.</p><p>The strategy worked. Inflation fell from 14.8% in 1980 to 3.2% by 1983.</p>",
    timeline:[{date:"Aug 1979",event:"Volcker appointed Fed Chair",desc:"Immediately signals tougher stance on inflation."},{date:"Oct 1979",event:"Saturday night massacre",desc:"Surprise policy shift allows rates to rise far higher."},{date:"Jun 1981",event:"Fed funds rate hits 20%",desc:"Its all-time high. Mortgage rates exceed 18%."},{date:"Jul 1981",event:"Recession begins",desc:"GDP contracts sharply."},{date:"Nov 1982",event:"Unemployment peaks at 10.8%",desc:"Highest since the Great Depression."},{date:"1983",event:"Inflation broken",desc:"CPI falls to 3.2% from nearly 15%."}],
    signals:[{name:"Yield curve",text:"The yield curve inverted sharply in 1979 and remained inverted."},{name:"Jobless claims",text:"Initial claims rose steadily from 1981, eventually exceeding 600,000 per week."},{name:"Consumer sentiment",text:"Sentiment hit record lows as mortgage rates made home-buying impossible for most Americans."}]}
 ];
 
-const EXPLAIN_DATA=[
-  {id:"yieldcurve",icon:"chart",title:"The Yield Curve",preview:"Why a line on a chart has predicted every US recession since the 1970s.",body:'<p>The yield curve is a graph showing interest rates on US government bonds of different maturities. An inverted yield curve - where short rates exceed long rates - signals that investors expect the Fed will cut rates sharply, usually because recession is anticipated.</p><div class="explain-callout"><p>The 2Y-10Y Treasury spread has inverted before every US recession since the 1970s, with a typical lead time of 12 to 24 months.</p></div><p>The curve inverted in 2019 before COVID, in 2006 before the Great Recession, and in 2000 before the dot-com bust.</p>'},
-  {id:"joblessclaims",icon:"list",title:"Jobless Claims",preview:"The economic indicator released every Thursday morning and why Wall Street watches it so closely.",body:'<p>Initial jobless claims measure the number of people who filed for unemployment insurance for the first time in a given week. Released every Thursday at 8:30am Eastern, it captures new layoffs in near real-time.</p><div class="explain-callout"><p>Jobless claims are a leading indicator because they rise before the unemployment rate does. By the time monthly unemployment rises significantly, the labour market has already been deteriorating for weeks or months.</p></div><p>A rising trend over four or more weeks is signal; one elevated week is noise.</p>'},
-  {id:"creditspreads",icon:"chart2",title:"High Yield Credit Spreads",preview:"Why the extra yield on junk bonds is one of the best real-time recession indicators.",body:'<p>High yield bonds are debt issued by companies with below-investment-grade credit ratings. The spread measures how much extra yield investors demand over comparable US Treasuries.</p><div class="explain-callout"><p>Credit spreads often widen weeks or months before economic data confirms a downturn - making them one of the fastest-moving early warning indicators available.</p></div><p>A spread above 6% has historically been consistent with recession or financial stress.</p>'},
-  {id:"causes",icon:"bolt",title:"What Causes Recessions?",preview:"Economists have debated this for decades. Here is what the evidence actually says.",body:'<p>Demand shocks occur when spending falls sharply, as in COVID. Supply shocks raise costs - the 1973 and 1990 recessions were triggered partly by oil price spikes. Financial crises are particularly severe because they impair the credit system.</p><div class="explain-callout"><p>Most recessions are not caused by a single factor but by the interaction of several: an external shock that exposes underlying vulnerabilities built up during the preceding expansion.</p></div><p>Policy errors also matter - the Volcker recession was deliberately engineered by the Federal Reserve.</p>'},
-  {id:"fedresponse",icon:"bank",title:"How the Fed Fights Recessions",preview:"Interest rates, money printing, and forward guidance explained.",body:'<p>The Federal Reserve has a dual mandate: maximum employment and stable prices. When recession threatens, the Fed cuts the federal funds rate. Lower short-term rates cascade through the economy.</p><div class="explain-callout"><p>When rates hit zero, the Fed deploys quantitative easing - purchasing large quantities of bonds. Between 2008 and 2022, the Fed balance sheet grew from under $1 trillion to nearly $9 trillion.</p></div><p>Central bank communication is itself a policy tool. When the Fed signals rates will stay low, it shifts expectations and affects borrowing decisions immediately.</p>'},
-  {id:"calendar-guide",icon:"cal",title:"How to Read the Calendar",preview:"What the economic calendar shows and why certain releases matter more.",body:'<p>The economic calendar shows scheduled releases of economic data - jobs reports, inflation figures, GDP estimates, and central bank decisions.</p><p>High-impact events (red dot) are releases that historically move markets significantly - jobs reports, CPI, GDP, and central bank rate decisions.</p><div class="explain-callout"><p>The most important US releases each month: Non-Farm Payrolls (first Friday), CPI (mid-month), and the FOMC decision. For the UK: Labour Market, CPI, and Bank of England rate decision.</p></div>'}
+// ── EXPLAIN DATA ───────────────────────────────────────────────────────────
+var EXPLAIN_DATA = [
+  {id:"yieldcurve", icon:"&#128200;", title:"The Yield Curve", preview:"Why a line on a chart has predicted every US recession since the 1970s.",
+   body:"<p>The yield curve is a graph showing interest rates on US government bonds of different maturities. An inverted yield curve - where short rates exceed long rates - signals that investors expect the Fed will cut rates sharply, usually because recession is anticipated.</p><div class=\"explain-callout\"><p>The 2Y-10Y Treasury spread has inverted before every US recession since the 1970s, with a typical lead time of 12 to 24 months.</p></div><p>The curve inverted in 2019 before COVID, in 2006 before the Great Recession, and in 2000 before the dot-com bust.</p>"},
+  {id:"joblessclaims", icon:"&#128203;", title:"Jobless Claims", preview:"The economic indicator released every Thursday morning and why Wall Street watches it so closely.",
+   body:"<p>Initial jobless claims measure the number of people who filed for unemployment insurance for the first time in a given week. Released every Thursday at 8:30am Eastern, it captures new layoffs in near real-time.</p><div class=\"explain-callout\"><p>Jobless claims are a leading indicator because they rise before the unemployment rate does. By the time monthly unemployment rises significantly, the labour market has already been deteriorating for weeks or months.</p></div><p>A rising trend over four or more weeks is signal; one elevated week is noise.</p>"},
+  {id:"creditspreads", icon:"&#128202;", title:"High Yield Credit Spreads", preview:"Why the extra yield on junk bonds is one of the best real-time recession indicators.",
+   body:"<p>High yield bonds are debt issued by companies with below-investment-grade credit ratings. The spread measures how much extra yield investors demand over comparable US Treasuries.</p><div class=\"explain-callout\"><p>Credit spreads often widen weeks or months before economic data confirms a downturn - making them one of the fastest-moving early warning indicators available.</p></div><p>A spread above 6% has historically been consistent with recession or financial stress.</p>"},
+  {id:"causes", icon:"&#9889;", title:"What Causes Recessions?", preview:"Economists have debated this for decades. Here is what the evidence actually says.",
+   body:"<p>Demand shocks occur when spending falls sharply, as in COVID. Supply shocks raise costs - the 1973 and 1990 recessions were triggered partly by oil price spikes. Financial crises are particularly severe because they impair the credit system.</p><div class=\"explain-callout\"><p>Most recessions are not caused by a single factor but by the interaction of several: an external shock that exposes underlying vulnerabilities built up during the preceding expansion.</p></div>"},
+  {id:"fedresponse", icon:"&#127963;", title:"How the Fed Fights Recessions", preview:"Interest rates, money printing, and forward guidance explained.",
+   body:"<p>The Federal Reserve has a dual mandate: maximum employment and stable prices. When recession threatens, the Fed cuts the federal funds rate. Lower short-term rates cascade through the economy.</p><div class=\"explain-callout\"><p>When rates hit zero, the Fed deploys quantitative easing - purchasing large quantities of bonds. Between 2008 and 2022, the Fed balance sheet grew from under $1 trillion to nearly $9 trillion.</p></div>"},
+  {id:"calguide", icon:"&#128197;", title:"How to Read the Calendar", preview:"What the economic calendar shows and why certain releases matter more.",
+   body:"<p>The economic calendar shows scheduled releases of economic data - jobs reports, inflation figures, GDP estimates, and central bank decisions.</p><p>High-impact events (red dot) are releases that historically move markets significantly - jobs reports, CPI, GDP, and central bank rate decisions.</p><div class=\"explain-callout\"><p>The most important US releases each month: Non-Farm Payrolls (first Friday), CPI (mid-month), and the FOMC decision. For the UK: Labour Market, CPI, and Bank of England rate decision.</p></div>"}
 ];
 
-const CAL_EVENTS=[
-  {date:"2026-06-12",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",forecast:"225K"},
-  {date:"2026-06-16",time:"07:00 BST",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment rate, employment change and wage growth",prev:"4.5%",forecast:"4.5%"},
-  {date:"2026-06-17",time:"07:00 BST",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.5%",forecast:"3.3%"},
-  {date:"2026-06-17",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.1%",forecast:"0.3%"},
-  {date:"2026-06-17",time:"09:15 ET",country:"US",imp:"medium",name:"Industrial Production",desc:"Monthly output of US factories and utilities",prev:"-0.3%",forecast:"0.2%"},
-  {date:"2026-06-18",time:"14:00 ET",country:"US",imp:"high",name:"FOMC Rate Decision",desc:"Federal Reserve interest rate announcement and press conference",prev:"4.25-4.50%",forecast:"4.25-4.50%"},
-  {date:"2026-06-19",time:"07:00 BST",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.4%",forecast:"0.1%"},
-  {date:"2026-06-19",time:"08:30 ET",country:"US",imp:"medium",name:"US Housing Starts",desc:"New residential construction and building permits",prev:"1,324K",forecast:"1,340K"},
-  {date:"2026-06-19",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"225K",forecast:"228K"},
-  {date:"2026-06-19",time:"12:00 BST",country:"UK",imp:"high",name:"Bank of England Rate Decision",desc:"BoE base rate announcement and Monetary Policy Committee vote",prev:"4.25%",forecast:"4.00%"},
-  {date:"2026-06-20",time:"07:00 BST",country:"UK",imp:"medium",name:"UK GDP Monthly",desc:"Monthly estimate of UK GDP growth",prev:"0.2%",forecast:"0.1%"},
-  {date:"2026-06-24",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Confidence",desc:"Conference Board consumer confidence index",prev:"97.7",forecast:"99.0"},
-  {date:"2026-06-25",time:"08:30 ET",country:"US",imp:"high",name:"US GDP Q1 Final",desc:"Final estimate of Q1 2026 GDP growth, annualised rate",prev:"-0.3%",forecast:"-0.2%"},
-  {date:"2026-06-25",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"228K",forecast:"227K"},
-  {date:"2026-06-26",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures - the Fed's preferred gauge",prev:"2.2%",forecast:"2.3%"},
-  {date:"2026-06-27",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Sentiment Final",desc:"University of Michigan consumer sentiment final reading",prev:"50.8",forecast:"51.5"},
-  {date:"2026-07-01",time:"10:00 ET",country:"US",imp:"high",name:"ISM Manufacturing PMI",desc:"Manufacturing activity index - 50 = neutral",prev:"48.7",forecast:"49.5"},
-  {date:"2026-07-01",time:"09:30 BST",country:"UK",imp:"medium",name:"UK Manufacturing PMI Final",desc:"S&P Global manufacturing PMI final reading",prev:"45.4",forecast:"45.9"},
-  {date:"2026-07-02",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"227K",forecast:"228K"},
-  {date:"2026-07-03",time:"08:30 ET",country:"US",imp:"high",name:"Non-Farm Payrolls",desc:"Monthly jobs added across non-farm sectors",prev:"139K",forecast:"145K"},
-  {date:"2026-07-03",time:"08:30 ET",country:"US",imp:"high",name:"US Unemployment Rate",desc:"US headline unemployment rate",prev:"4.2%",forecast:"4.2%"},
-  {date:"2026-07-08",time:"07:00 BST",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment, employment change and wage growth",prev:"4.5%",forecast:"4.5%"},
-  {date:"2026-07-10",time:"08:30 ET",country:"US",imp:"high",name:"US CPI Inflation",desc:"Consumer prices year-over-year",prev:"2.4%",forecast:"2.3%"},
-  {date:"2026-07-10",time:"08:30 ET",country:"US",imp:"high",name:"US Core CPI",desc:"CPI excluding food and energy - year-over-year",prev:"2.8%",forecast:"2.7%"},
-  {date:"2026-07-11",time:"07:00 BST",country:"UK",imp:"medium",name:"UK GDP Monthly",desc:"Monthly estimate of UK GDP growth",prev:"0.1%",forecast:"0.1%"},
-  {date:"2026-07-15",time:"07:00 BST",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.3%",forecast:"3.1%"},
-  {date:"2026-07-15",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.3%",forecast:"0.2%"},
-  {date:"2026-07-17",time:"07:00 BST",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.1%",forecast:"0.2%"},
-  {date:"2026-07-23",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",forecast:"230K"},
-  {date:"2026-07-29",time:"08:30 ET",country:"US",imp:"high",name:"US GDP Q2 Advance",desc:"First estimate of Q2 2026 GDP growth - annualised rate",prev:"-0.2%",forecast:"1.8%"},
-  {date:"2026-07-30",time:"14:00 ET",country:"US",imp:"high",name:"FOMC Rate Decision",desc:"Federal Reserve interest rate announcement and press conference",prev:"4.25-4.50%",forecast:"4.00-4.25%"},
-  {date:"2026-07-31",time:"07:00 BST",country:"UK",imp:"high",name:"UK GDP Q2 Preliminary",desc:"First estimate of Q2 2026 UK GDP growth",prev:"0.7%",forecast:"0.5%"},
-  {date:"2026-07-31",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures - the Fed's preferred gauge",prev:"2.3%",forecast:"2.2%"},
-  {date:"2026-08-06",time:"12:00 BST",country:"UK",imp:"high",name:"Bank of England Rate Decision",desc:"BoE base rate announcement and Monetary Policy Report",prev:"4.00%",forecast:"3.75%"},
-  {date:"2026-08-07",time:"08:30 ET",country:"US",imp:"high",name:"Non-Farm Payrolls",desc:"Monthly jobs added across non-farm sectors",prev:"145K",forecast:"148K"},
-  {date:"2026-08-07",time:"08:30 ET",country:"US",imp:"high",name:"US Unemployment Rate",desc:"US headline unemployment rate",prev:"4.2%",forecast:"4.2%"},
-  {date:"2026-08-11",time:"07:00 BST",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment, employment change and wage growth",prev:"4.5%",forecast:"4.4%"},
-  {date:"2026-08-12",time:"08:30 ET",country:"US",imp:"high",name:"US CPI Inflation",desc:"Consumer prices year-over-year",prev:"2.3%",forecast:"2.2%"},
-  {date:"2026-08-13",time:"07:00 BST",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.1%",forecast:"2.9%"},
-  {date:"2026-08-14",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.2%",forecast:"0.3%"},
-  {date:"2026-08-28",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures - the Fed's preferred gauge",prev:"2.2%",forecast:"2.1%"},
+// ── CALENDAR DATA ──────────────────────────────────────────────────────────
+var CAL_EVENTS = [
+  {date:"2026-06-12",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",fore:"225K"},
+  {date:"2026-06-16",time:"07:00 BST",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment rate, employment change and wage growth",prev:"4.5%",fore:"4.5%"},
+  {date:"2026-06-17",time:"07:00 BST",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.5%",fore:"3.3%"},
+  {date:"2026-06-17",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.1%",fore:"0.3%"},
+  {date:"2026-06-17",time:"09:15 ET",country:"US",imp:"medium",name:"Industrial Production",desc:"Monthly output of US factories and utilities",prev:"-0.3%",fore:"0.2%"},
+  {date:"2026-06-18",time:"14:00 ET",country:"US",imp:"high",name:"FOMC Rate Decision",desc:"Federal Reserve interest rate announcement and press conference",prev:"4.25-4.50%",fore:"4.25-4.50%"},
+  {date:"2026-06-19",time:"07:00 BST",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.4%",fore:"0.1%"},
+  {date:"2026-06-19",time:"08:30 ET",country:"US",imp:"medium",name:"US Housing Starts",desc:"New residential construction and building permits",prev:"1,324K",fore:"1,340K"},
+  {date:"2026-06-19",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"225K",fore:"228K"},
+  {date:"2026-06-19",time:"12:00 BST",country:"UK",imp:"high",name:"Bank of England Rate Decision",desc:"BoE base rate announcement and MPC vote",prev:"4.25%",fore:"4.00%"},
+  {date:"2026-06-20",time:"07:00 BST",country:"UK",imp:"medium",name:"UK GDP Monthly",desc:"Monthly estimate of UK GDP growth",prev:"0.2%",fore:"0.1%"},
+  {date:"2026-06-24",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Confidence",desc:"Conference Board consumer confidence index",prev:"97.7",fore:"99.0"},
+  {date:"2026-06-25",time:"08:30 ET",country:"US",imp:"high",name:"US GDP Q1 Final",desc:"Final estimate of Q1 2026 GDP growth, annualised rate",prev:"-0.3%",fore:"-0.2%"},
+  {date:"2026-06-25",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"228K",fore:"227K"},
+  {date:"2026-06-26",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures - the Fed's preferred gauge",prev:"2.2%",fore:"2.3%"},
+  {date:"2026-06-27",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Sentiment Final",desc:"University of Michigan consumer sentiment final reading",prev:"50.8",fore:"51.5"},
+  {date:"2026-07-01",time:"10:00 ET",country:"US",imp:"high",name:"ISM Manufacturing PMI",desc:"Manufacturing activity index - 50 = neutral",prev:"48.7",fore:"49.5"},
+  {date:"2026-07-01",time:"09:30 BST",country:"UK",imp:"medium",name:"UK Manufacturing PMI Final",desc:"S&P Global manufacturing PMI final reading",prev:"45.4",fore:"45.9"},
+  {date:"2026-07-02",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"227K",fore:"228K"},
+  {date:"2026-07-03",time:"08:30 ET",country:"US",imp:"high",name:"Non-Farm Payrolls",desc:"Monthly jobs added across non-farm sectors",prev:"139K",fore:"145K"},
+  {date:"2026-07-03",time:"08:30 ET",country:"US",imp:"high",name:"US Unemployment Rate",desc:"US headline unemployment rate",prev:"4.2%",fore:"4.2%"},
+  {date:"2026-07-08",time:"07:00 BST",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment, employment change and wage growth",prev:"4.5%",fore:"4.5%"},
+  {date:"2026-07-10",time:"08:30 ET",country:"US",imp:"high",name:"US CPI Inflation",desc:"Consumer prices year-over-year",prev:"2.4%",fore:"2.3%"},
+  {date:"2026-07-10",time:"08:30 ET",country:"US",imp:"high",name:"US Core CPI",desc:"CPI excluding food and energy - year-over-year",prev:"2.8%",fore:"2.7%"},
+  {date:"2026-07-11",time:"07:00 BST",country:"UK",imp:"medium",name:"UK GDP Monthly",desc:"Monthly estimate of UK GDP growth",prev:"0.1%",fore:"0.1%"},
+  {date:"2026-07-15",time:"07:00 BST",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.3%",fore:"3.1%"},
+  {date:"2026-07-15",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.3%",fore:"0.2%"},
+  {date:"2026-07-17",time:"07:00 BST",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.1%",fore:"0.2%"},
+  {date:"2026-07-23",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",fore:"230K"},
+  {date:"2026-07-29",time:"08:30 ET",country:"US",imp:"high",name:"US GDP Q2 Advance",desc:"First estimate of Q2 2026 GDP growth - annualised rate",prev:"-0.2%",fore:"1.8%"},
+  {date:"2026-07-30",time:"14:00 ET",country:"US",imp:"high",name:"FOMC Rate Decision",desc:"Federal Reserve interest rate announcement and press conference",prev:"4.25-4.50%",fore:"4.00-4.25%"},
+  {date:"2026-07-31",time:"07:00 BST",country:"UK",imp:"high",name:"UK GDP Q2 Preliminary",desc:"First estimate of Q2 2026 UK GDP growth",prev:"0.7%",fore:"0.5%"},
+  {date:"2026-07-31",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures - the Fed's preferred gauge",prev:"2.3%",fore:"2.2%"},
+  {date:"2026-08-06",time:"12:00 BST",country:"UK",imp:"high",name:"Bank of England Rate Decision",desc:"BoE base rate announcement and Monetary Policy Report",prev:"4.00%",fore:"3.75%"},
+  {date:"2026-08-07",time:"08:30 ET",country:"US",imp:"high",name:"Non-Farm Payrolls",desc:"Monthly jobs added across non-farm sectors",prev:"145K",fore:"148K"},
+  {date:"2026-08-07",time:"08:30 ET",country:"US",imp:"high",name:"US Unemployment Rate",desc:"US headline unemployment rate",prev:"4.2%",fore:"4.2%"},
+  {date:"2026-08-11",time:"07:00 BST",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment, employment change and wage growth",prev:"4.5%",fore:"4.4%"},
+  {date:"2026-08-12",time:"08:30 ET",country:"US",imp:"high",name:"US CPI Inflation",desc:"Consumer prices year-over-year",prev:"2.3%",fore:"2.2%"},
+  {date:"2026-08-13",time:"07:00 BST",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.1%",fore:"2.9%"},
+  {date:"2026-08-14",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.2%",fore:"0.3%"},
+  {date:"2026-08-28",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures - the Fed's preferred gauge",prev:"2.2%",fore:"2.1%"}
 ];
 
-const IMP_CLR={high:"#E24B4A",medium:"#BA7517"};
-const IMP_LBL={high:"HIGH",medium:"MED"};
-const FLAGS={US:"US",UK:"UK"};
-const WDAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const MTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-const ALL_PAGES=["dashboard","archive","calendar","explain"];
+var IMP_CLR = {high:"#E24B4A", medium:"#BA7517"};
+var IMP_LBL = {high:"HIGH", medium:"MED"};
+var WDAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var MTHS    = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+var ALL_PAGES = ["dashboard","archive","calendar","explain"];
 
-function showPage(p){
-  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
-  document.getElementById("page-"+p).classList.add("active");
-  ALL_PAGES.forEach(x=>{var el=document.getElementById("nav-"+x);if(el)el.classList.remove("active");});
-  var el=document.getElementById("nav-"+p);if(el)el.classList.add("active");
-  window.scrollTo(0,0);
-}
-function showArchive(id){showPage("archive");if(id){var r=ARCHIVE_DATA.find(x=>x.id===id);if(r)renderArchiveDetail(r);}else showArchiveOverview();}
-function showArchiveOverview(){document.getElementById("archive-overview").style.display="block";document.getElementById("archive-detail").style.display="none";window.scrollTo(0,0);}
-function buildDropdown(){document.getElementById("archive-dropdown").innerHTML=ARCHIVE_DATA.map(r=>'<a onclick="showArchive(''+r.id+'')">'+r.title+'<span class="dd-period">'+r.period+'</span></a>').join("");}
-function buildArchiveGrid(){
-  document.getElementById("archive-grid").innerHTML=ARCHIVE_DATA.map(r=>
-    '<div class="archive-card" onclick="showArchive(''+r.id+'')"><div class="archive-card-ey">RECESSION ARCHIVE</div>'
-    +'<div class="archive-card-title">'+r.title+'</div><div class="archive-card-period">'+r.period+'</div>'
-    +'<div class="archive-stats"><div><div class="asl">DURATION</div><div class="asv">'+r.duration+'</div></div><div><div class="asl">GDP FALL</div><div class="asv">'+r.gdpFall+'</div></div><div><div class="asl">PEAK UNEMP</div><div class="asv">'+r.peakUnemp+'</div></div><div><div class="asl">S&amp;P 500</div><div class="asv">'+r.sp500+'</div></div></div>'
-    +'<span class="archive-link">Read the full story</span></div>').join("");
-}
-function renderArchiveDetail(rec){
-  document.getElementById("archive-overview").style.display="none";
-  document.getElementById("archive-detail").style.display="block";
-  document.getElementById("archive-detail-content").innerHTML=
-    '<div class="detail-header"><div class="detail-eyebrow">RECESSION ARCHIVE</div><div class="detail-title">'+rec.title+'</div><div class="detail-period">'+rec.period+'</div></div>'
-    +'<div class="detail-stats"><div class="detail-stat"><div class="dsl">DURATION</div><div class="dsv">'+rec.duration+'</div></div><div class="detail-stat"><div class="dsl">GDP FALL</div><div class="dsv">'+rec.gdpFall+'</div></div><div class="detail-stat"><div class="dsl">PEAK UNEMPLOYMENT</div><div class="dsv">'+rec.peakUnemp+'</div></div><div class="detail-stat"><div class="dsl">S&amp;P 500</div><div class="dsv">'+rec.sp500+'</div></div></div>'
-    +'<div class="detail-section"><div class="detail-section-title">OVERVIEW</div><div class="detail-body">'+rec.narrative+'</div></div>'
-    +'<div class="detail-section"><div class="detail-section-title">TIMELINE</div><div style="padding:0">'+rec.timeline.map(t=>'<div class="timeline-item"><div class="tdate">'+t.date+'</div><div class="tdot"></div><div><div class="tevent">'+t.event+'</div><div class="tdesc">'+t.desc+'</div></div></div>').join("")+'</div></div>'
-    +'<div class="detail-section"><div class="detail-section-title">HOW THE INDICATORS BEHAVED</div><div class="ind-signals">'+rec.signals.map(s=>'<div class="sig-card"><div class="sig-name">'+s.name+'</div><div class="sig-text">'+s.text+'</div></div>').join("")+'</div></div>';
-  window.scrollTo(0,0);
-}
-function buildExplainGrid(){
-  document.getElementById("explain-grid").innerHTML=EXPLAIN_DATA.map(e=>
-    '<div class="explain-card" onclick="toggleExplain(''+e.id+'')"><div class="explain-icon" style="font-size:22px;margin-bottom:12px">&#128200;</div><div class="explain-card-title">'+e.title+'</div><div class="explain-preview">'+e.preview+'</div><span class="explain-link" id="el-'+e.id+'">Read more</span></div>'
-    +'<div class="explain-detail" id="ed-'+e.id+'"><div class="explain-detail-title">'+e.title+'</div><div class="explain-body">'+e.body+'</div><span class="explain-close" onclick="toggleExplain(''+e.id+'')">Close</span></div>').join("");
-}
-function toggleExplain(id){var d=document.getElementById("ed-"+id),l=document.getElementById("el-"+id),o=d.classList.contains("open");d.classList.toggle("open",!o);l.textContent=o?"Read more":"Close";}
-
-function fmtFullDate(ds){var d=new Date(ds+"T12:00:00");return WDAYS[d.getDay()]+" "+d.getDate()+" "+MTHS[d.getMonth()];}
-function buildCalendar(){
-  var today=new Date();today.setHours(0,0,0,0);
-  var todayStr=today.toISOString().split("T")[0];
-  var nextHigh=CAL_EVENTS.find(e=>e.imp==="high"&&e.date>=todayStr);
-  if(nextHigh){
-    var evDate=new Date(nextHigh.date+"T12:00:00");
-    var diff=Math.round((evDate-today)/864e5);
-    document.getElementById("cal-countdown").style.display="flex";
-    document.getElementById("cal-cd-event").textContent=FLAGS[nextHigh.country]+" "+nextHigh.name;
-    document.getElementById("cal-cd-meta").textContent=fmtFullDate(nextHigh.date)+" - "+nextHigh.time;
-    document.getElementById("cal-cd-num").textContent=diff===0?"Today":diff===1?"Tomorrow":diff;
-    document.getElementById("cal-cd-unit").textContent=diff<=1?"":"days away";
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function showPage(p) {
+  for (var i = 0; i < ALL_PAGES.length; i++) {
+    document.querySelectorAll('.page').forEach(function(x) { x.classList.remove('active'); });
   }
-  renderCalendar("all");
+  document.getElementById('page-' + p).classList.add('active');
+  ALL_PAGES.forEach(function(x) {
+    var el = document.getElementById('nav-' + x);
+    if (el) { el.classList.remove('active'); }
+  });
+  var el = document.getElementById('nav-' + p);
+  if (el) { el.classList.add('active'); }
+  window.scrollTo(0, 0);
 }
-function calFilter(f,btn){document.querySelectorAll(".cal-filter-row .filter-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderCalendar(f);}
-function renderCalendar(filter){
-  var today=new Date();today.setHours(0,0,0,0);var todayStr=today.toISOString().split("T")[0];
-  var filtered=CAL_EVENTS.filter(e=>filter==="high"?e.imp==="high":filter==="US"?e.country==="US":filter==="UK"?e.country==="UK":true);
-  var weeks={};
-  filtered.forEach(e=>{var d=new Date(e.date+"T12:00:00"),day=d.getDay();var mon=new Date(d);mon.setDate(d.getDate()-(day===0?6:day-1));var wk=mon.toISOString().split("T")[0];if(!weeks[wk])weeks[wk]={mon:mon,days:{}};if(!weeks[wk].days[e.date])weeks[wk].days[e.date]=[];weeks[wk].days[e.date].push(e);});
-  var body=document.getElementById("cal-body");body.innerHTML="";
-  if(!Object.keys(weeks).length){body.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">No events match this filter.</div>';return;}
-  Object.keys(weeks).sort().forEach(wk=>{
-    var W=weeks[wk],mon=W.mon,days=W.days,sun=new Date(mon);sun.setDate(mon.getDate()+6);
-    var wkDiv=document.createElement("div");
-    var hdr=document.createElement("div");hdr.className="cal-week-hdr";hdr.textContent="Week of "+MTHS[mon.getMonth()]+" "+mon.getDate()+(mon.getMonth()!==sun.getMonth()?" - "+MTHS[sun.getMonth()]+" "+sun.getDate():"");wkDiv.appendChild(hdr);
-    Object.keys(days).sort().forEach(dateStr=>{
-      var evs=days[dateStr],d=new Date(dateStr+"T12:00:00"),isToday=dateStr===todayStr,isPast=dateStr<todayStr;
-      var dayHdr=document.createElement("div");dayHdr.className="cal-day-hdr"+(isToday?" today-hdr":"");dayHdr.textContent=WDAYS[d.getDay()]+", "+MTHS[d.getMonth()]+" "+d.getDate()+(isToday?" - TODAY":"");wkDiv.appendChild(dayHdr);
-      evs.forEach(ev=>{
-        var row=document.createElement("div");row.className="cal-event-row"+(isPast?" past":"")+(isToday?" today-event":"");
-        row.innerHTML='<div class="cal-etime">'+ev.time+'</div><div class="cal-eflag">'+ev.country+'</div>'
-          +'<div class="cal-eimp"><div class="cal-eimp-dot" style="background:'+(IMP_CLR[ev.imp]||"#8892A4")+'"></div><span class="cal-eimp-txt" style="color:'+(IMP_CLR[ev.imp]||"#8892A4")+'">'+(IMP_LBL[ev.imp]||"LOW")+'</span></div>'
-          +'<div><div class="cal-ename">'+ev.name+'</div><div class="cal-edesc">'+ev.desc+'</div></div>'
-          +'<div><div class="cal-elabel">PREVIOUS</div><div class="cal-eprev">'+(ev.prev||"-")+'</div></div>'
-          +'<div><div class="cal-elabel">FORECAST</div><div class="cal-eforecast">'+(ev.forecast||"-")+'</div></div>';
+
+function showArchive(id) {
+  showPage('archive');
+  if (id) {
+    var rec = null;
+    for (var i = 0; i < ARCHIVE_DATA.length; i++) {
+      if (ARCHIVE_DATA[i].id === id) { rec = ARCHIVE_DATA[i]; break; }
+    }
+    if (rec) { renderArchiveDetail(rec); }
+  } else {
+    showArchiveOverview();
+  }
+}
+
+function showArchiveOverview() {
+  document.getElementById('archive-overview').style.display = 'block';
+  document.getElementById('archive-detail').style.display = 'none';
+  window.scrollTo(0, 0);
+}
+
+function buildDropdown() {
+  var dd = document.getElementById('archive-dropdown');
+  dd.innerHTML = '';
+  ARCHIVE_DATA.forEach(function(r) {
+    var a = document.createElement('a');
+    a.setAttribute('data-archiveid', r.id);
+    a.innerHTML = r.title + '<span class="dd-period">' + r.period + '</span>';
+    dd.appendChild(a);
+  });
+  dd.addEventListener('click', function(e) {
+    var link = e.target.closest('a');
+    if (link) { showArchive(link.getAttribute('data-archiveid')); }
+  });
+}
+
+function buildArchiveGrid() {
+  var grid = document.getElementById('archive-grid');
+  grid.innerHTML = '';
+  ARCHIVE_DATA.forEach(function(r) {
+    var card = document.createElement('div');
+    card.className = 'archive-card';
+    card.setAttribute('data-archiveid', r.id);
+    card.innerHTML = '<div class="archive-card-ey">RECESSION ARCHIVE</div>'
+      + '<div class="archive-card-title">' + r.title + '</div>'
+      + '<div class="archive-card-period">' + r.period + '</div>'
+      + '<div class="archive-stats">'
+      + '<div><div class="asl">DURATION</div><div class="asv">' + r.duration + '</div></div>'
+      + '<div><div class="asl">GDP FALL</div><div class="asv">' + r.gdpFall + '</div></div>'
+      + '<div><div class="asl">PEAK UNEMP</div><div class="asv">' + r.peakUnemp + '</div></div>'
+      + '<div><div class="asl">S&amp;P 500</div><div class="asv">' + r.sp500 + '</div></div>'
+      + '</div><span class="archive-link">Read the full story</span>';
+    grid.appendChild(card);
+  });
+  grid.addEventListener('click', function(e) {
+    var card = e.target.closest('.archive-card');
+    if (card) { showArchive(card.getAttribute('data-archiveid')); }
+  });
+}
+
+function renderArchiveDetail(rec) {
+  document.getElementById('archive-overview').style.display = 'none';
+  document.getElementById('archive-detail').style.display = 'block';
+  var tl = rec.timeline.map(function(t) {
+    return '<div class="timeline-item"><div class="tdate">' + t.date + '</div><div class="tdot"></div>'
+      + '<div><div class="tevent">' + t.event + '</div><div class="tdesc">' + t.desc + '</div></div></div>';
+  }).join('');
+  var sigs = rec.signals.map(function(s) {
+    return '<div class="sig-card"><div class="sig-name">' + s.name + '</div><div class="sig-text">' + s.text + '</div></div>';
+  }).join('');
+  document.getElementById('archive-detail-content').innerHTML =
+    '<div class="detail-header"><div class="detail-eyebrow">RECESSION ARCHIVE</div>'
+    + '<div class="detail-title">' + rec.title + '</div><div class="detail-period">' + rec.period + '</div></div>'
+    + '<div class="detail-stats"><div class="detail-stat"><div class="dsl">DURATION</div><div class="dsv">' + rec.duration + '</div></div>'
+    + '<div class="detail-stat"><div class="dsl">GDP FALL</div><div class="dsv">' + rec.gdpFall + '</div></div>'
+    + '<div class="detail-stat"><div class="dsl">PEAK UNEMP</div><div class="dsv">' + rec.peakUnemp + '</div></div>'
+    + '<div class="detail-stat"><div class="dsl">S&amp;P 500</div><div class="dsv">' + rec.sp500 + '</div></div></div>'
+    + '<div class="detail-section"><div class="detail-section-title">OVERVIEW</div><div class="detail-body">' + rec.narrative + '</div></div>'
+    + '<div class="detail-section"><div class="detail-section-title">TIMELINE</div><div>' + tl + '</div></div>'
+    + '<div class="detail-section"><div class="detail-section-title">HOW THE INDICATORS BEHAVED</div><div class="ind-signals">' + sigs + '</div></div>';
+  window.scrollTo(0, 0);
+}
+
+function buildExplainGrid() {
+  var grid = document.getElementById('explain-grid');
+  grid.innerHTML = '';
+  EXPLAIN_DATA.forEach(function(e) {
+    var card = document.createElement('div');
+    card.className = 'explain-card';
+    card.setAttribute('data-explainid', e.id);
+    card.innerHTML = '<div class="explain-icon">' + e.icon + '</div>'
+      + '<div class="explain-card-title">' + e.title + '</div>'
+      + '<div class="explain-preview">' + e.preview + '</div>'
+      + '<span class="explain-link" id="el-' + e.id + '">Read more</span>';
+    grid.appendChild(card);
+    var detail = document.createElement('div');
+    detail.className = 'explain-detail';
+    detail.id = 'ed-' + e.id;
+    detail.innerHTML = '<div class="explain-detail-title">' + e.title + '</div>'
+      + '<div class="explain-body">' + e.body + '</div>'
+      + '<span class="explain-close" data-explainid="' + e.id + '">Close</span>';
+    grid.appendChild(detail);
+  });
+  grid.addEventListener('click', function(ev) {
+    var card = ev.target.closest('.explain-card');
+    var close = ev.target.closest('.explain-close');
+    if (card) { toggleExplain(card.getAttribute('data-explainid')); }
+    if (close) { toggleExplain(close.getAttribute('data-explainid')); }
+  });
+}
+
+function toggleExplain(id) {
+  var d = document.getElementById('ed-' + id);
+  var l = document.getElementById('el-' + id);
+  var isOpen = d.classList.contains('open');
+  d.classList.toggle('open', !isOpen);
+  if (l) { l.textContent = isOpen ? 'Read more' : 'Close'; }
+}
+
+// ── CALENDAR ───────────────────────────────────────────────────────────────
+function fmtFullDate(ds) {
+  var d = new Date(ds + 'T12:00:00');
+  return WDAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MTHS[d.getMonth()];
+}
+
+function buildCalendar() {
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var todayStr = today.toISOString().split('T')[0];
+  var nextHigh = null;
+  for (var i = 0; i < CAL_EVENTS.length; i++) {
+    if (CAL_EVENTS[i].imp === 'high' && CAL_EVENTS[i].date >= todayStr) {
+      nextHigh = CAL_EVENTS[i]; break;
+    }
+  }
+  if (nextHigh) {
+    var evDate = new Date(nextHigh.date + 'T12:00:00');
+    var diff = Math.round((evDate - today) / 864e5);
+    document.getElementById('cal-countdown').style.display = 'flex';
+    document.getElementById('cal-cd-event').textContent = '[' + nextHigh.country + '] ' + nextHigh.name;
+    document.getElementById('cal-cd-meta').textContent = fmtFullDate(nextHigh.date) + ' - ' + nextHigh.time;
+    document.getElementById('cal-cd-num').textContent = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff;
+    document.getElementById('cal-cd-unit').textContent = diff <= 1 ? '' : 'days away';
+  }
+  renderCalendar('all');
+}
+
+function calFilter(f, btn) {
+  document.querySelectorAll('.cal-filter-row .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderCalendar(f);
+}
+
+function renderCalendar(filter) {
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var todayStr = today.toISOString().split('T')[0];
+  var filtered = CAL_EVENTS.filter(function(e) {
+    if (filter === 'high') { return e.imp === 'high'; }
+    if (filter === 'US') { return e.country === 'US'; }
+    if (filter === 'UK') { return e.country === 'UK'; }
+    return true;
+  });
+  var weeks = {};
+  filtered.forEach(function(e) {
+    var d = new Date(e.date + 'T12:00:00');
+    var day = d.getDay();
+    var mon = new Date(d);
+    mon.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+    var wk = mon.toISOString().split('T')[0];
+    if (!weeks[wk]) { weeks[wk] = {mon: mon, days: {}}; }
+    if (!weeks[wk].days[e.date]) { weeks[wk].days[e.date] = []; }
+    weeks[wk].days[e.date].push(e);
+  });
+  var body = document.getElementById('cal-body');
+  body.innerHTML = '';
+  var wkKeys = Object.keys(weeks).sort();
+  if (!wkKeys.length) {
+    body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">No events match this filter.</div>';
+    return;
+  }
+  wkKeys.forEach(function(wk) {
+    var W = weeks[wk];
+    var mon = W.mon;
+    var sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    var wkDiv = document.createElement('div');
+    var hdrText = 'Week of ' + MTHS[mon.getMonth()] + ' ' + mon.getDate();
+    if (mon.getMonth() !== sun.getMonth()) {
+      hdrText += ' - ' + MTHS[sun.getMonth()] + ' ' + sun.getDate();
+    }
+    var hdr = document.createElement('div');
+    hdr.className = 'cal-week-hdr';
+    hdr.textContent = hdrText;
+    wkDiv.appendChild(hdr);
+    Object.keys(W.days).sort().forEach(function(dateStr) {
+      var evs = W.days[dateStr];
+      var d = new Date(dateStr + 'T12:00:00');
+      var isToday = dateStr === todayStr;
+      var isPast = dateStr < todayStr;
+      var dayHdr = document.createElement('div');
+      dayHdr.className = 'cal-day-hdr' + (isToday ? ' today-hdr' : '');
+      dayHdr.textContent = WDAYS[d.getDay()] + ', ' + MTHS[d.getMonth()] + ' ' + d.getDate() + (isToday ? ' - TODAY' : '');
+      wkDiv.appendChild(dayHdr);
+      evs.forEach(function(ev) {
+        var row = document.createElement('div');
+        row.className = 'cal-event-row' + (isPast ? ' past' : '') + (isToday ? ' today-event' : '');
+        var impClr = IMP_CLR[ev.imp] || '#8892A4';
+        var impLbl = IMP_LBL[ev.imp] || 'LOW';
+        row.innerHTML = '<div class="cal-etime">' + ev.time + '</div>'
+          + '<div class="cal-eflag">' + ev.country + '</div>'
+          + '<div class="cal-eimp"><div class="cal-eimp-dot" style="background:' + impClr + '"></div>'
+          + '<span class="cal-eimp-txt" style="color:' + impClr + '">' + impLbl + '</span></div>'
+          + '<div><div class="cal-ename">' + ev.name + '</div><div class="cal-edesc">' + ev.desc + '</div></div>'
+          + '<div><div class="cal-elabel">PREVIOUS</div><div class="cal-eprev">' + (ev.prev || '-') + '</div></div>'
+          + '<div><div class="cal-elabel">FORECAST</div><div class="cal-eforecast">' + (ev.fore || '-') + '</div></div>';
         wkDiv.appendChild(row);
       });
     });
@@ -588,112 +896,600 @@ function renderCalendar(filter){
   });
 }
 
-const recPlugin={id:"recBands",beforeDraw:function(chart){var ctx=chart.ctx,ca=chart.chartArea,sc=chart.scales;if(!ca||!sc.x)return;var labels=chart.data.labels;RBANDS.forEach(function(band){var si=labels.findIndex(function(l){return l>=band[0];}),ei=labels.findIndex(function(l){return l>band[1];});if(si<0)return;if(ei<0)ei=labels.length-1;var x1=sc.x.getPixelForValue(si),x2=sc.x.getPixelForValue(ei);ctx.save();ctx.fillStyle="rgba(150,150,150,0.15)";ctx.fillRect(Math.min(x1,x2),ca.top,Math.abs(x2-x1)+(sc.x.width/labels.length),ca.bottom-ca.top);ctx.restore();});}};
+// ── FRED API ───────────────────────────────────────────────────────────────
+function apiFetch(id, history, months) {
+  var url = '/api/fred?series_id=' + id;
+  if (history) { url += '&history=true'; }
+  else if (months) { url += '&months=' + months; }
+  return fetch(url).then(function(r) {
+    if (!r.ok) { throw new Error('HTTP ' + r.status); }
+    return r.json();
+  }).then(function(d) {
+    if (d.error_message) { throw new Error(d.error_message); }
+    return d;
+  });
+}
+
+function getLatestValue(ind) {
+  if (ind.yoy) {
+    return apiFetch(ind.id, false, 16).then(function(d) {
+      var obs = (d.observations || []).filter(function(o) {
+        return o.value !== '.' && !isNaN(parseFloat(o.value));
+      }).sort(function(a, b) { return a.date > b.date ? 1 : -1; });
+      if (obs.length < 13) { return null; }
+      var curr = parseFloat(obs[obs.length - 1].value);
+      var prev = parseFloat(obs[obs.length - 13].value);
+      return prev === 0 ? null : ((curr - prev) / Math.abs(prev)) * 100;
+    });
+  }
+  if (ind.mom) {
+    return apiFetch(ind.id, false, 4).then(function(d) {
+      var obs = (d.observations || []).filter(function(o) {
+        return o.value !== '.' && !isNaN(parseFloat(o.value));
+      }).sort(function(a, b) { return a.date > b.date ? 1 : -1; });
+      if (obs.length < 2) { return null; }
+      var curr = parseFloat(obs[obs.length - 1].value);
+      var prev = parseFloat(obs[obs.length - 2].value);
+      return prev === 0 ? null : ((curr - prev) / Math.abs(prev)) * 100;
+    });
+  }
+  return apiFetch(ind.id, false, null).then(function(d) {
+    var raw = d.observations && d.observations[0] && d.observations[0].value;
+    if (!raw || raw === '.') { return null; }
+    var v = parseFloat(raw);
+    if (isNaN(v)) { return null; }
+    if (ind.tx) { v = ind.tx(v); }
+    return v;
+  });
+}
+
+function getHistoryData(ind) {
+  return apiFetch(ind.id, true, null).then(function(d) {
+    var monthly = toMonthly(d.observations || [], ind.tx);
+    if (ind.yoy) { return computeYoY(monthly); }
+    if (ind.mom) { return computeMoM(monthly); }
+    return monthly;
+  });
+}
+
+function toMonthly(obs, tx) {
+  var m = {};
+  obs.forEach(function(o) {
+    if (o.value === '.') { return; }
+    var k = o.date.substring(0, 7);
+    var v = parseFloat(o.value);
+    if (isNaN(v)) { return; }
+    if (tx) { v = tx(v); }
+    m[k] = v;
+  });
+  return Object.keys(m).sort().map(function(k) { return {label: k, value: m[k]}; });
+}
+
+function computeYoY(monthly) {
+  if (monthly.length < 13) { return []; }
+  return monthly.slice(12).map(function(p, i) {
+    var pv = monthly[i].value;
+    return {label: p.label, value: pv !== 0 ? ((p.value - pv) / Math.abs(pv)) * 100 : null};
+  }).filter(function(p) { return p.value !== null; });
+}
+
+function computeMoM(monthly) {
+  if (monthly.length < 2) { return []; }
+  return monthly.slice(1).map(function(p, i) {
+    var pv = monthly[i].value;
+    return {label: p.label, value: pv !== 0 ? ((p.value - pv) / Math.abs(pv)) * 100 : null};
+  }).filter(function(p) { return p.value !== null; });
+}
+
+function fmtMonth(s) {
+  var parts = s.split('-');
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(parts[1]) - 1] + " '" + parts[0].substring(2);
+}
+
+function fmtVal(ind, v) {
+  if (v === null || v === undefined) { return '-'; }
+  var prefix = (ind.sign && v >= 0) ? '+' : '';
+  return prefix + v.toFixed(ind.dp) + ind.unit;
+}
+
+// ── CHART PLUGIN ───────────────────────────────────────────────────────────
+var recPlugin = {
+  id: 'recBands',
+  beforeDraw: function(chart) {
+    var ctx = chart.ctx;
+    var ca = chart.chartArea;
+    var sc = chart.scales;
+    if (!ca || !sc.x) { return; }
+    var labels = chart.data.labels;
+    var bands = [['2020-02','2020-04']];
+    bands.forEach(function(band) {
+      var si = -1;
+      var ei = -1;
+      for (var i = 0; i < labels.length; i++) {
+        if (si < 0 && labels[i] >= band[0]) { si = i; }
+        if (labels[i] > band[1]) { ei = i; break; }
+      }
+      if (si < 0) { return; }
+      if (ei < 0) { ei = labels.length - 1; }
+      var x1 = sc.x.getPixelForValue(si);
+      var x2 = sc.x.getPixelForValue(ei);
+      ctx.save();
+      ctx.fillStyle = 'rgba(150,150,150,0.15)';
+      ctx.fillRect(Math.min(x1, x2), ca.top, Math.abs(x2 - x1) + (sc.x.width / labels.length), ca.bottom - ca.top);
+      ctx.restore();
+    });
+  }
+};
 Chart.register(recPlugin);
 
-async function apiFetch(id,history,months){var url="/api/fred?series_id="+id;if(history)url+="&history=true";else if(months)url+="&months="+months;var r=await fetch(url);if(!r.ok)throw new Error("HTTP "+r.status);var d=await r.json();if(d.error_message)throw new Error(d.error_message);return d;}
-async function getLatestValue(ind){
-  if(ind.yoy){var d=await apiFetch(ind.id,false,16);var obs=(d.observations||[]).filter(o=>o.value!=="."&&!isNaN(parseFloat(o.value))).sort((a,b)=>a.date.localeCompare(b.date));if(obs.length<13)return null;var curr=parseFloat(obs[obs.length-1].value),prev=parseFloat(obs[obs.length-13].value);return prev===0?null:((curr-prev)/Math.abs(prev))*100;}
-  if(ind.mom){var d=await apiFetch(ind.id,false,4);var obs=(d.observations||[]).filter(o=>o.value!=="."&&!isNaN(parseFloat(o.value))).sort((a,b)=>a.date.localeCompare(b.date));if(obs.length<2)return null;var curr=parseFloat(obs[obs.length-1].value),prev=parseFloat(obs[obs.length-2].value);return prev===0?null:((curr-prev)/Math.abs(prev))*100;}
-  var d=await apiFetch(ind.id,false,null);var raw=d.observations&&d.observations[0]&&d.observations[0].value;if(!raw||raw===".")return null;var v=parseFloat(raw);if(isNaN(v))return null;if(ind.tx)v=ind.tx(v);return v;
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function setStatus(state, msg) {
+  document.getElementById('dashboard-content').style.display = 'none';
+  document.getElementById('status-screen').style.display = 'block';
+  if (state === 'loading') {
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('status-title').textContent = 'Loading data...';
+    document.getElementById('status-msg').textContent = 'Fetching US economic indicators.';
+    document.getElementById('err-box').style.display = 'none';
+    document.getElementById('retry-btn').style.display = 'none';
+  } else {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('status-title').textContent = 'Could not load data';
+    document.getElementById('status-msg').textContent = 'Something went wrong fetching indicator data.';
+    document.getElementById('err-box').textContent = msg || 'Unknown error.';
+    document.getElementById('err-box').style.display = 'block';
+    document.getElementById('retry-btn').style.display = 'inline-block';
+  }
 }
-async function getHistoryData(ind){var d=await apiFetch(ind.id,true,null);var monthly=toMonthly(d.observations||[],ind.tx);if(ind.yoy)return computeYoY(monthly);if(ind.mom)return computeMoM(monthly);return monthly;}
-function toMonthly(obs,tx){var m={};obs.forEach(function(o){if(o.value===".")return;var k=o.date.substring(0,7);var v=parseFloat(o.value);if(isNaN(v))return;if(tx)v=tx(v);m[k]=v;});return Object.keys(m).sort().map(function(k){return{label:k,value:m[k]};});}
-function computeYoY(monthly){if(monthly.length<13)return[];return monthly.slice(12).map(function(p,i){var pv=monthly[i].value;return{label:p.label,value:pv!==0?((p.value-pv)/Math.abs(pv))*100:null};}).filter(function(p){return p.value!==null;});}
-function computeMoM(monthly){if(monthly.length<2)return[];return monthly.slice(1).map(function(p,i){var pv=monthly[i].value;return{label:p.label,value:pv!==0?((p.value-pv)/Math.abs(pv))*100:null};}).filter(function(p){return p.value!==null;});}
-function fmtMonth(s){var p=s.split("-");return["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(p[1])-1]+" '"+p[0].substring(2);}
-function fmtVal(ind,v){if(v===null||v===undefined)return"-";var p=ind.sign&&v>=0?"+":"";return p+v.toFixed(ind.dp)+ind.unit;}
 
-async function loadData(){
-  setStatus("loading");
-  try{
-    var results=await Promise.allSettled(HEADLINE.map(function(i){return getLatestValue(i);}));
-    var probVal=await getLatestValue({id:PROB_ID}).catch(function(){return null;});
-    if(results.every(function(r){return r.status==="rejected";}))throw new Error("All requests failed.");
-    renderDashboard(results.map(function(r){return r.status==="fulfilled"?r.value:null;}));
-    renderProbability(probVal);
+function loadData() {
+  setStatus('loading');
+  var hlPromises = HEADLINE.map(function(ind) { return getLatestValue(ind); });
+  var probPromise = getLatestValue({id: PROB_ID});
+
+  Promise.allSettled(hlPromises).then(function(hlResults) {
+    var allFailed = hlResults.every(function(r) { return r.status === 'rejected'; });
+    if (allFailed) {
+      var msg = hlResults[0] && hlResults[0].reason ? hlResults[0].reason.message : 'All requests failed.';
+      setStatus('error', msg);
+      return;
+    }
+    var values = hlResults.map(function(r) { return r.status === 'fulfilled' ? r.value : null; });
+    renderDashboard(values);
+    probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
     loadLibrary();
-  }catch(e){setStatus("error",e.message);}
-}
-async function loadLibrary(){
-  var grid=document.getElementById("library-grid");grid.innerHTML="";
-  document.getElementById("lib-count").textContent=LIBRARY.length;
-  var cards={};LIBRARY.forEach(function(ind){cards[ind.id]=createCard(ind,null,grid);});
-  var results=await Promise.allSettled(LIBRARY.map(function(i){return getLatestValue(i);}));
-  LIBRARY.forEach(function(ind,i){
-    if(results[i].status!=="fulfilled")return;
-    var val=results[i].value,c=cards[ind.id];if(!c)return;
-    var sig=(val!==null&&val!==undefined)?ind.sig(val):null;
-    var accent=c.querySelector(".ind-accent");if(accent&&sig)accent.style.background=HEX[sig];else if(sig&&!accent){var a=document.createElement("div");a.className="ind-accent";a.style.background=HEX[sig];c.prepend(a);}
-    var valEl=c.querySelector(".ind-value");if(valEl){valEl.textContent=val!==null&&val!==undefined?fmtVal(ind,val):"-";valEl.style.color=sig?HEX[sig]:"var(--muted)";valEl.classList.remove("loading");}
-    var hdr=c.querySelector(".ind-header");if(hdr&&sig){var badge=hdr.querySelector(".ind-badge");if(!badge){badge=document.createElement("span");badge.className="ind-badge";hdr.appendChild(badge);}badge.textContent=ind.lbl[sig];badge.style.background=BGS[sig];badge.style.color=TXT[sig];}
-  });
-  loadCharts();
-}
-var miniCharts={};
-async function loadCharts(){
-  var h=await Promise.allSettled(INDICATORS.map(function(i){return getHistoryData(i);}));
-  document.getElementById("charts-section").style.display="block";
-  var grid=document.getElementById("charts-grid");grid.innerHTML="";
-  INDICATORS.forEach(function(ind,i){
-    if(h[i].status!=="fulfilled")return;var monthly=h[i].value;if(!monthly||monthly.length<2)return;
-    histData[ind.id]=monthly;
-    var card=document.createElement("div");card.className="chart-card";
-    card.innerHTML='<div class="chart-card-hdr"><div><div class="chart-card-name">'+ind.name+'</div><div class="chart-card-sub">'+ind.sub+'</div></div><button class="btn-sm" onclick="event.stopPropagation();if(miniCharts[''+ind.id+''])miniCharts[''+ind.id+''].resetZoom()">Reset</button></div><div class="chart-wrap"><canvas id="mc-'+ind.id+'"></canvas></div>';
-    card.onclick=function(){openModal(ind.id);};grid.appendChild(card);
-    setTimeout(function(){buildMiniChart(ind,monthly);},50);
   });
 }
-function buildMiniChart(ind,monthly){
-  var canvas=document.getElementById("mc-"+ind.id);if(!canvas)return;
-  if(miniCharts[ind.id])miniCharts[ind.id].destroy();
-  var labels=monthly.map(function(p){return p.label;}),data=monthly.map(function(p){return p.value;}),t1=ind.th[0],t2=ind.th[1];
-  miniCharts[ind.id]=new Chart(canvas,{type:"line",plugins:[recPlugin],data:{labels:labels,datasets:[{data:data,borderColor:"#1B2A4A",borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:false},{data:labels.map(function(){return t1;}),borderColor:"rgba(99,153,34,0.4)",borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},{data:labels.map(function(){return t2;}),borderColor:"rgba(226,75,74,0.4)",borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{title:function(c){return fmtMonth(labels[c[0].index]);},label:function(c){if(c.datasetIndex!==0)return null;return fmtVal(ind,c.raw);}},filter:function(i){return i.datasetIndex===0;}},recBands:true,zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:"x"},pan:{enabled:true,mode:"x"}}},scales:{x:{ticks:{maxTicksLimit:6,maxRotation:0,callback:function(v,i){return fmtMonth(labels[i]);},font:{family:"'IBM Plex Mono',monospace",size:9},color:"#8892A4"},grid:{color:"rgba(0,0,0,0.04)"},border:{display:false}},y:{ticks:{maxTicksLimit:5,font:{family:"'IBM Plex Mono',monospace",size:9},color:"#8892A4",callback:function(v){return fmtVal(ind,v);}},grid:{color:"rgba(0,0,0,0.04)"},border:{display:false}}}}});
-}
-function createCard(ind,val,container){
-  var sig=(val!==null&&val!==undefined)?ind.sig(val):null;
-  var c=document.createElement("div");c.className="ind-card";c.dataset.category=ind.cat;c.onclick=function(){openModal(ind.id);};
-  c.innerHTML=(sig?'<div class="ind-accent" style="background:'+HEX[sig]+'"></div>':"")+'<div class="ind-body"><div class="ind-header"><span class="ind-name">'+ind.name+'</span>'+(sig?'<span class="ind-badge" style="background:'+BGS[sig]+';color:'+TXT[sig]+'">'+ind.lbl[sig]+'</span>':"")+'</div><div class="ind-sub">'+ind.sub+'</div><div class="ind-value'+(val===null?" loading":"")+'" style="color:'+(sig?HEX[sig]:"var(--muted)")+'">'+( val!==null&&val!==undefined?fmtVal(ind,val):"-")+'</div><div class="ind-note">'+ind.note+'</div><div class="ind-hint">Click for detail</div></div>';
-  container.appendChild(c);return c;
-}
-function filterCat(cat,btn){
-  document.querySelectorAll("#library-grid .ind-card").forEach(function(c){c.style.display=(cat==="all"||c.dataset.category===cat)?"":"none";});
-  document.querySelectorAll(".lib-header .filter-btn").forEach(function(b){b.classList.remove("active");});btn.classList.add("active");
-}
-var modalChart=null,modalMonthly=[],modalInd=null;
-async function openModal(indId){
-  var ind=INDICATORS.find(function(i){return i.id===indId;});if(!ind)return;modalInd=ind;
-  document.getElementById("ind-modal").style.display="block";document.getElementById("modal-ind-name").textContent=ind.name;document.getElementById("modal-ind-sub").textContent=ind.sub;document.getElementById("modal-loading").style.display="block";document.getElementById("modal-loaded").style.display="none";
-  var monthly=histData[indId];if(!monthly){try{monthly=await getHistoryData(ind);histData[indId]=monthly;}catch(e){monthly=[];}}
-  modalMonthly=monthly;
-  var lv=monthly.length>0?monthly[monthly.length-1].value:null,sig=lv!==null?ind.sig(lv):null;
-  document.getElementById("modal-value").textContent=lv!==null?fmtVal(ind,lv):"-";document.getElementById("modal-value").style.color=sig?HEX[sig]:"var(--muted)";
-  var badge=document.getElementById("modal-badge");if(sig){badge.textContent=ind.lbl[sig];badge.style.background=BGS[sig];badge.style.color=TXT[sig];badge.style.display="inline-block";}else badge.style.display="none";
-  if(monthly.length>1&&lv!==null){var l12=monthly.slice(-12).map(function(p){return p.value;});var h12=Math.max.apply(null,l12),lo12=Math.min.apply(null,l12);var all=monthly.map(function(p){return p.value;}).sort(function(a,b){return a-b;});var pct=Math.round((all.filter(function(v){return v<=lv;}).length/all.length)*100);var prev=monthly[monthly.length-2]?monthly[monthly.length-2].value:undefined;var mom=prev!==undefined?lv-prev:null;document.getElementById("ms-high").textContent=fmtVal(ind,h12);document.getElementById("ms-low").textContent=fmtVal(ind,lo12);document.getElementById("ms-pct").textContent=pct+"th";document.getElementById("ms-mom").textContent=mom!==null?fmtVal(Object.assign({},ind,{sign:true}),mom):"-";}
-  var det=IND_DETAIL[indId]||{};document.getElementById("modal-about").innerHTML="<p>"+(det.about||"No detail available.")+"</p>";document.getElementById("modal-watch").innerHTML="<p>"+(det.watch||"")+"</p>";
-  document.getElementById("modal-toggle-row").innerHTML='<button class="btn-sm active" id="mt-0" onclick="toggleDS(0,'mt-0')">Main line</button><button class="btn-sm active" id="mt-1" onclick="toggleDS(1,'mt-1')" style="color:var(--green)">Green threshold</button><button class="btn-sm active" id="mt-2" onclick="toggleDS(2,'mt-2')" style="color:var(--red)">Red threshold</button>';
-  buildModalChart(monthly,ind);document.getElementById("modal-loading").style.display="none";document.getElementById("modal-loaded").style.display="block";
-}
-function buildModalChart(monthly,ind){
-  if(modalChart){modalChart.destroy();modalChart=null;}
-  var canvas=document.getElementById("modal-chart-canvas"),labels=monthly.map(function(p){return p.label;}),data=monthly.map(function(p){return p.value;}),t1=ind.th[0],t2=ind.th[1];
-  modalChart=new Chart(canvas,{type:"line",plugins:[recPlugin],data:{labels:labels,datasets:[{label:ind.name,data:data,borderColor:"#1B2A4A",borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:0.3,fill:false},{label:"Green threshold",data:labels.map(function(){return t1;}),borderColor:"rgba(99,153,34,0.5)",borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},{label:"Red threshold",data:labels.map(function(){return t2;}),borderColor:"rgba(226,75,74,0.5)",borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},onClick:function(e,els){if(els.length>0&&els[0].datasetIndex===0){var idx=els[0].index;showPinned(fmtMonth(labels[idx])+": "+fmtVal(ind,data[idx]));}},plugins:{legend:{display:false},tooltip:{callbacks:{title:function(c){return fmtMonth(c[0].label);},label:function(c){return c.dataset.label+": "+fmtVal(ind,c.raw);}}},recBands:true,zoom:{zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:"x"},pan:{enabled:true,mode:"x"}}},scales:{x:{ticks:{maxTicksLimit:10,maxRotation:0,callback:function(v,i){return fmtMonth(labels[i]);},font:{family:"'IBM Plex Mono',monospace",size:9},color:"#8892A4"},grid:{color:"rgba(0,0,0,0.04)"},border:{display:false}},y:{ticks:{maxTicksLimit:6,font:{family:"'IBM Plex Mono',monospace",size:9},color:"#8892A4",callback:function(v){return fmtVal(ind,v);}},grid:{color:"rgba(0,0,0,0.04)"},border:{display:false}}}}});
-}
-function showPinned(text){var el=document.getElementById("pinned-val");if(!el){el=document.createElement("div");el.id="pinned-val";el.style.cssText="text-align:center;font-family:IBM Plex Mono,monospace;font-size:12px;color:var(--navy);margin-bottom:6px;padding:5px;background:#F0F4FA;border-radius:6px;";document.getElementById("modal-chart-hint").before(el);}el.textContent=text;}
-function toggleDS(idx,btnId){if(!modalChart)return;var ds=modalChart.data.datasets[idx];ds.hidden=!ds.hidden;modalChart.update();var el=document.getElementById(btnId);if(el)el.classList.toggle("active",!ds.hidden);}
-function setRange(range){if(!modalMonthly.length)return;var now=new Date(),cutoff;if(range==="1y"){cutoff=new Date(now);cutoff.setFullYear(cutoff.getFullYear()-1);}else if(range==="3y"){cutoff=new Date(now);cutoff.setFullYear(cutoff.getFullYear()-3);}else{buildModalChart(modalMonthly,modalInd);updateRangeBtns(range);return;}var cut=cutoff.toISOString().substring(0,7);var filtered=modalMonthly.filter(function(p){return p.label>=cut;});if(filtered.length>=2)buildModalChart(filtered,modalInd);updateRangeBtns(range);}
-function updateRangeBtns(active){["1y","3y","7y"].forEach(function(r){var el=document.querySelector('.modal-chart-controls .btn-sm[onclick="setRange(''+r+'')"]');if(el)el.classList.toggle("active",r===active);});}
-function resetModalZoom(){buildModalChart(modalMonthly,modalInd);updateRangeBtns("7y");}
-function closeModal(){if(modalChart){modalChart.destroy();modalChart=null;}document.getElementById("ind-modal").style.display="none";var pv=document.getElementById("pinned-val");if(pv)pv.remove();}
-document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal();});
-document.getElementById("ind-modal").addEventListener("click",function(e){if(e.target===document.getElementById("ind-modal"))closeModal();});
 
-function renderProbability(val){var el=document.getElementById("prob-value"),bar=document.getElementById("prob-bar"),st=document.getElementById("prob-status");if(val===null){el.textContent="N/A";return;}var hex,label;if(val<5){hex=HEX.g;label="No recession signal detected";}else if(val<30){hex=HEX.a;label="Elevated - monitor closely";}else{hex=HEX.r;label="High recession probability";}el.textContent=val.toFixed(1)+"%";el.style.color=hex;bar.style.width=Math.min(val,100)+"%";bar.style.background=hex;st.textContent=label;st.style.color=hex;}
-function setStatus(state,msg){document.getElementById("dashboard-content").style.display="none";document.getElementById("status-screen").style.display="block";if(state==="loading"){document.getElementById("spinner").style.display="block";document.getElementById("status-title").textContent="Loading data...";document.getElementById("status-msg").textContent="Fetching US economic indicators.";document.getElementById("err-box").style.display="none";document.getElementById("retry-btn").style.display="none";}else{document.getElementById("spinner").style.display="none";document.getElementById("status-title").textContent="Could not load data";document.getElementById("status-msg").textContent="Something went wrong.";document.getElementById("err-box").textContent=msg||"Unknown error.";document.getElementById("err-box").style.display="block";document.getElementById("retry-btn").style.display="inline-block";}}
-function renderDashboard(values){document.getElementById("status-screen").style.display="none";document.getElementById("dashboard-content").style.display="block";var now=new Date();document.getElementById("nav-live").style.display="inline";document.getElementById("nav-ts").textContent=now.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});var signals=HEADLINE.map(function(ind,i){var v=values[i];return(v!==null&&v!==undefined)?ind.sig(v):null;});updateGauge(signals.filter(function(s){return s!==null;}));document.getElementById("count-red").textContent=signals.filter(function(s){return s==="r";}).length;document.getElementById("count-amber").textContent=signals.filter(function(s){return s==="a";}).length;document.getElementById("count-green").textContent=signals.filter(function(s){return s==="g";}).length;var grid=document.getElementById("headline-grid");grid.innerHTML="";HEADLINE.forEach(function(ind,i){createCard(ind,values[i],grid);});}
-function updateGauge(signals){var reds=signals.filter(function(s){return s==="r";}).length,ambs=signals.filter(function(s){return s==="a";}).length,n=signals.length||5;var score=Math.min(1,(reds*2+ambs)/(n*2)),angle=Math.PI*(1-score);var nx=100+56*Math.cos(angle),ny=88-56*Math.sin(angle);var label,hex;if(reds>=4){label="HIGH RISK";hex=HEX.r;}else if(reds>=2){label="ELEVATED RISK";hex=HEX.a;}else if(reds===1||ambs>=3){label="MODERATE RISK";hex=HEX.a;}else{label="LOW RISK";hex=HEX.g;}document.getElementById("needle-line").setAttribute("x2",nx);document.getElementById("needle-line").setAttribute("y2",ny);document.getElementById("needle-line").setAttribute("stroke",hex);document.getElementById("needle-hub").setAttribute("fill",hex);document.getElementById("gauge-label").textContent=label;document.getElementById("gauge-label").style.color=hex;}
+function renderProbability(val) {
+  var el = document.getElementById('prob-value');
+  var bar = document.getElementById('prob-bar');
+  var st = document.getElementById('prob-status');
+  if (val === null || val === undefined) { el.textContent = 'N/A'; return; }
+  var hex, label;
+  if (val < 5) { hex = HEX.g; label = 'No recession signal detected'; }
+  else if (val < 30) { hex = HEX.a; label = 'Elevated - monitor closely'; }
+  else { hex = HEX.r; label = 'High recession probability'; }
+  el.textContent = val.toFixed(1) + '%';
+  el.style.color = hex;
+  bar.style.width = Math.min(val, 100) + '%';
+  bar.style.background = hex;
+  st.textContent = label;
+  st.style.color = hex;
+}
 
-buildDropdown();buildArchiveGrid();buildExplainGrid();buildCalendar();loadData();
+function renderDashboard(values) {
+  document.getElementById('status-screen').style.display = 'none';
+  document.getElementById('dashboard-content').style.display = 'block';
+  var now = new Date();
+  document.getElementById('nav-live').style.display = 'inline';
+  document.getElementById('nav-ts').textContent = now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+  var signals = HEADLINE.map(function(ind, i) {
+    var v = values[i];
+    return (v !== null && v !== undefined) ? ind.sig(v) : null;
+  });
+  var validSigs = signals.filter(function(s) { return s !== null; });
+  updateGauge(validSigs);
+  document.getElementById('count-red').textContent   = signals.filter(function(s) { return s === 'r'; }).length;
+  document.getElementById('count-amber').textContent = signals.filter(function(s) { return s === 'a'; }).length;
+  document.getElementById('count-green').textContent = signals.filter(function(s) { return s === 'g'; }).length;
+  var grid = document.getElementById('headline-grid');
+  grid.innerHTML = '';
+  HEADLINE.forEach(function(ind, i) { createCard(ind, values[i], grid); });
+}
+
+function updateGauge(signals) {
+  var reds = signals.filter(function(s) { return s === 'r'; }).length;
+  var ambs = signals.filter(function(s) { return s === 'a'; }).length;
+  var n = signals.length || 5;
+  var score = Math.min(1, (reds * 2 + ambs) / (n * 2));
+  var angle = Math.PI * (1 - score);
+  var nx = 100 + 56 * Math.cos(angle);
+  var ny = 88 - 56 * Math.sin(angle);
+  var label, hex;
+  if (reds >= 4)           { label = 'HIGH RISK';      hex = HEX.r; }
+  else if (reds >= 2)      { label = 'ELEVATED RISK';  hex = HEX.a; }
+  else if (reds === 1 || ambs >= 3) { label = 'MODERATE RISK'; hex = HEX.a; }
+  else                     { label = 'LOW RISK';       hex = HEX.g; }
+  document.getElementById('needle-line').setAttribute('x2', nx);
+  document.getElementById('needle-line').setAttribute('y2', ny);
+  document.getElementById('needle-line').setAttribute('stroke', hex);
+  document.getElementById('needle-hub').setAttribute('fill', hex);
+  document.getElementById('gauge-label').textContent = label;
+  document.getElementById('gauge-label').style.color = hex;
+}
+
+function createCard(ind, val, container) {
+  var sig = (val !== null && val !== undefined) ? ind.sig(val) : null;
+  var card = document.createElement('div');
+  card.className = 'ind-card';
+  card.setAttribute('data-category', ind.cat);
+  card.setAttribute('data-indid', ind.id);
+  if (sig) {
+    var accent = document.createElement('div');
+    accent.className = 'ind-accent';
+    accent.style.background = HEX[sig];
+    card.appendChild(accent);
+  }
+  var body = document.createElement('div');
+  body.className = 'ind-body';
+  var hdr = document.createElement('div');
+  hdr.className = 'ind-header';
+  var nameEl = document.createElement('span');
+  nameEl.className = 'ind-name';
+  nameEl.textContent = ind.name;
+  hdr.appendChild(nameEl);
+  if (sig) {
+    var badge = document.createElement('span');
+    badge.className = 'ind-badge';
+    badge.textContent = ind.lbl[sig];
+    badge.style.background = BGS[sig];
+    badge.style.color = TXT[sig];
+    hdr.appendChild(badge);
+  }
+  body.appendChild(hdr);
+  var sub = document.createElement('div');
+  sub.className = 'ind-sub';
+  sub.textContent = ind.sub;
+  body.appendChild(sub);
+  var valEl = document.createElement('div');
+  valEl.className = 'ind-value';
+  valEl.textContent = (val !== null && val !== undefined) ? fmtVal(ind, val) : '-';
+  valEl.style.color = sig ? HEX[sig] : 'var(--muted)';
+  body.appendChild(valEl);
+  var note = document.createElement('div');
+  note.className = 'ind-note';
+  note.textContent = ind.note;
+  body.appendChild(note);
+  var hint = document.createElement('div');
+  hint.className = 'ind-hint';
+  hint.textContent = 'Click for detail';
+  body.appendChild(hint);
+  card.appendChild(body);
+  container.appendChild(card);
+  return card;
+}
+
+function filterCat(cat, btn) {
+  document.querySelectorAll('#library-grid .ind-card').forEach(function(c) {
+    var show = (cat === 'all' || c.getAttribute('data-category') === cat);
+    c.style.display = show ? '' : 'none';
+  });
+  document.querySelectorAll('.lib-header .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function loadLibrary() {
+  var grid = document.getElementById('library-grid');
+  grid.innerHTML = '';
+  document.getElementById('lib-count').textContent = LIBRARY.length;
+  var cards = {};
+  LIBRARY.forEach(function(ind) { cards[ind.id] = createCard(ind, null, grid); });
+
+  var libPromises = LIBRARY.map(function(ind) { return getLatestValue(ind); });
+  Promise.allSettled(libPromises).then(function(results) {
+    LIBRARY.forEach(function(ind, i) {
+      if (results[i].status !== 'fulfilled') { return; }
+      var val = results[i].value;
+      var c = cards[ind.id];
+      if (!c) { return; }
+      var sig = (val !== null && val !== undefined) ? ind.sig(val) : null;
+      var accent = c.querySelector('.ind-accent');
+      if (sig && !accent) {
+        accent = document.createElement('div');
+        accent.className = 'ind-accent';
+        c.insertBefore(accent, c.firstChild);
+      }
+      if (accent && sig) { accent.style.background = HEX[sig]; }
+      var valEl = c.querySelector('.ind-value');
+      if (valEl) {
+        valEl.textContent = (val !== null && val !== undefined) ? fmtVal(ind, val) : '-';
+        valEl.style.color = sig ? HEX[sig] : 'var(--muted)';
+      }
+      var hdr = c.querySelector('.ind-header');
+      if (hdr && sig) {
+        var badge = hdr.querySelector('.ind-badge');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'ind-badge';
+          hdr.appendChild(badge);
+        }
+        badge.textContent = ind.lbl[sig];
+        badge.style.background = BGS[sig];
+        badge.style.color = TXT[sig];
+      }
+    });
+  });
+  setTimeout(loadCharts, 100);
+}
+
+// ── CHARTS ─────────────────────────────────────────────────────────────────
+var miniCharts = {};
+
+function loadCharts() {
+  var histPromises = INDICATORS.map(function(ind) { return getHistoryData(ind); });
+  Promise.allSettled(histPromises).then(function(results) {
+    document.getElementById('charts-section').style.display = 'block';
+    var grid = document.getElementById('charts-grid');
+    grid.innerHTML = '';
+    INDICATORS.forEach(function(ind, i) {
+      if (results[i].status !== 'fulfilled') { return; }
+      var monthly = results[i].value;
+      if (!monthly || monthly.length < 2) { return; }
+      histData[ind.id] = monthly;
+      var card = document.createElement('div');
+      card.className = 'chart-card';
+      card.setAttribute('data-indid', ind.id);
+      var hdr = document.createElement('div');
+      hdr.className = 'chart-card-hdr';
+      hdr.innerHTML = '<div><div class="chart-card-name">' + ind.name + '</div><div class="chart-card-sub">' + ind.sub + '</div></div>';
+      var resetBtn = document.createElement('button');
+      resetBtn.className = 'btn-sm';
+      resetBtn.textContent = 'Reset';
+      resetBtn.setAttribute('data-indid', ind.id);
+      hdr.appendChild(resetBtn);
+      card.appendChild(hdr);
+      var wrap = document.createElement('div');
+      wrap.className = 'chart-wrap';
+      var canvas = document.createElement('canvas');
+      canvas.id = 'mc-' + ind.id;
+      wrap.appendChild(canvas);
+      card.appendChild(wrap);
+      grid.appendChild(card);
+      (function(theInd, theMonthly) {
+        setTimeout(function() { buildMiniChart(theInd, theMonthly); }, 50);
+      })(ind, monthly);
+    });
+    grid.addEventListener('click', function(e) {
+      var btn = e.target.closest('.btn-sm');
+      if (btn) {
+        e.stopPropagation();
+        var id = btn.getAttribute('data-indid');
+        if (miniCharts[id]) { miniCharts[id].resetZoom(); }
+        return;
+      }
+      var card = e.target.closest('.chart-card');
+      if (card) { openModal(card.getAttribute('data-indid')); }
+    });
+  });
+}
+
+function buildMiniChart(ind, monthly) {
+  var canvas = document.getElementById('mc-' + ind.id);
+  if (!canvas) { return; }
+  if (miniCharts[ind.id]) { miniCharts[ind.id].destroy(); }
+  var labels = monthly.map(function(p) { return p.label; });
+  var data   = monthly.map(function(p) { return p.value; });
+  var t1 = ind.th[0];
+  var t2 = ind.th[1];
+  var t1line = labels.map(function() { return t1; });
+  var t2line = labels.map(function() { return t2; });
+  miniCharts[ind.id] = new Chart(canvas, {
+    type: 'line',
+    plugins: [recPlugin],
+    data: {labels: labels, datasets: [
+      {data: data,   borderColor: '#1B2A4A', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.3, fill: false},
+      {data: t1line, borderColor: 'rgba(99,153,34,0.4)',  borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false},
+      {data: t2line, borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false}
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode: 'index', intersect: false},
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          callbacks: {
+            title: function(c) { return fmtMonth(labels[c[0].index]); },
+            label: function(c) { if (c.datasetIndex !== 0) { return null; } return fmtVal(ind, c.raw); }
+          },
+          filter: function(item) { return item.datasetIndex === 0; }
+        },
+        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}, pan: {enabled: true, mode: 'x'}}
+      },
+      scales: {
+        x: {ticks: {maxTicksLimit: 6, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
+        y: {ticks: {maxTicksLimit: 5, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return fmtVal(ind, v); }}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}}
+      }
+    }
+  });
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+var modalChart    = null;
+var modalMonthly  = [];
+var modalInd      = null;
+
+function openModal(indId) {
+  var ind = null;
+  for (var i = 0; i < INDICATORS.length; i++) {
+    if (INDICATORS[i].id === indId) { ind = INDICATORS[i]; break; }
+  }
+  if (!ind) { return; }
+  modalInd = ind;
+  document.getElementById('ind-modal').style.display = 'block';
+  document.getElementById('modal-ind-name').textContent = ind.name;
+  document.getElementById('modal-ind-sub').textContent  = ind.sub;
+  document.getElementById('modal-loading').style.display = 'block';
+  document.getElementById('modal-loaded').style.display  = 'none';
+
+  var monthly = histData[indId] || null;
+  var p = monthly ? Promise.resolve(monthly) : getHistoryData(ind);
+  p.then(function(m) {
+    if (!histData[indId]) { histData[indId] = m; }
+    modalMonthly = m;
+    var lv  = m.length > 0 ? m[m.length - 1].value : null;
+    var sig = lv !== null ? ind.sig(lv) : null;
+    document.getElementById('modal-value').textContent  = lv !== null ? fmtVal(ind, lv) : '-';
+    document.getElementById('modal-value').style.color  = sig ? HEX[sig] : 'var(--muted)';
+    var badge = document.getElementById('modal-badge');
+    if (sig) { badge.textContent = ind.lbl[sig]; badge.style.background = BGS[sig]; badge.style.color = TXT[sig]; badge.style.display = 'inline-block'; }
+    else { badge.style.display = 'none'; }
+    if (m.length > 1 && lv !== null) {
+      var l12 = m.slice(-12).map(function(x) { return x.value; });
+      var h12 = Math.max.apply(null, l12);
+      var lo12 = Math.min.apply(null, l12);
+      var all  = m.map(function(x) { return x.value; }).sort(function(a, b) { return a - b; });
+      var pct  = Math.round((all.filter(function(v) { return v <= lv; }).length / all.length) * 100);
+      var prevV = m[m.length - 2] ? m[m.length - 2].value : null;
+      var mom  = prevV !== null ? lv - prevV : null;
+      document.getElementById('ms-high').textContent = fmtVal(ind, h12);
+      document.getElementById('ms-low').textContent  = fmtVal(ind, lo12);
+      document.getElementById('ms-pct').textContent  = pct + 'th';
+      var momInd = {dp: ind.dp, unit: ind.unit, sign: true};
+      document.getElementById('ms-mom').textContent  = mom !== null ? fmtVal(momInd, mom) : '-';
+    }
+    var det = IND_DETAIL[indId] || {};
+    document.getElementById('modal-about').innerHTML = '<p>' + (det.about || 'No detail available.') + '</p>';
+    document.getElementById('modal-watch').innerHTML = '<p>' + (det.watch || '') + '</p>';
+    document.getElementById('modal-toggle-row').innerHTML =
+      '<button class="btn-sm active" id="mt-0">Main line</button>'
+      + '<button class="btn-sm active" id="mt-1" style="color:var(--green)">Green threshold</button>'
+      + '<button class="btn-sm active" id="mt-2" style="color:var(--red)">Red threshold</button>';
+    document.getElementById('mt-0').onclick = function() { toggleDS(0, 'mt-0'); };
+    document.getElementById('mt-1').onclick = function() { toggleDS(1, 'mt-1'); };
+    document.getElementById('mt-2').onclick = function() { toggleDS(2, 'mt-2'); };
+    buildModalChart(m, ind);
+    document.getElementById('modal-loading').style.display = 'none';
+    document.getElementById('modal-loaded').style.display  = 'block';
+  }).catch(function() {
+    document.getElementById('modal-loading').style.display = 'none';
+    document.getElementById('modal-loaded').style.display  = 'block';
+  });
+}
+
+function buildModalChart(monthly, ind) {
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  var canvas = document.getElementById('modal-chart-canvas');
+  var labels = monthly.map(function(p) { return p.label; });
+  var data   = monthly.map(function(p) { return p.value; });
+  var t1 = ind.th[0];
+  var t2 = ind.th[1];
+  modalChart = new Chart(canvas, {
+    type: 'line',
+    plugins: [recPlugin],
+    data: {labels: labels, datasets: [
+      {label: ind.name,          data: data,                  borderColor: '#1B2A4A',             borderWidth: 2,   pointRadius: 0, pointHoverRadius: 5, tension: 0.3, fill: false},
+      {label: 'Green threshold', data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.5)',  borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: false},
+      {label: 'Red threshold',   data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.5)', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: false}
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode: 'index', intersect: false},
+      onClick: function(e, els) {
+        if (els.length > 0 && els[0].datasetIndex === 0) {
+          var idx = els[0].index;
+          showPinned(fmtMonth(labels[idx]) + ': ' + fmtVal(ind, data[idx]));
+        }
+      },
+      plugins: {
+        legend: {display: false},
+        tooltip: {callbacks: {title: function(c) { return fmtMonth(c[0].label); }, label: function(c) { return c.dataset.label + ': ' + fmtVal(ind, c.raw); }}},
+        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}, pan: {enabled: true, mode: 'x'}}
+      },
+      scales: {
+        x: {ticks: {maxTicksLimit: 10, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
+        y: {ticks: {maxTicksLimit: 6,  font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return fmtVal(ind, v); }},  grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}}
+      }
+    }
+  });
+}
+
+function showPinned(text) {
+  var el = document.getElementById('pinned-val');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'pinned-val';
+    el.style.cssText = 'text-align:center;font-family:IBM Plex Mono,monospace;font-size:12px;color:var(--navy);margin-bottom:6px;padding:5px;background:#F0F4FA;border-radius:6px;';
+    document.getElementById('modal-chart-hint').before(el);
+  }
+  el.textContent = text;
+}
+
+function toggleDS(idx, btnId) {
+  if (!modalChart) { return; }
+  var ds = modalChart.data.datasets[idx];
+  ds.hidden = !ds.hidden;
+  modalChart.update();
+  var el = document.getElementById(btnId);
+  if (el) { el.classList.toggle('active', !ds.hidden); }
+}
+
+function setRange(range) {
+  if (!modalMonthly.length || !modalInd) { return; }
+  var now = new Date();
+  var cutoff;
+  if (range === '1y')      { cutoff = new Date(now); cutoff.setFullYear(cutoff.getFullYear() - 1); }
+  else if (range === '3y') { cutoff = new Date(now); cutoff.setFullYear(cutoff.getFullYear() - 3); }
+  else { buildModalChart(modalMonthly, modalInd); updateRangeBtns('7y'); return; }
+  var cut = cutoff.toISOString().substring(0, 7);
+  var filtered = modalMonthly.filter(function(p) { return p.label >= cut; });
+  if (filtered.length >= 2) { buildModalChart(filtered, modalInd); }
+  updateRangeBtns(range);
+}
+
+function updateRangeBtns(active) {
+  ['1y','3y','7y'].forEach(function(r) {
+    var el = document.getElementById('range-' + r);
+    if (el) { el.classList.toggle('active', r === active); }
+  });
+}
+
+function resetModalZoom() {
+  buildModalChart(modalMonthly, modalInd);
+  updateRangeBtns('7y');
+}
+
+function closeModal() {
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  document.getElementById('ind-modal').style.display = 'none';
+  var pv = document.getElementById('pinned-val');
+  if (pv) { pv.remove(); }
+}
+
+// Close modal on Escape or background click
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); } });
+document.getElementById('ind-modal').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('ind-modal')) { closeModal(); }
+});
+
+// Indicator cards click delegation
+document.getElementById('headline-grid').addEventListener('click', function(e) {
+  var card = e.target.closest('.ind-card');
+  if (card) { openModal(card.getAttribute('data-indid')); }
+});
+document.getElementById('library-grid').addEventListener('click', function(e) {
+  var card = e.target.closest('.ind-card');
+  if (card) { openModal(card.getAttribute('data-indid')); }
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+buildDropdown();
+buildArchiveGrid();
+buildExplainGrid();
+buildCalendar();
+loadData();
+
 </script>
 </body>
 </html>
