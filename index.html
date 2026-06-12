@@ -59,10 +59,6 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
 .gauge-label{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;letter-spacing:0.08em;margin-top:4px}
 .breakdown{flex:1;min-width:160px}
 .breakdown-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-bottom:12px}
-.breakdown-counts{display:flex;gap:24px;margin-bottom:16px}
-.count-item{text-align:center}
-.count-num{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500}
-.count-lbl{font-size:11px;color:var(--muted);margin-top:1px}
 .section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:12px}
 .ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:11px;margin-bottom:24px}
 .ind-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;cursor:pointer;transition:box-shadow 0.2s,border-color 0.2s}
@@ -281,11 +277,6 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
       </div>
       <div class="breakdown">
         <div class="breakdown-title" id="breakdown-title">SIGNAL BREAKDOWN</div>
-        <div class="breakdown-counts">
-          <div class="count-item"><div class="count-num" id="count-red" style="color:var(--red)">-</div><div class="count-lbl">alert</div></div>
-          <div class="count-item"><div class="count-num" id="count-amber" style="color:var(--amber)">-</div><div class="count-lbl">warning</div></div>
-          <div class="count-item"><div class="count-num" id="count-green" style="color:var(--green)">-</div><div class="count-lbl">clear</div></div>
-        </div>
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:7px 14px;flex:1">Refresh</button>
           <button class="btn btn-secondary" id="edit-btn" onclick="openCustomizePanel()" style="font-size:12px;padding:7px 14px;flex:1">
@@ -1406,9 +1397,6 @@ function renderDashboard(values) {
   var validSigs = signals.filter(function(s) { return s !== null; });
   updateGauge(validSigs);
   document.getElementById('breakdown-title').textContent = 'SIGNAL BREAKDOWN — ' + selected.length + ' INDICATORS';
-  document.getElementById('count-red').textContent   = signals.filter(function(s) { return s === 'r'; }).length;
-  document.getElementById('count-amber').textContent = signals.filter(function(s) { return s === 'a'; }).length;
-  document.getElementById('count-green').textContent = signals.filter(function(s) { return s === 'g'; }).length;
   var grid = document.getElementById('headline-grid');
   grid.innerHTML = '';
   selected.forEach(function(ind, i) { createCard(ind, values[i], grid); });
