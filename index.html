@@ -1822,7 +1822,7 @@ function buildModalChart(monthly, ind) {
           callbacks: {title: function(c) { return fmtMonth(c[0].label); }, label: function(c) { return c.dataset.label + ': ' + fmtVal(ind, c.raw); }}
         },
         zoom: {
-  zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'xy'},
+  zoom: {wheel: {enabled: false}, pinch: {enabled: true}, mode: 'xy'},
   pan: {enabled: true, mode: 'xy', threshold: 5}
 }
       },
