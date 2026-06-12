@@ -181,6 +181,32 @@
     .explain-close{display:inline-block;margin-top:16px;font-size:12px;color:var(--muted);cursor:pointer}
     .explain-close:hover{color:var(--navy)}
     .site-footer{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);letter-spacing:0.04em}
+    /* CALENDAR */
+.cal-cd-inner{background:var(--navy);border-radius:10px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+.cal-cd-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.55);letter-spacing:0.1em;margin-bottom:5px}
+.cal-cd-event{font-size:15px;font-weight:600;color:#fff;margin-bottom:3px}
+.cal-cd-meta{font-size:12px;color:rgba(255,255,255,0.55)}
+.cal-cd-num{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:500;color:#8BC34A;line-height:1}
+.cal-cd-unit{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px}
+.cal-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.cal-week{margin-bottom:8px}
+.cal-week-hdr{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;padding:14px 0 8px;border-bottom:2px solid var(--border);margin-bottom:0}
+.cal-day-hdr{font-size:12px;font-weight:600;color:var(--navy);padding:10px 0 4px;font-family:'IBM Plex Mono',monospace}
+.cal-day-hdr.today-hdr{color:var(--green)}
+.cal-event-row{display:grid;grid-template-columns:72px 44px 44px 1fr 72px 72px;gap:0 10px;align-items:center;padding:10px 8px;border-bottom:1px solid var(--border);cursor:default;transition:background 0.12s;border-radius:4px}
+.cal-event-row:hover{background:#F5F5F3}
+.cal-event-row.past{opacity:0.38}
+.cal-event-row.today-event{background:#F0F4FA}
+.cal-etime{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.cal-eflag{font-size:14px;text-align:center}
+.cal-eimp{display:flex;align-items:center;gap:4px}
+.cal-eimp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cal-ename{font-size:13px;font-weight:500;color:var(--text);margin-bottom:1px}
+.cal-edesc{font-size:10px;color:var(--muted)}
+.cal-eprev{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right}
+.cal-eforecast{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text);text-align:right;font-weight:500}
+.cal-elabel{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:2px}
+.cal-hidden{display:none!important}
     @media(max-width:640px){nav{padding:0 16px}main{padding:16px 14px 48px}.detail-title{font-size:26px}.charts-grid{grid-template-columns:1fr}.modal-stats{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
@@ -190,8 +216,8 @@
   <ul class="nav-links">
     <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
     <li class="nav-item" id="nav-archive"><a>Archive <span style="font-size:9px;opacity:0.6">▾</span></a><div class="nav-dropdown" id="archive-dropdown"></div></li>
-    <li class="nav-item" id="nav-explain"><a onclick="showPage('explain')">Explain It</a></li>
-  </ul>
+<li class="nav-item" id="nav-explain"><a onclick="showPage('explain')">Explain It</a></li>
+<li class="nav-item" id="nav-calendar"><a onclick="showPage('calendar')">Calendar</a></li>  </ul>
   <div class="nav-right"><span class="badge-live" id="nav-live" style="display:none">● LIVE &nbsp;</span><span id="nav-ts"></span></div>
 </nav>
 
@@ -305,6 +331,40 @@
   </main>
 </div>
 
+<!-- CALENDAR -->
+<div id="page-calendar" class="page">
+  <main>
+    <div class="page-header">
+      <div class="page-eyebrow">ECONOMIC CALENDAR</div>
+      <div class="page-title">Upcoming Releases</div>
+      <div class="page-subtitle">Major US and UK economic data releases, central bank decisions, and key events. All times shown in local release time.</div>
+    </div>
+    <div id="cal-countdown" style="display:none">
+      <div class="cal-cd-inner">
+        <div>
+          <div class="cal-cd-label">NEXT HIGH-IMPACT RELEASE</div>
+          <div class="cal-cd-event" id="cal-cd-event">—</div>
+          <div class="cal-cd-meta" id="cal-cd-meta"></div>
+        </div>
+        <div style="text-align:right">
+          <div class="cal-cd-num" id="cal-cd-num">—</div>
+          <div class="cal-cd-unit">days away</div>
+        </div>
+      </div>
+    </div>
+    <div class="cal-filter-row">
+      <button class="filter-btn active" onclick="calFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="calFilter('high',this)">High impact</button>
+      <button class="filter-btn" onclick="calFilter('US',this)">🇺🇸 US</button>
+      <button class="filter-btn" onclick="calFilter('UK',this)">🇬🇧 UK</button>
+    </div>
+    <div id="cal-body"></div>
+    <div style="margin-top:20px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6">
+      Release dates based on typical official schedules. Forecasts are approximate consensus estimates. Always verify with official sources: <a href="https://www.bls.gov/schedule/" style="color:var(--navy)" target="_blank">BLS (US)</a> · <a href="https://www.ons.gov.uk/releasecalendar" style="color:var(--navy)" target="_blank">ONS (UK)</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" style="color:var(--navy)" target="_blank">FOMC</a> · <a href="https://www.bankofengland.co.uk/monetary-policy/monetary-policy-committee" style="color:var(--navy)" target="_blank">BoE</a>
+    </div>
+    <div class="site-footer" style="margin-top:32px">RECESSION RADAR &nbsp;·&nbsp; INFORMATIONAL ONLY</div>
+  </main>
+</div>
 <!-- MODAL -->
 <div id="ind-modal">
   <div class="modal-panel">
@@ -468,8 +528,7 @@ const EXPLAIN_DATA=[
 function showPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById(`page-${p}`).classList.add('active');
-  ['dashboard','archive','explain'].forEach(x=>document.getElementById(`nav-${x}`)?.classList.remove('active'));
-  document.getElementById(`nav-${p}`)?.classList.add('active');
+['dashboard','archive','explain','calendar'].forEach(x=>document.getElementById(`nav-${x}`)?.classList.remove('active'));  document.getElementById(`nav-${p}`)?.classList.add('active');
   window.scrollTo(0,0);
 }
 function showArchive(id){
@@ -934,8 +993,194 @@ function updateGauge(signals){
   document.getElementById("gauge-label").style.color=hex;
 }
 
+/* ═══════════════════════ CALENDAR ═══════════════════════ */
+const CAL_EVENTS = [
+  // ── JUNE 2026 ──
+  {date:"2026-06-12",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",forecast:"225K"},
+  {date:"2026-06-16",time:"07:00 GMT",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment rate, employment change and wage growth",prev:"4.5%",forecast:"4.5%"},
+  {date:"2026-06-17",time:"07:00 GMT",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.5%",forecast:"3.3%"},
+  {date:"2026-06-17",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.1%",forecast:"0.3%"},
+  {date:"2026-06-17",time:"09:15 ET",country:"US",imp:"medium",name:"Industrial Production",desc:"Monthly output of US factories and utilities",prev:"-0.3%",forecast:"0.2%"},
+  {date:"2026-06-18",time:"14:00 ET",country:"US",imp:"high",name:"FOMC Rate Decision",desc:"Federal Reserve interest rate announcement and press conference",prev:"4.25–4.50%",forecast:"4.25–4.50%"},
+  {date:"2026-06-19",time:"12:00 GMT",country:"UK",imp:"high",name:"Bank of England Rate Decision",desc:"BoE base rate announcement and Monetary Policy Report",prev:"4.25%",forecast:"4.00%"},
+  {date:"2026-06-19",time:"08:30 ET",country:"US",imp:"medium",name:"US Housing Starts & Permits",desc:"New residential construction and building permits",prev:"1,324K",forecast:"1,340K"},
+  {date:"2026-06-19",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"225K",forecast:"228K"},
+  {date:"2026-06-20",time:"07:00 GMT",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.4%",forecast:"0.1%"},
+  {date:"2026-06-24",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Confidence",desc:"Conference Board consumer confidence index",prev:"97.7",forecast:"99.0"},
+  {date:"2026-06-25",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"228K",forecast:"227K"},
+  {date:"2026-06-25",time:"08:30 ET",country:"US",imp:"high",name:"US GDP Q1 (Final)",desc:"Final estimate of Q1 2026 GDP growth, annualised rate",prev:"-0.3%",forecast:"-0.2%"},
+  {date:"2026-06-25",time:"07:00 GMT",country:"UK",imp:"medium",name:"UK GDP (Monthly)",desc:"Monthly estimate of GDP growth",prev:"0.2%",forecast:"0.1%"},
+  {date:"2026-06-26",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures price index — the Fed's preferred inflation gauge",prev:"2.2%",forecast:"2.3%"},
+  {date:"2026-06-27",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Sentiment (Final)",desc:"University of Michigan consumer sentiment final reading",prev:"50.8",forecast:"51.5"},
+  // ── JULY 2026 ──
+  {date:"2026-07-01",time:"10:00 ET",country:"US",imp:"high",name:"ISM Manufacturing PMI",desc:"Institute for Supply Management — manufacturing activity index (50 = neutral)",prev:"48.7",forecast:"49.5"},
+  {date:"2026-07-01",time:"09:30 GMT",country:"UK",imp:"medium",name:"UK Manufacturing PMI (Final)",desc:"S&P Global manufacturing PMI — final reading",prev:"45.4",forecast:"45.9"},
+  {date:"2026-07-02",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"227K",forecast:"228K"},
+  {date:"2026-07-03",time:"08:30 ET",country:"US",imp:"high",name:"Non-Farm Payrolls",desc:"Monthly jobs added across non-farm sectors",prev:"139K",forecast:"145K"},
+  {date:"2026-07-03",time:"08:30 ET",country:"US",imp:"high",name:"US Unemployment Rate",desc:"US headline unemployment rate",prev:"4.2%",forecast:"4.2%"},
+  {date:"2026-07-03",time:"10:00 ET",country:"US",imp:"medium",name:"ISM Services PMI",desc:"ISM services activity index",prev:"53.1",forecast:"52.8"},
+  {date:"2026-07-08",time:"07:00 GMT",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment, employment change and wage growth",prev:"4.5%",forecast:"4.5%"},
+  {date:"2026-07-09",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"228K",forecast:"230K"},
+  {date:"2026-07-10",time:"08:30 ET",country:"US",imp:"high",name:"US CPI Inflation",desc:"Consumer prices year-over-year",prev:"2.4%",forecast:"2.3%"},
+  {date:"2026-07-10",time:"08:30 ET",country:"US",imp:"high",name:"US Core CPI",desc:"CPI excluding food and energy — year-over-year",prev:"2.8%",forecast:"2.7%"},
+  {date:"2026-07-11",time:"08:30 ET",country:"US",imp:"medium",name:"US PPI",desc:"Producer price index year-over-year",prev:"2.5%",forecast:"2.4%"},
+  {date:"2026-07-15",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.3%",forecast:"0.2%"},
+  {date:"2026-07-15",time:"09:15 ET",country:"US",imp:"medium",name:"Industrial Production",desc:"Monthly output of US factories and utilities",prev:"0.2%",forecast:"0.1%"},
+  {date:"2026-07-16",time:"07:00 GMT",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.3%",forecast:"3.1%"},
+  {date:"2026-07-16",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"230K",forecast:"229K"},
+  {date:"2026-07-16",time:"08:30 ET",country:"US",imp:"medium",name:"US Housing Starts & Permits",desc:"New residential construction and building permits",prev:"1,340K",forecast:"1,350K"},
+  {date:"2026-07-18",time:"07:00 GMT",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.1%",forecast:"0.2%"},
+  {date:"2026-07-18",time:"07:00 GMT",country:"UK",imp:"medium",name:"UK GDP (Monthly)",desc:"Monthly estimate of GDP growth",prev:"0.1%",forecast:"0.1%"},
+  {date:"2026-07-23",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",forecast:"230K"},
+  {date:"2026-07-24",time:"08:30 ET",country:"US",imp:"medium",name:"Durable Goods Orders",desc:"New orders for manufactured durable goods — month-over-month",prev:"-0.5%",forecast:"0.3%"},
+  {date:"2026-07-29",time:"08:30 ET",country:"US",imp:"high",name:"US GDP Q2 (Advance)",desc:"First estimate of Q2 2026 GDP growth — annualised rate",prev:"-0.2%",forecast:"1.8%"},
+  {date:"2026-07-30",time:"14:00 ET",country:"US",imp:"high",name:"FOMC Rate Decision",desc:"Federal Reserve interest rate announcement and press conference",prev:"4.25–4.50%",forecast:"4.00–4.25%"},
+  {date:"2026-07-31",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures — the Fed's preferred inflation gauge",prev:"2.3%",forecast:"2.2%"},
+  {date:"2026-07-31",time:"07:00 GMT",country:"UK",imp:"high",name:"UK GDP Q2 (Preliminary)",desc:"First estimate of Q2 2026 GDP growth",prev:"0.7%",forecast:"0.5%"},
+  // ── AUGUST 2026 ──
+  {date:"2026-08-04",time:"10:00 ET",country:"US",imp:"high",name:"ISM Manufacturing PMI",desc:"Manufacturing activity index — 50 = neutral",prev:"49.5",forecast:"50.0"},
+  {date:"2026-08-05",time:"09:30 GMT",country:"UK",imp:"medium",name:"UK Manufacturing PMI (Final)",desc:"S&P Global manufacturing PMI final reading",prev:"45.9",forecast:"46.3"},
+  {date:"2026-08-06",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"230K",forecast:"229K"},
+  {date:"2026-08-07",time:"08:30 ET",country:"US",imp:"high",name:"Non-Farm Payrolls",desc:"Monthly jobs added across non-farm sectors",prev:"145K",forecast:"148K"},
+  {date:"2026-08-07",time:"08:30 ET",country:"US",imp:"high",name:"US Unemployment Rate",desc:"US headline unemployment rate",prev:"4.2%",forecast:"4.2%"},
+  {date:"2026-08-07",time:"12:00 GMT",country:"UK",imp:"high",name:"Bank of England Rate Decision",desc:"BoE base rate announcement and Monetary Policy Report",prev:"4.00%",forecast:"3.75%"},
+  {date:"2026-08-11",time:"07:00 GMT",country:"UK",imp:"high",name:"UK Labour Market",desc:"Unemployment, employment change and wage growth",prev:"4.5%",forecast:"4.4%"},
+  {date:"2026-08-12",time:"08:30 ET",country:"US",imp:"high",name:"US CPI Inflation",desc:"Consumer prices year-over-year",prev:"2.3%",forecast:"2.2%"},
+  {date:"2026-08-12",time:"08:30 ET",country:"US",imp:"high",name:"US Core CPI",desc:"CPI excluding food and energy — year-over-year",prev:"2.7%",forecast:"2.6%"},
+  {date:"2026-08-13",time:"07:00 GMT",country:"UK",imp:"high",name:"UK CPI Inflation",desc:"Consumer prices year-over-year",prev:"3.1%",forecast:"2.9%"},
+  {date:"2026-08-13",time:"08:30 ET",country:"US",imp:"medium",name:"US PPI",desc:"Producer price index year-over-year",prev:"2.4%",forecast:"2.3%"},
+  {date:"2026-08-13",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",forecast:"229K"},
+  {date:"2026-08-14",time:"08:30 ET",country:"US",imp:"high",name:"US Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.2%",forecast:"0.3%"},
+  {date:"2026-08-15",time:"07:00 GMT",country:"UK",imp:"medium",name:"UK Retail Sales",desc:"Month-over-month change in retail spending",prev:"0.2%",forecast:"0.1%"},
+  {date:"2026-08-15",time:"09:15 ET",country:"US",imp:"medium",name:"Industrial Production",desc:"Monthly output of US factories and utilities",prev:"0.1%",forecast:"0.2%"},
+  {date:"2026-08-20",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"229K",forecast:"230K"},
+  {date:"2026-08-22",time:"07:00 GMT",country:"UK",imp:"medium",name:"UK GDP (Monthly)",desc:"Monthly estimate of GDP growth",prev:"0.1%",forecast:"0.2%"},
+  {date:"2026-08-27",time:"08:30 ET",country:"US",imp:"medium",name:"Durable Goods Orders",desc:"New orders for manufactured durable goods",prev:"0.3%",forecast:"0.1%"},
+  {date:"2026-08-27",time:"08:30 ET",country:"US",imp:"medium",name:"Initial Jobless Claims",desc:"New unemployment insurance filings",prev:"230K",forecast:"229K"},
+  {date:"2026-08-28",time:"08:30 ET",country:"US",imp:"high",name:"PCE Inflation",desc:"Personal consumption expenditures — the Fed's preferred inflation gauge",prev:"2.2%",forecast:"2.1%"},
+  {date:"2026-08-28",time:"10:00 ET",country:"US",imp:"medium",name:"Consumer Sentiment (Final)",desc:"University of Michigan consumer sentiment final reading",prev:"51.5",forecast:"52.0"},
+];
+
+const IMP_COLOR = {high:"#E24B4A", medium:"#BA7517", low:"#8892A4"};
+const IMP_LABEL = {high:"HIGH", medium:"MED", low:"LOW"};
+const FLAGS = {US:"🇺🇸", UK:"🇬🇧"};
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS_LONG = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+let calCurrentFilter = "all";
+
+function buildCalendar(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().split('T')[0];
+
+  // Countdown to next high-impact event
+  const nextHigh = CAL_EVENTS.find(e=>e.imp==="high"&&e.date>=todayStr);
+  if(nextHigh){
+    const evDate = new Date(nextHigh.date+"T12:00:00");
+    const diff = Math.round((evDate-today)/(1000*60*60*24));
+    document.getElementById('cal-countdown').style.display='block';
+    document.getElementById('cal-cd-event').textContent=`${FLAGS[nextHigh.country]} ${nextHigh.name}`;
+    document.getElementById('cal-cd-meta').textContent=`${fmtFullDate(nextHigh.date)} · ${nextHigh.time}`;
+    document.getElementById('cal-cd-num').textContent=diff===0?"Today":diff===1?"Tomorrow":diff;
+    document.getElementById('cal-cd-unit').textContent=diff<=1?"":"days away";
+  }
+
+  renderCalendar(calCurrentFilter);
+}
+
+function calFilter(f,btn){
+  calCurrentFilter=f;
+  document.querySelectorAll('.cal-filter-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCalendar(f);
+}
+
+function renderCalendar(filter){
+  const today = new Date();today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().split('T')[0];
+
+  const filtered = CAL_EVENTS.filter(e=>{
+    if(filter==="high")return e.imp==="high";
+    if(filter==="US")return e.country==="US";
+    if(filter==="UK")return e.country==="UK";
+    return true;
+  });
+
+  // Group by week then by day
+  const weeks = {};
+  filtered.forEach(e=>{
+    const d=new Date(e.date+"T12:00:00");
+    const day=d.getDay();
+    const monday=new Date(d);monday.setDate(d.getDate()-(day===0?6:day-1));
+    const wk=monday.toISOString().split('T')[0];
+    if(!weeks[wk])weeks[wk]={monday,days:{}};
+    if(!weeks[wk].days[e.date])weeks[wk].days[e.date]=[];
+    weeks[wk].days[e.date].push(e);
+  });
+
+  const body=document.getElementById('cal-body');body.innerHTML='';
+
+  Object.keys(weeks).sort().forEach(wk=>{
+    const {monday,days}=weeks[wk];
+    const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
+    const wkDiv=document.createElement('div');wkDiv.className='cal-week';
+
+    const hdr=document.createElement('div');hdr.className='cal-week-hdr';
+    hdr.textContent=`Week of ${MONTHS_LONG[monday.getMonth()]} ${monday.getDate()}${monday.getMonth()!==sunday.getMonth()?' – '+MONTHS_LONG[sunday.getMonth()]+' '+sunday.getDate():''}`;
+    wkDiv.appendChild(hdr);
+
+    Object.keys(days).sort().forEach(dateStr=>{
+      const events=days[dateStr];
+      const d=new Date(dateStr+"T12:00:00");
+      const isToday=dateStr===todayStr;
+      const isPast=dateStr<todayStr;
+
+      const dayHdr=document.createElement('div');
+      dayHdr.className='cal-day-hdr'+(isToday?' today-hdr':'');
+      dayHdr.textContent=`${DAYS[d.getDay()]}, ${MONTHS_LONG[d.getMonth()]} ${d.getDate()}${isToday?' — TODAY':''}`;
+      wkDiv.appendChild(dayHdr);
+
+      events.forEach(ev=>{
+        const row=document.createElement('div');
+        row.className='cal-event-row'+(isPast?' past':'')+(isToday?' today-event':'');
+        row.dataset.imp=ev.imp;row.dataset.country=ev.country;
+        row.innerHTML=`
+          <div class="cal-etime">${ev.time}</div>
+          <div class="cal-eflag">${FLAGS[ev.country]||''}</div>
+          <div class="cal-eimp">
+            <div class="cal-eimp-dot" style="background:${IMP_COLOR[ev.imp]}"></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:${IMP_COLOR[ev.imp]}">${IMP_LABEL[ev.imp]}</span>
+          </div>
+          <div>
+            <div class="cal-ename">${ev.name}</div>
+            <div class="cal-edesc">${ev.desc}</div>
+          </div>
+          <div>
+            <div class="cal-elabel">PREVIOUS</div>
+            <div class="cal-eprev">${ev.prev||'—'}</div>
+          </div>
+          <div>
+            <div class="cal-elabel">FORECAST</div>
+            <div class="cal-eforecast">${ev.forecast||'—'}</div>
+          </div>`;
+        wkDiv.appendChild(row);
+      });
+    });
+
+    body.appendChild(wkDiv);
+  });
+
+  if(!Object.keys(weeks).length){
+    body.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">No events match this filter.</div>';
+  }
+}
+
+function fmtFullDate(dateStr){
+  const d=new Date(dateStr+"T12:00:00");
+  return`${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS_LONG[d.getMonth()]}`;
+}
 /* ═══════════════════════ INIT ═══════════════════════ */
-buildDropdown();buildArchiveGrid();buildExplainGrid();loadData();
-</script>
+buildDropdown();buildArchiveGrid();buildExplainGrid();buildCalendar();loadData();</script>
 </body>
 </html>
