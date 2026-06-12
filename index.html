@@ -1690,17 +1690,8 @@ function setProbModalRange(range) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {padding: {top: 10}},
       interaction: {mode: 'index', intersect: false},
-      onHover: function(e, els) {
-        if (els.length > 0) {
-          chart.crosshairActive = true;
-          chart.crosshairX = e.x;
-          chart.update('none');
-        } else {
-          chart.crosshairActive = false;
-          chart.update('none');
-        }
-      },
       onClick: function(e, els) {
         if (els.length > 0) {
           var idx = els[0].index;
@@ -1735,7 +1726,7 @@ function setProbModalRange(range) {
         },
         y: {
           min: 0,
-          suggestedMax: 105,
+          max: 100,
           ticks: {maxTicksLimit: 6, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return v + '%'; }},
           grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
         }
