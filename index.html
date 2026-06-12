@@ -297,6 +297,10 @@ main{max-width:980px;margin:0 auto;padding:28px 24px 56px}
     </div>
     <div class="section-label">YOUR INDICATORS</div>
     <div class="ind-grid" id="headline-grid"></div>
+    <div id="dashboard-charts-section" style="display:none;margin-top:24px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:12px">HISTORICAL CHARTS</div>
+  <div class="charts-grid" id="dashboard-charts-grid"></div>
+</div>
     <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
     <div id="customize-overlay" class="customize-overlay" onclick="closeCustomizePanel()"></div>
     <div id="customize-panel" class="customize-panel">
@@ -1408,6 +1412,7 @@ function renderDashboard(values) {
   var grid = document.getElementById('headline-grid');
   grid.innerHTML = '';
   selected.forEach(function(ind, i) { createCard(ind, values[i], grid); });
+  loadDashboardCharts();
 }
 
 function updateGauge(signals) {
@@ -1489,6 +1494,10 @@ function filterCat(cat, btn) {
     var show = (cat === 'all' || c.getAttribute('data-category') === cat);
     c.style.display = show ? '' : 'none';
   });
+  document.querySelectorAll('#charts-grid .chart-card').forEach(function(c) {
+    var show = (cat === 'all' || c.getAttribute('data-category') === cat);
+    c.style.display = show ? '' : 'none';
+  });
   document.querySelectorAll('.lib-header .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
 }
@@ -1536,6 +1545,89 @@ function loadLibrary() {
   setTimeout(loadCharts, 100);
 }
 
+function loadDashboardCharts() {
+  var selected = getSelectedIndicators();
+  var section = document.getElementById('dashboard-charts-section');
+  var grid = document.getElementById('dashboard-charts-grid');
+  grid.innerHTML = '';
+  section.style.display = 'none';
+  var promises = selected.map(function(ind) { return getHistoryData(ind); });
+  Promise.allSettled(promises).then(function(results) {
+    section.style.display = 'block';
+    selected.forEach(function(ind, i) {
+      if (results[i].status !== 'fulfilled') { return; }
+      var monthly = results[i].value;
+      if (!monthly || monthly.length < 2) { return; }
+      histData[ind.id] = monthly;
+      var card = document.createElement('div');
+      card.className = 'chart-card';
+      card.setAttribute('data-indid', ind.id);
+      var hdr = document.createElement('div');
+      hdr.className = 'chart-card-hdr';
+      hdr.innerHTML = '<div><div class="chart-card-name">' + ind.name + '</div><div class="chart-card-sub">' + ind.sub + '</div></div>';
+      card.appendChild(hdr);
+      var wrap = document.createElement('div');
+      wrap.className = 'chart-wrap';
+      var canvas = document.createElement('canvas');
+      canvas.id = 'dmc-' + ind.id;
+      wrap.appendChild(canvas);
+      card.appendChild(wrap);
+      grid.appendChild(card);
+      card.onclick = function() { openModal(ind.id); };
+      (function(theInd, theMonthly) {
+        setTimeout(function() {
+          var c = document.getElementById('dmc-' + theInd.id);
+          if (!c) { return; }
+          buildMiniChartOnCanvas(c, theInd, theMonthly);
+        }, 50);
+      })(ind, monthly);
+    });
+  });
+}
+
+function buildMiniChartOnCanvas(canvas, ind, monthly) {
+  var now = new Date();
+  var cutoff = new Date(now);
+  cutoff.setFullYear(cutoff.getFullYear() - 7);
+  var cut = cutoff.toISOString().substring(0, 7);
+  var filtered = monthly.filter(function(p) { return p.label >= cut; });
+  if (filtered.length < 2) { filtered = monthly; }
+  var labels = filtered.map(function(p) { return p.label; });
+  var data   = filtered.map(function(p) { return p.value; });
+  var t1 = ind.th[0];
+  var t2 = ind.th[1];
+  var chart = new Chart(canvas, {
+    type: 'line',
+    plugins: [recPlugin, gradientPlugin],
+    data: {labels: labels, datasets: [
+      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false},
+      {data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false},
+      {data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false}
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode: 'index', intersect: false},
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          backgroundColor: 'rgba(27,42,74,0.95)', titleColor: '#8892A4', bodyColor: '#FFFFFF',
+          cornerRadius: 6, padding: 10,
+          callbacks: {
+            title: function(c) { return fmtMonth(labels[c[0].index]); },
+            label: function(c) { if (c.datasetIndex !== 0) { return null; } return fmtVal(ind, c.raw); }
+          },
+          filter: function(item) { return item.datasetIndex === 0; }
+        },
+        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true}, mode: 'x'}, pan: {enabled: true, mode: 'x'}}
+      },
+      scales: {
+        x: {ticks: {maxTicksLimit: 6, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
+        y: {ticks: {maxTicksLimit: 5, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return fmtVal(ind, v); }}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}}
+      }
+    }
+  });
+  chart.chartIndicator = ind;
+}
 // ── CHARTS ─────────────────────────────────────────────────────────────────
 var miniCharts = {};
 
@@ -1553,6 +1645,9 @@ function loadCharts() {
       var card = document.createElement('div');
       card.className = 'chart-card';
       card.setAttribute('data-indid', ind.id);
+      card.setAttribute('data-category', ind.cat);
+card.setAttribute('data-name', ind.name);
+card.setAttribute('data-sub', ind.sub);
       var hdr = document.createElement('div');
       hdr.className = 'chart-card-hdr';
       hdr.innerHTML = '<div><div class="chart-card-name">' + ind.name + '</div><div class="chart-card-sub">' + ind.sub + '</div></div>';
@@ -1870,6 +1965,12 @@ function searchIndicators(searchTerm) {
     var matches = name.toLowerCase().indexOf(searchTerm) >= 0 || sub.toLowerCase().indexOf(searchTerm) >= 0;
     card.style.display = matches ? 'block' : 'none';
     if (matches) { matchCount++; }
+  });
+  document.querySelectorAll('#charts-grid .chart-card').forEach(function(c) {
+    var name = c.getAttribute('data-name') || '';
+    var sub = c.getAttribute('data-sub') || '';
+    var matches = name.toLowerCase().indexOf(searchTerm) >= 0 || sub.toLowerCase().indexOf(searchTerm) >= 0;
+    c.style.display = matches ? '' : 'none';
   });
   var noMsg = document.getElementById('no-indicators-msg');
   if (noMsg) { noMsg.style.display = matchCount === 0 && searchTerm !== '' ? 'block' : 'none'; }
