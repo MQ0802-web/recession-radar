@@ -1628,25 +1628,6 @@ function buildProbChart(monthly) {
 function openProbModal() {
   if (!probMonthlyAll.length) { return; }
   document.getElementById('prob-modal').style.display = 'block';
-  if (!openProbModal._listenersAdded) {
-    openProbModal._listenersAdded = true;
-    var probCanvas = document.getElementById('prob-modal-canvas');
-    var isDragging = false;
-    var lastDragX = 0;
-    var lastDragY = 0;
-    probCanvas.addEventListener('mousedown', function(e) {
-      isDragging = true; lastDragX = e.clientX; lastDragY = e.clientY;
-    });
-    probCanvas.addEventListener('mousemove', function(e) {
-      if (!isDragging) { return; }
-      var dx = e.clientX - lastDragX;
-      var dy = e.clientY - lastDragY;
-      lastDragX = e.clientX; lastDragY = e.clientY;
-      if (probModalChart) { probModalChart.pan({x: dx, y: dy}); }
-    });
-    probCanvas.addEventListener('mouseup', function() { isDragging = false; });
-    probCanvas.addEventListener('mouseleave', function() { isDragging = false; });
-  }
   var lv = probMonthlyAll[probMonthlyAll.length - 1].value;
   var el = document.getElementById('prob-modal-value');
   var badge = document.getElementById('prob-modal-badge');
