@@ -251,6 +251,9 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
           <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
           <div class="prob-status" id="prob-status"></div>
         </div>
+        <div style="width:180px;height:52px;flex-shrink:0">
+          <canvas id="prob-sparkline"></canvas>
+        </div>
       </div>
     </div>
   
@@ -1497,10 +1500,60 @@ function loadData() {
     }
     var values = hlResults.map(function(r) { return r.status === 'fulfilled' ? r.value : null; });
     renderDashboard(values);
-    probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
-  });
+probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
+    apiFetch(PROB_ID, true, null).then(function(d) {
+      var monthly = toMonthly(d.observations || [], null);
+      buildProbSparkline(monthly);
+    }).catch(function() {});  });
 }
 
+function buildProbSparkline(monthly) {
+  var canvas = document.getElementById('prob-sparkline');
+  if (!canvas || monthly.length < 2) { return; }
+  var now = new Date();
+  var cutoff = new Date(now);
+  cutoff.setFullYear(cutoff.getFullYear() - 5);
+  var cut = cutoff.toISOString().substring(0, 7);
+  var filtered = monthly.filter(function(p) { return p.label >= cut; });
+  if (filtered.length < 2) { filtered = monthly; }
+  var labels = filtered.map(function(p) { return p.label; });
+  var data = filtered.map(function(p) { return p.value; });
+  new Chart(canvas, {
+    type: 'line',
+    data: {labels: labels, datasets: [{
+      data: data,
+      borderColor: '#E24B4A',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true,
+      backgroundColor: 'rgba(226,75,74,0.08)'
+    }]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          backgroundColor: 'rgba(27,42,74,0.95)',
+          titleColor: '#8892A4',
+          bodyColor: '#fff',
+          cornerRadius: 6,
+          padding: 8,
+          callbacks: {
+            title: function(c) { return fmtMonth(labels[c[0].index]); },
+            label: function(c) { return c.raw.toFixed(1) + '%'; }
+          }
+        }
+      },
+      scales: {
+        x: {display: false},
+        y: {display: false, min: 0, max: 100}
+      }
+    }
+  });
+}
 function renderProbability(val) {
   var el = document.getElementById('prob-value');
   var bar = document.getElementById('prob-bar');
