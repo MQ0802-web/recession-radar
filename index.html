@@ -237,21 +237,7 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
     <button class="btn btn-primary" id="retry-btn" style="display:none" onclick="loadData()">Try again</button>
   </div>
   <div id="dashboard-content" style="display:none">
-    <div class="prob-card">
-      <div>
-        <div class="prob-eyebrow">RECESSION PROBABILITY</div>
-        <div class="prob-title">Federal Reserve model estimate</div>
-        <div class="prob-source">Chauvet &amp; Piger &middot; Updated monthly</div>
-      </div>
-      <div class="prob-right">
-        <div class="prob-value" id="prob-value">-</div>
-        <div class="prob-bar-section">
-          <div class="prob-bar-wrap"><div class="prob-bar" id="prob-bar" style="width:0%"></div></div>
-          <div class="prob-scale"><span>0%</span><span>50%</span><span>100%</span></div>
-          <div class="prob-status" id="prob-status"></div>
-        </div>
-      </div>
-    </div>
+    
   
     <div id="dash-next-release" style="display:none;margin-bottom:12px;padding:12px 20px;background:var(--navy);border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
       <div>
@@ -272,16 +258,6 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
           Edit indicators<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span>
         </button>
         <button class="btn btn-primary" onclick="loadData()" style="font-size:12px;padding:5px 14px">↻ Refresh</button>
-      </div>
-    </div>
-    <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px;cursor:pointer" onclick="openProbModal()">
-      <div class="chart-card-hdr">
-        <div>
-          <div class="chart-card-name">Recession Probability</div>
-<div class="chart-card-sub">Federal Reserve model (Chauvet &amp; Piger) &middot; 2-3 month lag &middot; click to expand</div>        </div>
-      </div>
-      <div style="position:relative;height:150px">
-        <canvas id="prob-chart-canvas"></canvas>
       </div>
     </div>
     <div class="score-card" id="score-card" style="display:none">
@@ -312,8 +288,19 @@ main{max-width:980px;margin:0 auto;padding:8px 8px 32px}.btn{padding:9px 18px;bo
     <div id="dashboard-charts-section" style="display:none;margin-top:24px">
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
-    <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
-    <div id="customize-overlay" class="customize-overlay" onclick="closeCustomizePanel()"></div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:24px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">FED RECESSION PROBABILITY</div>
+    <div class="chart-card" id="prob-chart-card" style="display:none;margin-bottom:12px;cursor:pointer" onclick="openProbModal()">
+      <div class="chart-card-hdr">
+        <div>
+          <div class="chart-card-name">Recession Probability</div>
+          <div class="chart-card-sub">Federal Reserve model (Chauvet &amp; Piger) &middot; 2-3 month lag &middot; click to expand</div>
+        </div>
+      </div>
+      <div style="position:relative;height:150px">
+        <canvas id="prob-chart-canvas"></canvas>
+      </div>
+    </div>
+    <div class="site-footer">DATA: FRED (ST. LOUIS FED) &nbsp;&middot;&nbsp; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>    <div id="customize-overlay" class="customize-overlay" onclick="closeCustomizePanel()"></div>
     <div id="customize-panel" class="customize-panel">
       <div class="customize-header">
         <div class="customize-title">Your Indicators</div>
@@ -1568,8 +1555,7 @@ function loadData() {
     }
     var values = hlResults.map(function(r) { return r.status === 'fulfilled' ? r.value : null; });
     renderDashboard(values);
-probPromise.then(function(pv) { renderProbability(pv); }).catch(function() { renderProbability(null); });
-    apiFetch(PROB_ID, false, null, true, null).then(function(d) {
+probPromise.catch(function() {});    apiFetch(PROB_ID, false, null, true, null).then(function(d) {
       var monthly = toMonthly(d.observations || [], null);
       buildProbChart(monthly);
     }).catch(function() {});  });
