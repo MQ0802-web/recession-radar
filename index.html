@@ -1584,13 +1584,13 @@ function buildProbChart(monthly) {
     plugins: [recPlugin, gradientPlugin],
     data: {labels: labels, datasets: [{
       data: data,
-      borderColor: '#E24B4A',
+      borderColor: '#1B2A4A',
       borderWidth: 2,
       pointRadius: 0,
       pointHoverRadius: 5,
       tension: 0.3,
       fill: false,
-      backgroundColor: 'rgba(226,75,74,0.08)'
+      backgroundColor: 'rgba(27,42,74,0.08)'
     }]},
     options: {
       responsive: true,
@@ -1620,7 +1620,7 @@ function buildProbChart(monthly) {
     }
   });
   probMiniChart.chartIndicator = {
-    sig: function(v) { return v > 30 ? 'r' : v > 5 ? 'a' : 'g'; }
+    sig: function(v) { return null; }
   };
 }
 
@@ -1675,7 +1675,7 @@ function setProbModalRange(range) {
 
   var chart = new Chart(canvas, {
     type: 'line',
-    plugins: [recPlugin],
+    plugins: [recPlugin, gradientPlugin, crosshairPlugin],
     data: {labels: labels, datasets: [{
       label: 'Recession Probability',
       data: data,
@@ -1691,6 +1691,16 @@ function setProbModalRange(range) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: {mode: 'index', intersect: false},
+      onHover: function(e, els) {
+        if (els.length > 0) {
+          chart.crosshairActive = true;
+          chart.crosshairX = e.x;
+          chart.update('none');
+        } else {
+          chart.crosshairActive = false;
+          chart.update('none');
+        }
+      },
       onClick: function(e, els) {
         if (els.length > 0) {
           var idx = els[0].index;
@@ -1724,7 +1734,8 @@ function setProbModalRange(range) {
           grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
         },
         y: {
-          min: 0, max: 100,
+          min: 0,
+          suggestedMax: 105,
           ticks: {maxTicksLimit: 6, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return v + '%'; }},
           grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}
         }
@@ -1749,7 +1760,7 @@ function setProbModalRange(range) {
   canvas.addEventListener('mouseleave', function() { isDragging = false; });
 
   chart.chartIndicator = {
-    sig: function(v) { return v > 30 ? 'r' : v > 5 ? 'a' : 'g'; }
+    sig: function(v) { return null; }
   };
   probModalChart = chart;
 }
