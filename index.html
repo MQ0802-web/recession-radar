@@ -1313,6 +1313,15 @@ function buildCalendar() {
     document.getElementById('cal-cd-unit').textContent = diff <= 1 ? '' : 'days away';
   }
   renderCalendar('all');
+  setTimeout(function() {
+    var todayHdr = document.querySelector('.today-hdr');
+    if (todayHdr) {
+      todayHdr.scrollIntoView({behavior: 'smooth', block: 'center'});
+    } else {
+      var firstFuture = document.querySelector('.cal-event-row:not(.past)');
+      if (firstFuture) { firstFuture.scrollIntoView({behavior: 'smooth', block: 'center'}); }
+    }
+  }, 100);
 
   if (nextHigh) {
     var eventParts2 = nextHigh.date.split('-');
@@ -1336,7 +1345,11 @@ function renderCalendar(filter) {
   var today = new Date();
   today.setHours(0, 0, 0, 0);
   var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  var cutoffDate = new Date(today);
+  cutoffDate.setDate(cutoffDate.getDate() - 7);
+  var cutoffStr = cutoffDate.getFullYear() + '-' + String(cutoffDate.getMonth() + 1).padStart(2, '0') + '-' + String(cutoffDate.getDate()).padStart(2, '0');
   var filtered = CAL_EVENTS.filter(function(e) {
+    if (e.date < cutoffStr) { return false; }
     if (filter === 'high') { return e.imp === 'high'; }
     if (filter === 'US') { return e.country === 'US'; }
     if (filter === 'UK') { return e.country === 'UK'; }
