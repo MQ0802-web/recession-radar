@@ -1307,8 +1307,7 @@ function buildCalendar() {
     var eventMs = new Date(parseInt(eventParts[0]), parseInt(eventParts[1])-1, parseInt(eventParts[2])).getTime();
     var diff = Math.round((eventMs - todayMs) / 864e5);
     document.getElementById('cal-countdown').style.display = 'flex';
-    document.getElementById('cal-cd-event').textContent = '[' + nextHigh.country + '] ' + nextHigh.name;
-    document.getElementById('cal-cd-meta').textContent = fmtFullDate(nextHigh.date) + ' - ' + nextHigh.time;
+document.getElementById('cal-cd-event').textContent = nextHigh.name;      document.getElementById('cal-cd-meta').textContent = fmtFullDate(nextHigh.date) + ' - ' + nextHigh.time;
     document.getElementById('cal-cd-num').textContent = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff;
     document.getElementById('cal-cd-unit').textContent = diff <= 1 ? '' : 'days away';
   }
@@ -1328,7 +1327,7 @@ function buildCalendar() {
     var eventMs2 = new Date(parseInt(eventParts2[0]), parseInt(eventParts2[1])-1, parseInt(eventParts2[2])).getTime();
     var diff2 = Math.round((eventMs2 - todayMs) / 864e5);
     document.getElementById('dash-next-release').style.display = 'flex';
-    document.getElementById('dash-release-name').textContent = '[' + nextHigh.country + '] ' + nextHigh.name;
+    document.getElementById('dash-release-name').textContent = nextHigh.name;
     document.getElementById('dash-release-meta').textContent = fmtFullDate(nextHigh.date) + ' · ' + nextHigh.time;
     document.getElementById('dash-release-num').textContent = diff2 === 0 ? 'Today' : diff2 === 1 ? 'Tomorrow' : diff2;
     document.getElementById('dash-release-unit').textContent = diff2 <= 1 ? '' : 'days away';
