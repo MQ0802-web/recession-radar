@@ -690,9 +690,7 @@ var INDICATORS = [
    sig:function(v){return v>103?"g":v>100?"a":"r";}, lbl:{g:"Expanding",a:"Flat",r:"Contracting"},
    note:"Captures output across manufacturing, mining, and utilities.", th:[103,100]},
 
-  {id:"CAPUTL",    cat:"output",    name:"Capacity utilization", sub:"% of industrial capacity in use", unit:"%",   dp:1,
-   sig:function(v){return v>78?"g":v>74?"a":"r";}, lbl:{g:"Strong",a:"Softening",r:"Weak"},
-   note:"Low utilization signals weak demand.", th:[78,74]},
+  
 
   {id:"CFNAI",     cat:"output",    name:"Chicago Fed Activity", sub:"National Activity Index",          unit:"",    dp:2, sign:true,
    sig:function(v){return v>0?"g":v>-0.7?"a":"r";}, lbl:{g:"Above trend",a:"Below trend",r:"Recession risk"},
@@ -1010,7 +1008,6 @@ var IND_DETAIL = {
   JTSJOL:{about:"The JOLTS Job Openings and Labor Turnover Survey measures the number of unfilled positions each month.",watch:"Openings above 8 million signal strong employer demand. A sharp sustained decline is a leading indicator of future layoffs by 3-6 months."},
   JTSQUR:{about:"The quit rate measures the percentage of workers who voluntarily left their jobs in a given month. A high quit rate signals worker confidence.",watch:"A quit rate above 2.5% indicates a strong labour market. A declining quit rate signals growing worker anxiety."},
   INDPRO:{about:"The Industrial Production Index measures real output across manufacturing, mining, and electric and gas utilities. One of the four indicators the NBER uses in its official recession dating.",watch:"Sustained declines are a strong recession signal. The index often turns before GDP does."},
-  CAPUTL:{about:"Capacity utilization measures the percentage of productive capacity actually being used in the industrial sector.",watch:"Readings below 74% have historically been associated with recessions."},
   CFNAI:{about:"The Chicago Fed National Activity Index is based on 85 economic indicators. Designed to measure overall economic activity relative to its historical trend.",watch:"A 3-month moving average below -0.7 has historically indicated a high probability that a recession has begun."},
   HOUST:{about:"Housing starts measure the number of new residential construction projects begun in a given month. Housing leads the broader economic cycle by 6-12 months.",watch:"Sustained falls below 1.1 million annualized starts have accompanied every recession of the past 50 years."},
   PERMIT:{about:"Building permits are issued before construction begins, making them a leading indicator of housing starts by 1-2 months.",watch:"Permits below 1.1 million signal significant weakness in the construction pipeline."},
