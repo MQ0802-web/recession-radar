@@ -207,6 +207,16 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 .customize-error{font-size:11px;color:var(--red);margin:8px 12px;padding:8px;background:rgba(226,75,74,0.05);border-radius:4px;display:none}
 .customize-error.show{display:block}
 .custom-dot{font-size:10px;color:var(--navy);display:inline}
+@media print{
+  nav,.site-footer,#snapshot-export-btn,.page-eyebrow{display:none!important}
+  body{background:#fff}
+  main{padding:0!important;max-width:100%!important}
+  .page{display:block!important}
+  #page-snapshot{display:block!important}
+  #page-dashboard,#page-indicators,#page-archive,#page-calendar,#page-explain{display:none!important}
+  #snapshot-table th,#snapshot-table td{font-size:11px!important}
+  .page-header{margin-bottom:16px!important}
+}
 @media(max-width:640px){nav{padding:0 16px}main{padding:16px 14px 48px}.detail-title{font-size:26px}.charts-grid{grid-template-columns:1fr}.modal-stats{grid-template-columns:repeat(2,1fr)}.cal-event-row>:nth-child(5),.cal-event-row>:nth-child(6){display:none}.customize-panel{width:100%}}
 </style>
 </head>
@@ -222,6 +232,7 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
     </li>
     <li class="nav-item" id="nav-calendar"><a onclick="showPage('calendar')">Calendar</a></li>
     <li class="nav-item" id="nav-explain"><a onclick="showPage('explain')">Explain It</a></li>
+    <li class="nav-item" id="nav-snapshot"><a onclick="showPage('snapshot')">Snapshot</a></li>
   </ul>
   <div class="nav-right"><span class="badge-live" id="nav-live" style="display:none">&#9679; LIVE &nbsp;</span><span id="nav-ts"></span></div>
 </nav>
@@ -451,6 +462,48 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 </main>
 </div>
 
+<div id="page-snapshot" class="page">
+<main>
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="page-eyebrow">DATA SNAPSHOT</div>
+      <div class="page-title">Current Indicator Readings</div>
+      <div class="page-subtitle" id="snapshot-subtitle">All 30 indicators as of today. Green = clear, amber = caution, red = alert.</div>
+    </div>
+    <button onclick="exportSnapshot()" style="padding:9px 18px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;background:var(--navy);color:#fff;height:fit-content" id="snapshot-export-btn">Export PDF</button>
+  </div>
+  <div id="snapshot-loading" style="text-align:center;padding:48px 0;color:var(--muted);font-size:13px">
+    <div class="spinner" style="margin:0 auto 12px"></div>Loading all indicators...
+  </div>
+  <div id="snapshot-content" style="display:none">
+    <div id="snapshot-summary" style="background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:20px 24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px">SUMMARY</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="background:#fff;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px">CLEAR</div><div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:var(--green)" id="snap-count-g">-</div></div>
+        <div style="background:#fff;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px">CAUTION</div><div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:var(--amber)" id="snap-count-a">-</div></div>
+        <div style="background:#fff;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px">ALERT</div><div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;color:var(--red)" id="snap-count-r">-</div></div>
+        <div style="background:#fff;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px">COMPOSITE SCORE</div><div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500" id="snap-score">-</div></div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid #EEEEEC;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <table id="snapshot-table" style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#F5F5F3;border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;font-weight:500">INDICATOR</th>
+            <th style="text-align:left;padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;font-weight:500">CATEGORY</th>
+            <th style="text-align:right;padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;font-weight:500">VALUE</th>
+            <th style="text-align:center;padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;font-weight:500">DIRECTION</th>
+            <th style="text-align:center;padding:12px 16px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.1em;font-weight:500">SIGNAL</th>
+          </tr>
+        </thead>
+        <tbody id="snapshot-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:right;font-family:'IBM Plex Mono',monospace" id="snapshot-timestamp"></div>
+  </div>
+  <div class="site-footer" style="margin-top:48px">DATA: FRED (ST. LOUIS FED) &middot; INFORMATIONAL ONLY - NOT FINANCIAL ADVICE</div>
+</main>
+</div>
 <div id="page-explain" class="page">
 <main>
   <div class="page-header">
@@ -1039,7 +1092,7 @@ var IMP_CLR = {high:"#E24B4A", medium:"#BA7517"};
 var IMP_LBL = {high:"HIGH", medium:"MED"};
 var WDAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var MTHS    = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-var ALL_PAGES = ["dashboard","indicators","archive","calendar","explain"];
+var ALL_PAGES = ["dashboard","indicators","archive","calendar","explain","snapshot"];
 
 function computeCompositeScore(indicators, values) {
   var total = 0;
@@ -2709,6 +2762,107 @@ function renderRecessionIndicators(rec) {
     });
   });
 }
+// ── SNAPSHOT ───────────────────────────────────────────────────────────────
+var snapshotLoaded = false;
+
+function loadSnapshotPage() {
+  if (snapshotLoaded) { return; }
+  document.getElementById('snapshot-loading').style.display = 'block';
+  document.getElementById('snapshot-content').style.display = 'none';
+
+  var catNames = {labour:'Labour',output:'Output',housing:'Housing',financial:'Financial',prices:'Prices',consumer:'Consumer'};
+  var promises = INDICATORS.map(function(ind) {
+    return apiFetch(ind.id, false, null, false, null).then(function(d) {
+      var obs = (d.observations || []).filter(function(o) { return o.value !== '.' && !isNaN(parseFloat(o.value)); });
+      obs.sort(function(a,b){ return a.date > b.date ? 1 : -1; });
+      if (!obs.length) { return {curr: null, prev: null}; }
+      var curr = parseFloat(obs[obs.length-1].value);
+      var prev = obs.length > 1 ? parseFloat(obs[obs.length-2].value) : null;
+      if (ind.tx) { curr = ind.tx(curr); if (prev !== null) { prev = ind.tx(prev); } }
+      if (ind.yoy) {
+        if (obs.length < 13) { return {curr: null, prev: null}; }
+        var c = parseFloat(obs[obs.length-1].value);
+        var p12 = parseFloat(obs[obs.length-13].value);
+        var p13 = obs.length > 13 ? parseFloat(obs[obs.length-14].value) : null;
+        curr = p12 !== 0 ? ((c - p12) / Math.abs(p12)) * 100 : null;
+        prev = (p13 !== null && p13 !== 0) ? ((p12 - p13) / Math.abs(p13)) * 100 : null;
+      }
+      if (ind.mom) {
+        if (obs.length < 2) { return {curr: null, prev: null}; }
+        var c2 = parseFloat(obs[obs.length-1].value);
+        var p2 = parseFloat(obs[obs.length-2].value);
+        var p3 = obs.length > 2 ? parseFloat(obs[obs.length-3].value) : null;
+        curr = p2 !== 0 ? ((c2 - p2) / Math.abs(p2)) * 100 : null;
+        prev = (p3 !== null && p3 !== 0) ? ((p2 - p3) / Math.abs(p3)) * 100 : null;
+      }
+      return {curr: curr, prev: prev};
+    }).catch(function() { return {curr: null, prev: null}; });
+  });
+
+  Promise.allSettled(promises).then(function(results) {
+    var tbody = document.getElementById('snapshot-tbody');
+    tbody.innerHTML = '';
+    var gc = 0, ac = 0, rc = 0;
+    var scoreInds = [], scoreVals = [];
+
+    INDICATORS.forEach(function(ind, i) {
+      var res = results[i].status === 'fulfilled' ? results[i].value : {curr:null,prev:null};
+      var curr = res.curr;
+      var prev = res.prev;
+      var sig = curr !== null ? ind.sig(curr) : null;
+      var sigLabel = {g:'Clear',a:'Caution',r:'Alert'};
+      var sigColor = {g:'var(--green)',a:'var(--amber)',r:'var(--red)'};
+      var sigBg = {g:'var(--gbg)',a:'var(--abg)',r:'var(--rbg)'};
+      var sigTxt = {g:'var(--gtxt)',a:'var(--atxt)',r:'var(--rtxt)'};
+
+      if (sig === 'g') { gc++; } else if (sig === 'a') { ac++; } else if (sig === 'r') { rc++; }
+      scoreInds.push(ind);
+      scoreVals.push(curr);
+
+      var dir = '';
+      if (curr !== null && prev !== null) {
+        if (curr > prev) { dir = '<span style="color:var(--muted);font-size:14px">&#9650;</span>'; }
+        else if (curr < prev) { dir = '<span style="color:var(--muted);font-size:14px">&#9660;</span>'; }
+        else { dir = '<span style="color:var(--muted);font-size:12px">&#8212;</span>'; }
+      }
+
+      var tr = document.createElement('tr');
+      tr.style.cssText = 'border-bottom:1px solid var(--border);transition:background 0.1s';
+      tr.onmouseover = function() { this.style.background = '#F5F5F3'; };
+      tr.onmouseout = function() { this.style.background = ''; };
+      tr.innerHTML = '<td style="padding:12px 16px">'
+        + '<div style="font-size:13px;font-weight:500;color:var(--navy)">' + ind.name + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + ind.sub + '</div>'
+        + '</td>'
+        + '<td style="padding:12px 16px"><span style="font-size:11px;color:var(--muted);font-family:\'IBM Plex Mono\',monospace">' + (catNames[ind.cat] || ind.cat) + '</span></td>'
+        + '<td style="padding:12px 16px;text-align:right;font-family:\'IBM Plex Mono\',monospace;font-size:13px;font-weight:500;color:' + (sig ? sigColor[sig] : 'var(--muted)') + '">' + (curr !== null ? fmtVal(ind, curr) : '-') + '</td>'
+        + '<td style="padding:12px 16px;text-align:center">' + (dir || '-') + '</td>'
+        + '<td style="padding:12px 16px;text-align:center"><span style="font-size:11px;padding:3px 10px;border-radius:99px;font-weight:500;background:' + (sig ? sigBg[sig] : 'var(--border)') + ';color:' + (sig ? sigTxt[sig] : 'var(--muted)') + '">' + (sig ? sigLabel[sig] : '-') + '</span></td>';
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('snap-count-g').textContent = gc;
+    document.getElementById('snap-count-a').textContent = ac;
+    document.getElementById('snap-count-r').textContent = rc;
+    var score = computeCompositeScore(scoreInds, scoreVals);
+    var scoreEl = document.getElementById('snap-score');
+    var risk = scoreToRisk(score);
+    scoreEl.textContent = score !== null ? score.toFixed(1) : '-';
+    scoreEl.style.color = risk.hex;
+
+    var now = new Date();
+    document.getElementById('snapshot-subtitle').textContent = 'All 30 indicators as of ' + now.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + '.';
+    document.getElementById('snapshot-timestamp').textContent = 'Generated ' + now.toLocaleString('en-GB', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+
+    document.getElementById('snapshot-loading').style.display = 'none';
+    document.getElementById('snapshot-content').style.display = 'block';
+    snapshotLoaded = true;
+  });
+}
+
+function exportSnapshot() {
+  window.print();
+}
 // ── INIT ───────────────────────────────────────────────────────────────────
 buildDropdown();
 buildArchiveGrid();
@@ -2732,6 +2886,9 @@ showPage = function(p) {
   originalShowPage(p);
   if (p === 'indicators') {
     loadIndicatorsPage();
+  }
+  if (p === 'snapshot') {
+    loadSnapshotPage();
   }
 };
 
