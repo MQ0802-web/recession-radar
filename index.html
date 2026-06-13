@@ -1597,12 +1597,21 @@ function getLatestValue(ind) {
       return prev === 0 ? null : ((curr - prev) / Math.abs(prev)) * 100;
     });
   }
-  return apiFetch(ind.id, false, 12).then(function(d) {
-    var obs = (d.observations || []).filter(function(o) {
-      return o.value !== '.' && !isNaN(parseFloat(o.value));
-    }).sort(function(a, b) { return a.date > b.date ? 1 : -1; });
-    if (!obs.length) { return null; }
-    var v = parseFloat(obs[obs.length - 1].value);
+  return apiFetch(ind.id, false, null).then(function(d) {
+    var raw = d.observations && d.observations[0] && d.observations[0].value;
+    if (!raw || raw === '.') {
+      return apiFetch(ind.id, false, 6).then(function(d2) {
+        var obs = (d2.observations || []).filter(function(o) {
+          return o.value !== '.' && !isNaN(parseFloat(o.value));
+        }).sort(function(a, b) { return a.date > b.date ? 1 : -1; });
+        if (!obs.length) { return null; }
+        var v = parseFloat(obs[obs.length - 1].value);
+        if (isNaN(v)) { return null; }
+        if (ind.tx) { v = ind.tx(v); }
+        return v;
+      });
+    }
+    var v = parseFloat(raw);
     if (isNaN(v)) { return null; }
     if (ind.tx) { v = ind.tx(v); }
     return v;
