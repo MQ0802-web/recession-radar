@@ -2787,6 +2787,17 @@ function loadSnapshotPage() {
     return apiFetch(ind.id, false, months, false, null).then(function(d) {
       var obs = (d.observations || []).filter(function(o) { return o.value !== '.' && !isNaN(parseFloat(o.value)); });
       obs.sort(function(a,b){ return a.date > b.date ? 1 : -1; });
+      if (!obs.length && months < 36) {
+        return apiFetch(ind.id, false, null, true, null).then(function(d2) {
+          var obs2 = (d2.observations || []).filter(function(o) { return o.value !== '.' && !isNaN(parseFloat(o.value)); });
+          obs2.sort(function(a,b){ return a.date > b.date ? 1 : -1; });
+          if (!obs2.length) { return {curr: null, prev: null}; }
+          var curr = parseFloat(obs2[obs2.length-1].value);
+          var prev = obs2.length > 1 ? parseFloat(obs2[obs2.length-2].value) : null;
+          if (ind.tx) { curr = ind.tx(curr); if (prev !== null) { prev = ind.tx(prev); } }
+          return {curr: curr, prev: prev};
+        }).catch(function() { return {curr: null, prev: null}; });
+      }
       if (!obs.length) { return {curr: null, prev: null}; }
       var curr = parseFloat(obs[obs.length-1].value);
       var prev = obs.length > 1 ? parseFloat(obs[obs.length-2].value) : null;
