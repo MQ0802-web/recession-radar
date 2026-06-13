@@ -2527,7 +2527,7 @@ function buildModalChart(ind) {
         zoom: {zoom: {wheel: {enabled: false}, pinch: {enabled: false}}, pan: {enabled: false}}
       },
       scales: {
-        x: {ticks: {maxTicksLimit: 10, maxRotation: 0, callback: function(v, i) { return fmtMonth(labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
+        x: {ticks: {maxTicksLimit: 10, maxRotation: 0, callback: function(v, i) { return fmtMonth(modalChart.data.labels[i]); }, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4'}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}},
         y: {ticks: {maxTicksLimit: 6, font: {family:"'IBM Plex Mono',monospace", size: 9}, color: '#8892A4', callback: function(v) { return fmtVal(ind, v); }}, grid: {color: 'rgba(0,0,0,0.04)'}, border: {display: false}}
       }
     }
