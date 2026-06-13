@@ -1707,25 +1707,45 @@ var recPlugin = {
 
 var gradientPlugin = {
   id: 'gradientFill',
-  beforeRender: function(chart) {
+  beforeDatasetDraw: function(chart, args) {
+    if (args.index !== 0) { return; }
+    var ctx = chart.ctx;
+    var ca = chart.chartArea;
+    var sc = chart.scales;
+    if (!ca || !sc.x || !sc.y) { return; }
     var ind = chart.chartIndicator;
     if (!ind) { return; }
     var dataset = chart.data.datasets[0];
-    if (!dataset) { return; }
-    var ca = chart.chartArea;
-    if (!ca) { return; }
-    var lastVal = null;
-    for (var i = dataset.data.length - 1; i >= 0; i--) {
-      if (dataset.data[i] !== null && dataset.data[i] !== undefined) { lastVal = dataset.data[i]; break; }
-    }
-    var sig = lastVal !== null ? ind.sig(lastVal) : null;
-    var gradColor = sig === 'g' ? 'rgba(99,153,34,' : sig === 'a' ? 'rgba(230,178,92,' : sig === 'r' ? 'rgba(226,75,74,' : 'rgba(27,42,74,';
-    var ctx = chart.ctx;
+    if (!dataset || !dataset.data || dataset.data.length < 2) { return; }
+    var meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data || meta.data.length < 2) { return; }
+    var lastVal = dataset.data[dataset.data.length - 1];
+    var sig = (lastVal !== null && lastVal !== undefined) ? ind.sig(lastVal) : null;
+    var gradColor = sig === 'g' ? 'rgba(99,153,34' : sig === 'a' ? 'rgba(230,178,92' : sig === 'r' ? 'rgba(226,75,74' : 'rgba(27,42,74';
+    var opacity = sig ? 0.25 : 0.15;
+    ctx.save();
     var gradient = ctx.createLinearGradient(0, ca.top, 0, ca.bottom);
-    gradient.addColorStop(0, gradColor + '0.25)');
-    gradient.addColorStop(1, gradColor + '0)');
-    dataset.backgroundColor = gradient;
-    dataset.fill = 'origin';
+    gradient.addColorStop(0, gradColor + ',' + opacity + ')');
+    gradient.addColorStop(1, gradColor + ',0)');
+    ctx.beginPath();
+    var firstPoint = meta.data[0];
+    ctx.moveTo(firstPoint.x, ca.bottom);
+    ctx.lineTo(firstPoint.x, firstPoint.y);
+    for (var i = 1; i < meta.data.length; i++) {
+      var prev = meta.data[i - 1];
+      var curr = meta.data[i];
+      var cpx1 = prev.x + (curr.x - prev.x) * 0.4;
+      var cpy1 = prev.y;
+      var cpx2 = prev.x + (curr.x - prev.x) * 0.6;
+      var cpy2 = curr.y;
+      ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, curr.x, curr.y);
+    }
+    var lastPoint = meta.data[meta.data.length - 1];
+    ctx.lineTo(lastPoint.x, ca.bottom);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.restore();
   }
 };
 
@@ -1821,7 +1841,7 @@ document.getElementById('prob-chart-card').style.display = 'flex';
       pointRadius: 0,
       pointHoverRadius: 5,
       tension: 0.3,
-      fill: 'start',
+      fill: false,
       backgroundColor: 'rgba(27,42,74,0.08)'
     }]},
     options: {
@@ -1916,7 +1936,7 @@ function setProbModalRange(range) {
       pointRadius: 0,
       pointHoverRadius: 5,
       tension: 0.3,
-      fill: 'start',
+      fill: false,
       backgroundColor: 'rgba(27,42,74,0.08)'
     }]},
     options: {
@@ -2202,9 +2222,9 @@ function buildMiniChartOnCanvas(canvas, ind, monthly) {
     type: 'line',
     plugins: [recPlugin, gradientPlugin],
     data: {labels: labels, datasets: [
-      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: 'start'},
-      {data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'},
-      {data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'}
+      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false},
+      {data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false},
+      {data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false}
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -2309,9 +2329,9 @@ function buildMiniChart(ind, monthly) {
     type: 'line',
     plugins: [recPlugin, gradientPlugin, crosshairPlugin],
     data: {labels: labels, datasets: [
-      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: 'start'},
-      {data: t1line, borderColor: 'rgba(99,153,34,0.4)',  borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'},
-      {data: t2line, borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'}
+      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: false},
+      {data: t1line, borderColor: 'rgba(99,153,34,0.4)',  borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false},
+      {data: t2line, borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: false}
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -2443,9 +2463,9 @@ function buildModalChart(monthly, ind) {
     type: 'line',
     plugins: [recPlugin, gradientPlugin, crosshairPlugin],
     data: {labels: labels, datasets: [
-      {label: ind.name,          data: data,                  borderColor: '#1B2A4A',             borderWidth: 2.5,   pointRadius: 0, pointHoverRadius: 5, tension: 0.4, fill: 'start'},
-      {label: 'Green threshold', data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.5)',  borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: 'start'},
-      {label: 'Red threshold',   data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.5)', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: 'start'}
+      {label: ind.name,          data: data,                  borderColor: '#1B2A4A',             borderWidth: 2.5,   pointRadius: 0, pointHoverRadius: 5, tension: 0.4, fill: false},
+      {label: 'Green threshold', data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.5)',  borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: false},
+      {label: 'Red threshold',   data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.5)', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: false}
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -2710,7 +2730,7 @@ function renderRecessionIndicators(rec) {
               borderWidth: 2,
               pointRadius: 0,
               tension: 0.3,
-              fill: 'start'
+              fill: false
             }]},
             options: {
               responsive: true,
