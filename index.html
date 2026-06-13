@@ -2289,28 +2289,10 @@ function buildMiniChartOnCanvas(canvas, ind, monthly) {
     options: {
       responsive: true, maintainAspectRatio: false,
 interaction: {mode: 'index', intersect: false},
-onHover: function(e, els, chart) {
-  if (els && els.length > 0) {
-    chart.crosshairActive = true;
-    chart.crosshairX = els[0].element.x;
-    chart.crosshairIdx = els[0].index;
-  } else {
-    chart.crosshairActive = false;
-    chart.crosshairIdx = undefined;
-  }
-  chart.draw();
-},
+
       plugins: {
         legend: {display: false},
-        tooltip: {
-          backgroundColor: 'rgba(27,42,74,0.95)', titleColor: '#8892A4', bodyColor: '#FFFFFF',
-          cornerRadius: 6, padding: 10,
-          callbacks: {
-            title: function(c) { return fmtMonth(labels[c[0].index]); },
-            label: function(c) { if (c.datasetIndex !== 0) { return null; } return fmtVal(ind, c.raw); }
-          },
-          filter: function(item) { return item.datasetIndex === 0; }
-        },
+        tooltip: {enabled: false},
         zoom: {
   zoom: {wheel: {enabled: false}, pinch: {enabled: false}, mode: 'xy'},
   pan: {enabled: false, mode: 'xy', threshold: 5}
