@@ -1707,7 +1707,7 @@ var recPlugin = {
 
 var gradientPlugin = {
   id: 'gradientFill',
-  beforeUpdate: function(chart) {
+  beforeRender: function(chart) {
     var ind = chart.chartIndicator;
     if (!ind) { return; }
     var dataset = chart.data.datasets[0];
@@ -1821,7 +1821,7 @@ document.getElementById('prob-chart-card').style.display = 'flex';
       pointRadius: 0,
       pointHoverRadius: 5,
       tension: 0.3,
-      fill: 'origin',
+      fill: 'start',
       backgroundColor: 'rgba(27,42,74,0.08)'
     }]},
     options: {
@@ -1916,7 +1916,7 @@ function setProbModalRange(range) {
       pointRadius: 0,
       pointHoverRadius: 5,
       tension: 0.3,
-      fill: 'origin',
+      fill: 'start',
       backgroundColor: 'rgba(27,42,74,0.08)'
     }]},
     options: {
@@ -2202,9 +2202,9 @@ function buildMiniChartOnCanvas(canvas, ind, monthly) {
     type: 'line',
     plugins: [recPlugin, gradientPlugin],
     data: {labels: labels, datasets: [
-      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: 'origin'},
-      {data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'origin'},
-      {data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'origin'}
+      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: 'start'},
+      {data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'},
+      {data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'}
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -2309,9 +2309,9 @@ function buildMiniChart(ind, monthly) {
     type: 'line',
     plugins: [recPlugin, gradientPlugin, crosshairPlugin],
     data: {labels: labels, datasets: [
-      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: 'origin'},
-      {data: t1line, borderColor: 'rgba(99,153,34,0.4)',  borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'origin'},
-      {data: t2line, borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'origin'}
+      {data: data,   borderColor: '#1B2A4A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.4, fill: 'start'},
+      {data: t1line, borderColor: 'rgba(99,153,34,0.4)',  borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'},
+      {data: t2line, borderColor: 'rgba(226,75,74,0.4)', borderWidth: 1, borderDash: [4,3], pointRadius: 0, fill: 'start'}
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -2443,9 +2443,9 @@ function buildModalChart(monthly, ind) {
     type: 'line',
     plugins: [recPlugin, gradientPlugin, crosshairPlugin],
     data: {labels: labels, datasets: [
-      {label: ind.name,          data: data,                  borderColor: '#1B2A4A',             borderWidth: 2.5,   pointRadius: 0, pointHoverRadius: 5, tension: 0.4, fill: 'origin'},
-      {label: 'Green threshold', data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.5)',  borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: 'origin'},
-      {label: 'Red threshold',   data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.5)', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: 'origin'}
+      {label: ind.name,          data: data,                  borderColor: '#1B2A4A',             borderWidth: 2.5,   pointRadius: 0, pointHoverRadius: 5, tension: 0.4, fill: 'start'},
+      {label: 'Green threshold', data: labels.map(function() { return t1; }), borderColor: 'rgba(99,153,34,0.5)',  borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: 'start'},
+      {label: 'Red threshold',   data: labels.map(function() { return t2; }), borderColor: 'rgba(226,75,74,0.5)', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, fill: 'start'}
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -2710,7 +2710,7 @@ function renderRecessionIndicators(rec) {
               borderWidth: 2,
               pointRadius: 0,
               tension: 0.3,
-              fill: 'origin'
+              fill: 'start'
             }]},
             options: {
               responsive: true,
