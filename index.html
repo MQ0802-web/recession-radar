@@ -1280,7 +1280,7 @@ function fmtFullDate(ds) {
 function buildCalendar() {
   var today = new Date();
   today.setHours(0, 0, 0, 0);
-  var todayStr = today.toISOString().split('T')[0];
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
   var nextHigh = null;
   for (var i = 0; i < CAL_EVENTS.length; i++) {
     if (CAL_EVENTS[i].imp === 'high' && CAL_EVENTS[i].date >= todayStr) {
@@ -1317,7 +1317,7 @@ function calFilter(f, btn) {
 function renderCalendar(filter) {
   var today = new Date();
   today.setHours(0, 0, 0, 0);
-  var todayStr = today.toISOString().split('T')[0];
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
   var filtered = CAL_EVENTS.filter(function(e) {
     if (filter === 'high') { return e.imp === 'high'; }
     if (filter === 'US') { return e.country === 'US'; }
