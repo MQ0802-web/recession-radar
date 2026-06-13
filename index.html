@@ -1587,7 +1587,7 @@ function getLatestValue(ind) {
     });
   }
   if (ind.mom) {
-    return apiFetch(ind.id, false, 4).then(function(d) {
+    return apiFetch(ind.id, false, 6).then(function(d) {
       var obs = (d.observations || []).filter(function(o) {
         return o.value !== '.' && !isNaN(parseFloat(o.value));
       }).sort(function(a, b) { return a.date > b.date ? 1 : -1; });
@@ -1597,7 +1597,7 @@ function getLatestValue(ind) {
       return prev === 0 ? null : ((curr - prev) / Math.abs(prev)) * 100;
     });
   }
-  return apiFetch(ind.id, false, 4).then(function(d) {
+  return apiFetch(ind.id, false, 6).then(function(d) {
     var obs = (d.observations || []).filter(function(o) {
       return o.value !== '.' && !isNaN(parseFloat(o.value));
     }).sort(function(a, b) { return a.date > b.date ? 1 : -1; });
