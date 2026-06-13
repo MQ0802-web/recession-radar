@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     }
     const r = await fetch(url);
     const d = await r.json();
+    res.setHeader('Cache-Control', 'no-store');
     res.json(d);
   } catch(e) {
     res.status(500).json({ error_message: e.message });
