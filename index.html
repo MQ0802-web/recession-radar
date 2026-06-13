@@ -234,7 +234,7 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
     <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
     <li class="nav-item" id="nav-indicators"><a onclick="showPage('indicators')">Indicators</a></li>
     <li class="nav-item" id="nav-archive">
-      <a onclick="showArchive()">Archive <span style="font-size:8px;opacity:0.7;vertical-align:middle">▼</span></a>
+      <a onclick="showArchive();event.stopPropagation()">Archive <span style="font-size:8px;opacity:0.7;vertical-align:middle">▼</span></a>
       <div class="nav-dropdown" id="archive-dropdown"></div>
     </li>
     <li class="nav-item" id="nav-calendar"><a onclick="showPage('calendar')">Calendar</a></li>
@@ -373,7 +373,7 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
     <div id="customize-panel" class="customize-panel">
       <div class="customize-header">
         <div class="customize-title">Your Indicators</div>
-        <button class="customize-close" onclick="closeCustomizePanel()">×</button>
+        <button class="customize-close" onclick="closeCustomizePanel();event.stopPropagation()">×</button>
       </div>
       <div class="customize-body">
         <div class="customize-subheading">Select up to 10 indicators to show on your dashboard. All indicators are always available in the Indicators tab.</div>
