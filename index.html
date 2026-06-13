@@ -1707,53 +1707,25 @@ var recPlugin = {
 
 var gradientPlugin = {
   id: 'gradientFill',
-  beforeDatasetDraw: function(chart, args) {
-    if (args.index !== 0) { return; }
-    var ctx = chart.ctx;
-    var ca = chart.chartArea;
-    var sc = chart.scales;
-    if (!ca || !sc.x || !sc.y) { return; }
-
+  beforeRender: function(chart) {
     var ind = chart.chartIndicator;
     if (!ind) { return; }
-
     var dataset = chart.data.datasets[0];
-    if (!dataset || !dataset.data || dataset.data.length < 2) { return; }
-
-    var meta = chart.getDatasetMeta(0);
-    if (!meta || !meta.data || meta.data.length < 2) { return; }
-
-    var lastVal = dataset.data[dataset.data.length - 1];
-    var sig = (lastVal !== null && lastVal !== undefined) ? ind.sig(lastVal) : null;
-    var gradColor = sig === 'g' ? 'rgba(99,153,34' : sig === 'a' ? 'rgba(230,178,92' : sig === 'r' ? 'rgba(226,75,74' : 'rgba(27,42,74';
-    var opacity = sig ? 0.25 : 0.15;
-
-    ctx.save();
-    var gradient = ctx.createLinearGradient(0, ca.top, 0, ca.bottom);
-    gradient.addColorStop(0, gradColor + ',' + opacity + ')');
-    gradient.addColorStop(1, gradColor + ',0)');
-
-    ctx.beginPath();
-    var firstPoint = meta.data[0];
-    ctx.moveTo(firstPoint.x, ca.bottom);
-    ctx.lineTo(firstPoint.x, firstPoint.y);
-
-    for (var i = 1; i < meta.data.length; i++) {
-      var prev = meta.data[i - 1];
-      var curr = meta.data[i];
-      var cpx1 = prev.x + (curr.x - prev.x) * 0.4;
-      var cpy1 = prev.y;
-      var cpx2 = prev.x + (curr.x - prev.x) * 0.6;
-      var cpy2 = curr.y;
-      ctx.bezierCurveTo(cpx1, cpy1, cpx2, cpy2, curr.x, curr.y);
+    if (!dataset) { return; }
+    var ca = chart.chartArea;
+    if (!ca) { return; }
+    var lastVal = null;
+    for (var i = dataset.data.length - 1; i >= 0; i--) {
+      if (dataset.data[i] !== null && dataset.data[i] !== undefined) { lastVal = dataset.data[i]; break; }
     }
-
-    var lastPoint = meta.data[meta.data.length - 1];
-    ctx.lineTo(lastPoint.x, ca.bottom);
-    ctx.closePath();
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    ctx.restore();
+    var sig = lastVal !== null ? ind.sig(lastVal) : null;
+    var gradColor = sig === 'g' ? 'rgba(99,153,34,' : sig === 'a' ? 'rgba(230,178,92,' : sig === 'r' ? 'rgba(226,75,74,' : 'rgba(27,42,74,';
+    var ctx = chart.ctx;
+    var gradient = ctx.createLinearGradient(0, ca.top, 0, ca.bottom);
+    gradient.addColorStop(0, gradColor + '0.25)');
+    gradient.addColorStop(1, gradColor + '0)');
+    dataset.backgroundColor = gradient;
+    dataset.fill = 'origin';
   }
 };
 
