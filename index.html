@@ -454,7 +454,13 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
     <div class="page-title">The Economics, Explained</div>
     <div class="page-subtitle">Plain-English guides to every indicator on this dashboard and the bigger ideas behind them.</div>
   </div>
-  <div class="explain-grid" id="explain-grid"></div>
+  <div id="explain-overview">
+    <div class="explain-grid" id="explain-grid"></div>
+  </div>
+  <div id="explain-detail-view" style="display:none">
+    <a class="back-link" onclick="showExplainOverview()">&larr; Back to Explain It</a>
+    <div id="explain-detail-content"></div>
+  </div>
   <div class="site-footer" style="margin-top:48px">RECESSION RADAR &middot; INFORMATIONAL ONLY</div>
 </main>
 </div>
