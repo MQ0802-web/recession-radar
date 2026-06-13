@@ -256,6 +256,10 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
             <div class="prob-scale"><span>0</span><span>50</span><span>100</span></div>
             <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;line-height:1.5">Based on <span id="score-ind-count">-</span> indicators &middot; Red=2pts &middot; Amber=1pt &middot; Green=0pts</div>
             <div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic">Equal-weighted signal index — indicative only, not a statistical model</div>
+            <div id="whats-moving" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--navy);letter-spacing:0.1em;margin-bottom:8px">WHAT'S MOVING</div>
+              <div id="whats-moving-items"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1060,6 +1064,59 @@ function scoreToRisk(score) {
   return             {label: 'HIGH',     hex: '#E24B4A', desc: 'Widespread recession signals'};
 }
 
+function detectMovement(indicators, values) {
+  var stored = null;
+  try {
+    var raw = localStorage.getItem('rr_prev_values');
+    if (raw) { stored = JSON.parse(raw); }
+  } catch(e) {}
+
+  var movements = [];
+
+  if (stored) {
+    indicators.forEach(function(ind, i) {
+      var curr = values[i];
+      if (curr === null || curr === undefined) { return; }
+      var prev = stored[ind.id];
+      if (prev === null || prev === undefined) { return; }
+
+      var currSig = ind.sig(curr);
+      var prevSig = ind.sig(prev);
+
+      if (currSig !== prevSig) {
+        var sigLabel = {g:'Clear', a:'Caution', r:'Alert'};
+        var sigColor = {g:'var(--green)', a:'var(--amber)', r:'var(--red)'};
+        movements.push({
+          name: ind.name,
+          text: 'Signal changed from <span style="color:' + sigColor[prevSig] + ';font-weight:600">' + sigLabel[prevSig] + '</span> to <span style="color:' + sigColor[currSig] + ';font-weight:600">' + sigLabel[currSig] + '</span>',
+          priority: currSig === 'r' ? 0 : currSig === 'a' ? 1 : 2
+        });
+      } else if (prev !== 0) {
+        var pctChange = Math.abs((curr - prev) / Math.abs(prev)) * 100;
+        if (pctChange >= 5) {
+          var dir = curr > prev ? 'up' : 'down';
+          var dirColor = dir === 'up' ? 'var(--red)' : 'var(--green)';
+          if (ind.id === 'T10Y2Y' || ind.id === 'CIVPART' || ind.id === 'USALOLITONOSTSAM') {
+            dirColor = dir === 'up' ? 'var(--green)' : 'var(--red)';
+          }
+          movements.push({
+            name: ind.name,
+            text: 'Value moved <span style="color:' + dirColor + ';font-weight:600">' + dir + ' ' + pctChange.toFixed(1) + '%</span> from last reading',
+            priority: 3
+          });
+        }
+      }
+    });
+  }
+
+  var newStored = {};
+  indicators.forEach(function(ind, i) {
+    if (values[i] !== null && values[i] !== undefined) { newStored[ind.id] = values[i]; }
+  });
+  try { localStorage.setItem('rr_prev_values', JSON.stringify(newStored)); } catch(e) {}
+
+  return movements.sort(function(a, b) { return a.priority - b.priority; });
+}
 function renderCompositeScore(indicators, values) {
   var score = computeCompositeScore(indicators, values);
   var risk = scoreToRisk(score);
@@ -1081,6 +1138,21 @@ function renderCompositeScore(indicators, values) {
   bar.style.width = score + '%';
   bar.style.background = risk.hex;
   cnt.textContent = indicators.filter(function(ind, i) { return values[i] !== null && values[i] !== undefined; }).length;
+
+  var movements = detectMovement(indicators, values);
+  var container = document.getElementById('whats-moving');
+  var itemsEl = document.getElementById('whats-moving-items');
+  if (movements.length > 0) {
+    itemsEl.innerHTML = movements.map(function(m) {
+      return '<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:6px">'
+        + '<div style="font-size:11px;font-weight:600;color:var(--navy);min-width:120px;flex-shrink:0">' + m.name + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);line-height:1.5">' + m.text + '</div>'
+        + '</div>';
+    }).join('');
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+  }
 }
 
 function renderHero(indicators, values) {
