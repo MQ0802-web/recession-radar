@@ -2641,8 +2641,14 @@ function setRange(range) {
   updateRangeBtns(range);
 }
 
-function resetModalZoom() { setRange('7y'); }
+function updateRangeBtns(active) {
+  ['1y','3y','7y','15y','max'].forEach(function(r) {
+    var el = document.getElementById('range-' + r);
+    if (el) { el.classList.toggle('active', r === active); }
+  });
+}
 
+function resetModalZoom() { setRange('7y'); }
 function modalZoomIn() {
   var size = modalWindowEnd - modalWindowStart;
   var newSize = Math.max(12, Math.round(size * 0.75));
