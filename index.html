@@ -1277,6 +1277,19 @@ function fmtFullDate(ds) {
   return WDAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MTHS[d.getMonth()];
 }
 
+function loadCalendarData() {
+  fetch('/api/calendar')
+    .then(function(r) { return r.json(); })
+    .then(function(events) {
+      if (Array.isArray(events) && events.length > 0) {
+        CAL_EVENTS = events;
+      }
+      buildCalendar();
+    })
+    .catch(function() {
+      buildCalendar();
+    });
+}
 function buildCalendar() {
   var today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -2598,10 +2611,10 @@ function renderRecessionIndicators(rec) {
 buildDropdown();
 buildArchiveGrid();
 buildExplainGrid();
-buildCalendar();
 initializeSelectedIndicators();
 updateCustomDot();
 loadData();
+loadCalendarData();
 
 // Set up search listener for indicators page
 var searchInput = document.getElementById('indicators-search');
