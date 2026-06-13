@@ -222,7 +222,13 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 </head>
 <body>
 <nav>
-  <div class="nav-logo" onclick="showPage('dashboard')">RECESSION RADAR</div>
+  <div class="nav-logo" onclick="showPage('dashboard')" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+    <svg width="32" height="32" viewBox="0 0 56 56" style="flex-shrink:0">
+      <rect x="0" y="0" width="56" height="56" rx="8" fill="rgba(255,255,255,0.12)"/>
+      <polyline points="5,28 14,28 19,13 25,43 30,20 36,28 51,28" fill="none" stroke="#8BC34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:#fff;letter-spacing:0.04em">RECESSION RADAR</span>
+  </div>
   <ul class="nav-links">
     <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
     <li class="nav-item" id="nav-indicators"><a onclick="showPage('indicators')">Indicators</a></li>
