@@ -2783,7 +2783,7 @@ function loadSnapshotPage() {
 
   var catNames = {labour:'Labour',output:'Output',housing:'Housing',financial:'Financial',prices:'Prices',consumer:'Consumer'};
   var promises = INDICATORS.map(function(ind) {
-    var months = ind.yoy ? 16 : ind.mom ? 4 : null;
+    var months = ind.yoy ? 16 : ind.mom ? 4 : 3;
     return apiFetch(ind.id, false, months, false, null).then(function(d) {
       var obs = (d.observations || []).filter(function(o) { return o.value !== '.' && !isNaN(parseFloat(o.value)); });
       obs.sort(function(a,b){ return a.date > b.date ? 1 : -1; });
