@@ -1250,30 +1250,34 @@ function buildExplainGrid() {
     card.innerHTML = '<div class="explain-icon">' + e.icon + '</div>'
       + '<div class="explain-card-title">' + e.title + '</div>'
       + '<div class="explain-preview">' + e.preview + '</div>'
-      + '<span class="explain-link" id="el-' + e.id + '">Read more</span>';
+      + '<span class="explain-link">Read more</span>';
+    card.onclick = function() { showExplainDetail(e.id); };
     grid.appendChild(card);
-    var detail = document.createElement('div');
-    detail.className = 'explain-detail';
-    detail.id = 'ed-' + e.id;
-    detail.innerHTML = '<div class="explain-detail-title">' + e.title + '</div>'
-      + '<div class="explain-body">' + e.body + '</div>'
-      + '<span class="explain-close" data-explainid="' + e.id + '">Close</span>';
-    grid.appendChild(detail);
-  });
-  grid.addEventListener('click', function(ev) {
-    var card = ev.target.closest('.explain-card');
-    var close = ev.target.closest('.explain-close');
-    if (card) { toggleExplain(card.getAttribute('data-explainid')); }
-    if (close) { toggleExplain(close.getAttribute('data-explainid')); }
   });
 }
 
-function toggleExplain(id) {
-  var d = document.getElementById('ed-' + id);
-  var l = document.getElementById('el-' + id);
-  var isOpen = d.classList.contains('open');
-  d.classList.toggle('open', !isOpen);
-  if (l) { l.textContent = isOpen ? 'Read more' : 'Close'; }
+function showExplainDetail(id) {
+  var item = null;
+  for (var i = 0; i < EXPLAIN_DATA.length; i++) {
+    if (EXPLAIN_DATA[i].id === id) { item = EXPLAIN_DATA[i]; break; }
+  }
+  if (!item) { return; }
+  document.getElementById('explain-overview').style.display = 'none';
+  document.getElementById('explain-detail-view').style.display = 'block';
+  document.getElementById('explain-detail-content').innerHTML =
+    '<div style="margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)">'
+    + '<div style="font-size:32px;margin-bottom:12px">' + item.icon + '</div>'
+    + '<div class="explain-detail-title">' + item.title + '</div>'
+    + '<div style="font-size:14px;color:var(--muted);margin-top:-12px;margin-bottom:0">' + item.preview + '</div>'
+    + '</div>'
+    + '<div class="explain-body">' + item.body + '</div>';
+  window.scrollTo(0, 0);
+}
+
+function showExplainOverview() {
+  document.getElementById('explain-overview').style.display = 'block';
+  document.getElementById('explain-detail-view').style.display = 'none';
+  window.scrollTo(0, 0);
 }
 
 // ── CALENDAR ───────────────────────────────────────────────────────────────
