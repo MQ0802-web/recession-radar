@@ -2389,35 +2389,11 @@ function buildMiniChart(ind, monthly) {
     options: {
       responsive: true, maintainAspectRatio: false,
 interaction: {mode: 'index', intersect: false},
-onHover: function(e, els, chart) {
-  if (els && els.length > 0) {
-    chart.crosshairActive = true;
-    chart.crosshairX = els[0].element.x;
-    chart.crosshairIdx = els[0].index;
-  } else {
-    chart.crosshairActive = false;
-    chart.crosshairIdx = undefined;
-  }
-  chart.draw();
-},
+
     
       plugins: {
         legend: {display: false},
-        tooltip: {
-          backgroundColor: 'rgba(27,42,74,0.95)',
-          titleColor: '#8892A4',
-          bodyColor: '#FFFFFF',
-          borderColor: 'transparent',
-          cornerRadius: 6,
-          padding: 10,
-          titleFont: {family:"'IBM Plex Mono',monospace", size: 10},
-          bodyFont: {family:"'IBM Plex Mono',monospace", size: 12, weight: 'bold'},
-          callbacks: {
-            title: function(c) { return fmtMonth(labels[c[0].index]); },
-            label: function(c) { if (c.datasetIndex !== 0) { return null; } return fmtVal(ind, c.raw); }
-          },
-          filter: function(item) { return item.datasetIndex === 0; }
-        },
+        tooltip: {enabled: false},
         zoom: {
   zoom: {wheel: {enabled: false}, pinch: {enabled: false}, mode: 'xy'},
   pan: {enabled: false, mode: 'xy', threshold: 5}
@@ -2432,25 +2408,7 @@ onHover: function(e, els, chart) {
   chart.chartIndicator = ind;
   miniCharts[ind.id] = chart;
 
-var isDragging = false;
-  var lastDragX = 0;
-  var lastDragY = 0;
-  canvas.addEventListener('mousedown', function(e) {
-    isDragging = true;
-    lastDragX = e.clientX;
-    lastDragY = e.clientY;
-    e.preventDefault();
-  });
-  canvas.addEventListener('mousemove', function(e) {
-    if (!isDragging) { return; }
-    var dx = e.clientX - lastDragX;
-    var dy = e.clientY - lastDragY;
-    lastDragX = e.clientX;
-    lastDragY = e.clientY;
-    chart.pan({x: dx, y: dy});
-  });
-  canvas.addEventListener('mouseup', function() { isDragging = false; });
-  canvas.addEventListener('mouseleave', function() { isDragging = false; });
+
 }
 
 // ── MODAL ──────────────────────────────────────────────────────────────────
