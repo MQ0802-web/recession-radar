@@ -1113,7 +1113,16 @@ function detectMovement(indicators, values) {
   indicators.forEach(function(ind, i) {
     if (values[i] !== null && values[i] !== undefined) { newStored[ind.id] = values[i]; }
   });
-  try { localStorage.setItem('rr_prev_values', JSON.stringify(newStored)); } catch(e) {}
+  try {
+    var existing = localStorage.getItem('rr_prev_values');
+    var existingTs = localStorage.getItem('rr_prev_values_ts');
+    var now = Date.now();
+    var oneDayMs = 24 * 60 * 60 * 1000;
+    if (!existing || !existingTs || (now - parseInt(existingTs)) > oneDayMs) {
+      localStorage.setItem('rr_prev_values', JSON.stringify(newStored));
+      localStorage.setItem('rr_prev_values_ts', String(now));
+    }
+  } catch(e) {}
 
   return movements.sort(function(a, b) { return a.priority - b.priority; });
 }
