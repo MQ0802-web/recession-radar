@@ -218,7 +218,34 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
   #snapshot-table th,#snapshot-table td{font-size:11px!important}
   .page-header{margin-bottom:16px!important}
 }
-@media(max-width:640px){nav{padding:0 16px}main{padding:16px 14px 48px}.detail-title{font-size:26px}.charts-grid{grid-template-columns:1fr}.modal-stats{grid-template-columns:repeat(2,1fr)}.cal-event-row>:nth-child(5),.cal-event-row>:nth-child(6){display:none}.customize-panel{width:100%}}
+@media(max-width:640px){
+  nav{padding:0 12px}
+  .nav-links{gap:0}
+  .nav-item>a{padding:0 9px;font-size:12px}
+  main{padding:12px 12px 48px}
+  .detail-title{font-size:24px}
+  .charts-grid{grid-template-columns:1fr}
+  .modal-stats{grid-template-columns:repeat(2,1fr)}
+  .cal-event-row>:nth-child(5),.cal-event-row>:nth-child(6){display:none}
+  .customize-panel{width:100%}
+  .detail-stats{grid-template-columns:repeat(3,1fr)}
+  .archive-grid{grid-template-columns:1fr}
+  .ind-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .nav-item>a{padding:0 7px;font-size:11px}
+  .ind-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  #score-card, #dash-next-release{min-width:0}
+  .prob-right{flex-direction:column;align-items:flex-start}
+  .prob-value{font-size:32px}
+  .modal-value{font-size:32px}
+  .modal-chart-wrap{height:240px}
+  .page-title{font-size:24px}
+  .dash-two-col{grid-template-columns:1fr !important}
+  .detail-two-col{grid-template-columns:1fr !important}
+}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -257,7 +284,7 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
   <div id="dashboard-content" style="display:none">
     
   
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:12px;align-items:stretch">
+    <div class="dash-two-col" style="display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:12px;align-items:stretch">
       <div class="score-card" id="score-card" style="display:none;margin-bottom:0">
         <div>
           <div class="prob-eyebrow">COMPOSITE RISK SCORE</div>
@@ -314,7 +341,7 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;margin-top:24px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CONTEXT</div>    
-<div style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:stretch;margin-bottom:12px">      
+<div class="dash-two-col" style="display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:stretch;margin-bottom:12px">
 <div class="chart-card" id="prob-chart-card" style="display:none;cursor:pointer" onclick="openProbModal()">        <div class="chart-card-hdr">
           <div>
             <div class="chart-card-name">Recession Probability</div>
@@ -1366,7 +1393,7 @@ function renderArchiveDetail(rec) {
     + '<div class="detail-stat"><div class="dsl">S&amp;P 500</div><div class="dsv">' + rec.sp500 + '</div></div>'
     + '<div class="detail-stat"><div class="dsl">RECOVERY</div><div class="dsv">' + rec.recovery + '</div></div></div>'
 + '<div class="detail-section"><div class="detail-section-title">OVERVIEW</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start">'
+    + '<div class="detail-two-col" style="display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start">'
     + '<div class="detail-body">' + rec.narrative + '</div>'
     + '<div style="background:#F0F4FA;border-radius:10px;padding:20px 22px;border-left:3px solid var(--navy)">'
     + '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(27,42,74,0.12)">EARLY WARNING SIGNS</div>'
@@ -1380,7 +1407,7 @@ function renderArchiveDetail(rec) {
     + '</div>'
     + '</div></div>'    
 + '<div class="detail-section"><div class="detail-section-title">TIMELINE</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:stretch">'
+    + '<div class="detail-two-col" style="display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:stretch">'
     + '<div style="display:flex;flex-direction:column">' + tl + '</div>'
     + '<div style="background:var(--card);border:1px solid #EEEEEC;border-radius:10px;padding:20px 22px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">'
     + '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">POLICY RESPONSE</div>'
