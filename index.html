@@ -246,6 +246,18 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
   .dash-two-col{grid-template-columns:1fr !important}
   .detail-two-col{grid-template-columns:1fr !important}
 }
+.nav-burger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0 4px;margin-left:auto}
+@media(max-width:640px){
+  .nav-burger{display:block}
+  .nav-links{display:none;position:absolute;top:56px;left:0;right:0;background:var(--navy);flex-direction:column;padding:8px 0;z-index:300;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+  .nav-links.open{display:flex}
+  .nav-item>a{height:44px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,0.07)}
+  .nav-right{display:none}
+  .nav-item.active>a{box-shadow:none;background:rgba(255,255,255,0.08)}
+  .nav-dropdown{position:static;border:none;border-top:none;box-shadow:none;background:rgba(255,255,255,0.05);min-width:unset}
+  .nav-dropdown a{color:rgba(255,255,255,0.7);border-bottom:1px solid rgba(255,255,255,0.05)}
+  .nav-dropdown a:hover{background:rgba(255,255,255,0.08);color:#fff}
+}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -258,7 +270,8 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
     </svg>
     <span style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:#fff;letter-spacing:0.04em">RECESSION RADAR</span>
   </div>
-  <ul class="nav-links">
+  <button class="nav-burger" onclick="toggleMobileNav()" id="nav-burger">&#9776;</button>
+<ul class="nav-links" id="nav-links">
     <li class="nav-item active" id="nav-dashboard"><a onclick="showPage('dashboard')">Dashboard</a></li>
     <li class="nav-item" id="nav-indicators"><a onclick="showPage('indicators')">Indicators</a></li>
     <li class="nav-item" id="nav-archive">
@@ -3003,6 +3016,21 @@ function dismissDisclaimer() {
   document.body.style.overflow = '';
 }
 // ── INIT ───────────────────────────────────────────────────────────────────
+function toggleMobileNav() {
+  var links = document.getElementById('nav-links');
+  var burger = document.getElementById('nav-burger');
+  links.classList.toggle('open');
+}
+
+// Close mobile nav when a page is selected
+var _origShowPage = showPage;
+showPage = function(p) {
+  _origShowPage(p);
+  var links = document.getElementById('nav-links');
+  if (links) { links.classList.remove('open'); }
+  if (p === 'indicators') { loadIndicatorsPage(); }
+  if (p === 'snapshot') { loadSnapshotPage(); }
+};
 buildDropdown();
 buildArchiveGrid();
 buildExplainGrid();
@@ -3021,16 +3049,7 @@ if (searchInput) {
 }
 
 // Update showPage to load indicators when needed
-var originalShowPage = showPage;
-showPage = function(p) {
-  originalShowPage(p);
-  if (p === 'indicators') {
-    loadIndicatorsPage();
-  }
-  if (p === 'snapshot') {
-    loadSnapshotPage();
-  }
-};
+
 
 </script>
 </body>
