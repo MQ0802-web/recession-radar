@@ -183,7 +183,7 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
 .cal-eforecast{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;text-align:center}
 .cal-disc{margin-top:20px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6}
 .cal-disc a{color:var(--navy)}
-.score-card{background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:24px 32px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-left:4px solid var(--border)}
+.score-card{background:var(--card);border:1px solid #EEEEEC;border-radius:12px;padding:24px 28px;margin-bottom:16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,0.05);border-left:4px solid var(--border)}
 .site-footer{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);letter-spacing:0.04em}
 .customize-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:999;opacity:0;transition:opacity 250ms ease;pointer-events:none;display:none}.customize-overlay.active{opacity:1;pointer-events:auto;display:block}
 .customize-panel{position:fixed;right:0;top:0;bottom:0;width:340px;background:white;box-shadow:-2px 0 12px rgba(0,0,0,0.1);z-index:1000;transform:translateX(100%);transition:transform 250ms ease;overflow-y:auto;display:none;flex-direction:column}.customize-panel.active{transform:translateX(0);display:flex}
@@ -304,27 +304,26 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
   
     <div class="dash-two-col" style="display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:12px;align-items:stretch">
       <div class="score-card" id="score-card" style="display:none;margin-bottom:0">
-        <div>
-          <div class="prob-eyebrow">COMPOSITE RISK SCORE</div>
-          <div class="prob-title">Recession Radar proprietary index</div>
-          <div class="prob-source">Computed live from your selected indicators</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="prob-eyebrow" style="margin:0">COMPOSITE RISK SCORE</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)"><span id="score-ind-count">-</span> indicators</div>
         </div>
-        <div class="prob-right">
-          <div style="text-align:right">
-            <div class="prob-value" id="score-value">-</div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-top:4px" id="score-label">-</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px" id="score-desc">-</div>
+        <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px">
+          <div id="score-value" style="font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:500;letter-spacing:-0.02em;line-height:1">-</div>
+          <div>
+            <div id="score-label" style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;letter-spacing:0.04em">-</div>
+            <div id="score-desc" style="font-size:12px;color:var(--muted);margin-top:4px">-</div>
           </div>
-          <div class="prob-bar-section">
-            <div class="prob-bar-wrap"><div class="prob-bar" id="score-bar" style="width:0%"></div></div>
-            <div class="prob-scale"><span>0</span><span>50</span><span>100</span></div>
-            <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;line-height:1.5">Based on <span id="score-ind-count">-</span> indicators &middot; Red=2pts &middot; Amber=1pt &middot; Green=0pts</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px;font-style:italic">Equal-weighted signal index - indicative only, not a statistical model</div>
-            <div id="whats-moving" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--navy);letter-spacing:0.1em;margin-bottom:8px">WHAT'S MOVING</div>
-              <div id="whats-moving-items"></div>
-            </div>
-          </div>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">
+          <div id="score-bar" style="width:0%;height:100%;border-radius:4px;transition:width 1s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">
+          <span>0</span><span>50</span><span>100</span>
+        </div>
+        <div id="whats-moving" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--navy);letter-spacing:0.1em;margin-bottom:8px">WHAT'S MOVING</div>
+          <div id="whats-moving-items"></div>
         </div>
       </div>
       <div id="dash-next-release" style="display:none;padding:24px;background:var(--navy);border-radius:12px;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
