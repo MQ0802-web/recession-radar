@@ -338,17 +338,20 @@ main{max-width:1280px;margin:0 auto;padding:8px 24px 32px}btn{padding:9px 18px;b
         </div>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-bottom:16px">
-      <a style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:none" onclick="showPage('indicators')">All indicators →</a>
-      <a style="font-size:12px;color:var(--navy);cursor:pointer;font-weight:500" onclick="openCustomizePanel()">Edit indicators<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span></a>
-      <button onclick="loadData()" title="Refresh data" style="background:none;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">↻</button>
-    </div>
 <div style="display:flex;gap:16px;margin-bottom:8px;margin-top:4px">
       <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--green);opacity:0.7"></div>Clear</div>
       <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--amber);opacity:0.7"></div>Caution</div>
       <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--red);opacity:0.7"></div>Alert</div>
     </div>
-    <div class="section-label">YOUR INDICATORS</div>    <div class="ind-grid" id="headline-grid"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">YOUR INDICATORS</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <a style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:none" onclick="showPage('indicators')">All indicators →</a>
+        <a style="font-size:12px;color:var(--navy);cursor:pointer;font-weight:500" onclick="openCustomizePanel()">Edit<span class="custom-dot" id="custom-dot" style="display:none;margin-left:4px">●</span></a>
+        <button onclick="loadData()" title="Refresh data" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">↻</button>
+      </div>
+    </div>
+    <div class="ind-grid" id="headline-grid"></div>
     <div id="dashboard-charts-section" style="display:none;margin-top:24px">
 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--navy);letter-spacing:0.12em;margin-bottom:12px;padding-left:10px;border-left:3px solid var(--navy);line-height:1.4">HISTORICAL CHARTS</div>  <div class="charts-grid" id="dashboard-charts-grid"></div>
 </div>
